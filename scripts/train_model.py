@@ -3,7 +3,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import numpy as np
-from src.models.cnn_lstm import CNNLSTMInsectClassifier
+from src.models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
 # TensorBoard
 from torch.utils.tensorboard import SummaryWriter
 import os
@@ -75,7 +75,7 @@ writer = SummaryWriter(log_dir=log_dir)
 # Model
 classes = label_encoder.classes_
 n_classes = len(classes)
-model = CNNLSTMInsectClassifier(n_classes=n_classes)
+model = SimpleCNNLSTMInsectClassifier(n_classes=n_classes)
 
 # Better weight initialization for complex architecture
 def init_weights(m):
@@ -104,13 +104,16 @@ class_weights = compute_class_weight(
 )
 class_weights_tensor = torch.FloatTensor(class_weights).to(device)
 
-print(f"📊 Using class weights for balanced training:")
+# Calculate class weights but don't use them yet
+print(f"📊 Class weights calculated (but NOT using them):")
 for i, (cls, weight) in enumerate(zip(label_encoder.classes_, class_weights)):
     print(f"  {cls}: {weight:.3f}")
 
-# Optimizer and loss - simpler setup that works
-optimizer = optim.Adam(model.parameters(), lr=1e-3, weight_decay=1e-4)  
-criterion = nn.CrossEntropyLoss(weight=class_weights_tensor)
+print(f"🧪 TESTING: Using standard CrossEntropyLoss (no class weights)")
+
+# Simpler approach - higher LR, no class weights
+optimizer = optim.Adam(model.parameters(), lr=3e-3, weight_decay=1e-4)  
+criterion = nn.CrossEntropyLoss()  # No class weights
 
 # Simple learning rate scheduler that works
 scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=1e-6)
