@@ -7,7 +7,7 @@ from data.preprocessing import InsectAudioPreprocessor
 RAW_DATA_DIR = Path('data/raw/InsectSound1000')
 PROCESSED_DATA_DIR = Path('data/processed')
 SPLITS_DIR = Path('data/splits')
-METADATA_PATH = Path('data/metadata/metadata.csv')
+METADATA_PATH = Path('data/raw/insectsound1000/metadata.csv')
 
 # Ensure output directories exist
 PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
