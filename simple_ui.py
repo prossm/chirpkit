@@ -24,14 +24,27 @@ def load_model():
         print("Loading model components...")
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
-        # Load label encoder
-        label_encoder = joblib.load('models/trained/label_encoder.joblib')
+        # Load label encoder - automatically find the latest species count model
+        import glob
+        label_encoder_files = glob.glob('models/trained/*_label_encoder.joblib')
+        if not label_encoder_files:
+            print("No label encoder found")
+            return False
+        
+        # Use the one with most species (highest number)
+        latest_encoder = max(label_encoder_files, key=lambda x: int(x.split('_')[-3].replace('species', '')))
+        print(f"Using label encoder: {latest_encoder}")
+        
+        label_encoder = joblib.load(latest_encoder)
         n_classes = len(label_encoder.classes_)
         print(f"Label encoder loaded: {n_classes} classes")
         
-        # Load model
+        # Load model - find corresponding model file
+        model_name = latest_encoder.replace('_label_encoder.joblib', '.pth').split('/')[-1]
+        model_path = f'models/trained/{model_name}'
+        print(f"Looking for model: {model_path}")
+        
         model = SimpleCNNLSTMInsectClassifier(n_classes=n_classes)
-        model_path = 'models/trained/cnn_lstm_best.pth'
         
         if os.path.exists(model_path):
             model.load_state_dict(torch.load(model_path, map_location=device))

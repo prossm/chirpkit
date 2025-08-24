@@ -265,16 +265,24 @@ class UnifiedTrainer:
         
         return self.model
     
-    def setup_training(self, lr=3e-3, weight_decay=1e-4):
+    def setup_training(self, lr=1e-4, weight_decay=1e-4):
         """Setup optimizer, criterion, scheduler"""
-        # Simple approach - standard CrossEntropyLoss
-        self.optimizer = optim.Adam(self.model.parameters(), lr=lr, weight_decay=weight_decay)
+        # Use AdamW optimizer for better performance
+        self.optimizer = optim.AdamW(self.model.parameters(), lr=lr, weight_decay=weight_decay)
         self.criterion = nn.CrossEntropyLoss()
         
-        # Learning rate scheduler
-        self.scheduler = optim.lr_scheduler.CosineAnnealingLR(self.optimizer, T_max=100, eta_min=1e-6)
+        # Better learning rate scheduler - ReduceLROnPlateau
+        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+            self.optimizer, 
+            mode='max',  # Monitor validation accuracy (higher is better)
+            factor=0.5,  # Reduce LR by half when plateau
+            patience=5,  # Wait 5 epochs before reducing
+            min_lr=1e-7,  # Minimum learning rate
+            verbose=True
+        )
         
-        print(f"⚙️ Training setup: lr={lr}, weight_decay={weight_decay}")
+        print(f"⚙️ Training setup: AdamW optimizer, lr={lr}, weight_decay={weight_decay}")
+        print(f"⚙️ LR Scheduler: ReduceLROnPlateau with patience=5")
         
     def train_epoch(self, epoch):
         """Train for one epoch"""
@@ -354,8 +362,10 @@ class UnifiedTrainer:
                 self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
             start_epoch = checkpoint['epoch'] + 1
             best_val_acc = checkpoint.get('best_val_acc', 0.0)
-            patience_counter = checkpoint.get('patience_counter', 0)
+            # Reset patience when resuming with new training setup
+            patience_counter = 0  # Fresh start for patience
             print(f"✅ Resumed from epoch {start_epoch}, best val acc: {best_val_acc:.4f}")
+            print(f"🔄 Reset patience counter for new training cycle")
         
         # Training loop
         for epoch in range(start_epoch, max_epochs + 1):
@@ -369,8 +379,11 @@ class UnifiedTrainer:
             # Validate
             val_loss, val_acc, val_f1, val_precision, val_recall, predictions, targets = self.validate()
             
-            # Learning rate
-            current_lr = self.scheduler.get_last_lr()[0]
+            # Learning rate (handle different scheduler types)
+            try:
+                current_lr = self.optimizer.param_groups[0]['lr']
+            except:
+                current_lr = self.scheduler.get_last_lr()[0]
             
             # Print metrics
             print(f"Train: Loss={train_loss:.4f}, Acc={train_acc:.4f}")
@@ -395,8 +408,8 @@ class UnifiedTrainer:
             else:
                 patience_counter += 1
             
-            # Step scheduler
-            self.scheduler.step()
+            # Step scheduler with validation accuracy for ReduceLROnPlateau
+            self.scheduler.step(val_acc)
             
             # Save checkpoint
             checkpoint = {
@@ -414,12 +427,13 @@ class UnifiedTrainer:
             }
             torch.save(checkpoint, checkpoint_path)
             
-            # Save best model
-            if epoch == start_epoch or val_acc > best_val_acc:
+            # Save best model only when we improve
+            if val_acc > best_val_acc:
                 best_val_acc = val_acc
                 torch.save(self.model.state_dict(), self.models_dir / f'{self.model_name}.pth')
+                print(f"💾 Saved new best model with accuracy: {best_val_acc:.4f}")
                 
-                # Save training info
+                # Save training info only for the best model
                 training_info = {
                     'dataset': self.dataset_name,
                     'model_name': self.model_name,
@@ -455,7 +469,7 @@ def main():
     parser.add_argument('--model-name', help='Custom model name (optional)')
     parser.add_argument('--epochs', type=int, default=100, help='Maximum epochs')
     parser.add_argument('--patience', type=int, default=15, help='Early stopping patience')
-    parser.add_argument('--lr', type=float, default=3e-3, help='Learning rate')
+    parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate (lower for fine-tuning)')
     parser.add_argument('--weight-decay', type=float, default=1e-4, help='Weight decay')
     parser.add_argument('--no-resume', action='store_true', help='Don\'t resume from checkpoint')
     
