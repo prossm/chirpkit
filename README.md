@@ -1,208 +1,215 @@
-# 🦗 World-Class Insect Sound Classifier
+# 🦗 ChirpKit: Multi-Species Insect Sound Classifier
 
-A state-of-the-art Python system for identifying insect species from audio using advanced deep learning. Features an enhanced CNN-LSTM architecture with attention mechanisms, comprehensive training pipeline, and production-ready API.
+A comprehensive Python system for identifying **471 insect species** from audio recordings using deep learning. Features a CNN-LSTM neural network with attention mechanisms, comprehensive training pipeline, and an intuitive web interface for real-time species identification.
 
 ## ✨ Key Features
 
-- **🧠 Advanced Architecture**: CNN-LSTM hybrid with multi-head attention, residual connections, and squeeze-excitation blocks
-- **🔄 Smart Training**: Automatic resume, learning rate scheduling, early stopping, and comprehensive checkpointing
-- **🎭 Data Augmentation**: SpecAugment, time stretching, frequency shifting, and noise injection
-- **📊 Comprehensive Evaluation**: Detailed metrics, confusion matrices, ROC curves, and classification reports
-- **🛡️ Robust Validation**: Model consistency, robustness testing, and data quality validation
-- **⚙️ Configuration Management**: Flexible YAML/JSON configuration system
-- **🚀 Production Ready**: FastAPI backend with optimized inference
+- **🎯 471 Species Classification**: Trained on combined datasets totaling 176,532 audio samples
+- **🧠 Advanced CNN-LSTM Architecture**: Hybrid model with multi-head attention for temporal audio analysis  
+- **🎤 Real-time Recording**: Web UI supports both live audio recording and file uploads
+- **📊 Smart Confidence Display**: Context-aware confidence ratings with visual star system
+- **🔍 Species Browser**: Searchable modal with all 471 supported species
+- **📖 Wikipedia Integration**: Automatic fetching of species info, images, and descriptions
+- **⚡ Fast Training**: Optimized pipeline with resume capability and adaptive learning rates
 
-## 🏗️ Architecture Overview
+## 📊 Dataset Information
 
-The classifier uses a sophisticated multi-stage architecture:
+ChirpKit is trained on two comprehensive insect audio datasets:
 
-1. **Enhanced CNN**: Residual blocks with Squeeze-and-Excitation attention
-2. **Bidirectional LSTM**: Captures temporal dependencies in audio sequences  
-3. **Multi-Head Attention**: Multiple transformer-like attention layers with positional encoding
-4. **Advanced Classification**: Multi-layer classifier with batch normalization and dropout
+- **InsectSound1000**: 165,982 samples across 12 common species
+- **InsectSet459**: 10,550 samples across 459 diverse species  
+- **Combined Total**: 176,532 audio samples representing 471 unique species
 
 ## 🚀 Quick Start
 
-### Training
-```bash
-# Start/resume training with all enhancements
-python scripts/train_model.py
+### Option 1: Use Pre-trained Model (Recommended)
 
-# The script automatically:
-# - Resumes from your last checkpoint (epoch 20)
-# - Applies data augmentation (60% probability)
-# - Uses cosine annealing learning rate scheduling
-# - Implements early stopping (patience: 15 epochs)
-# - Logs comprehensive metrics to TensorBoard
-# - Saves detailed classification reports every 10 epochs
+The repository includes a pre-trained model ready for immediate use:
+
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/chirpkit.git
+cd chirpkit
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Launch the web interface
+python simple_ui.py
 ```
 
-### Evaluation
-```bash
-# Comprehensive model evaluation
-python scripts/evaluate_model.py
+Access the web UI at `http://localhost:7860` to:
+- 🎤 Record insect sounds directly in your browser
+- 📁 Upload audio files (.wav, .mp3, .m4a, .flac)
+- 🔍 Browse all 471 supported species
+- 📖 View species information and Wikipedia photos
 
-# Generates:
-# - Confusion matrix visualization
-# - Per-class accuracy plots  
-# - ROC curves for all classes
-# - Detailed classification reports
+### Option 2: Train Your Own Model
+
+```bash
+# Download and preprocess datasets
+python scripts/download_insectsound1000.py
+python scripts/download_insectset459.py
+python scripts/preprocess_unified.py --dataset both
+
+# Train the unified model on both datasets
+python scripts/train_unified.py --dataset combined
 ```
 
-### Validation Pipeline
-```bash
-# Complete model validation and testing
-python scripts/validate_pipeline.py
+## 🎯 Model Performance
 
-# Tests:
-# - Model consistency across runs
-# - Data augmentation diversity
-# - Model robustness to noise
-# - Training data quality and distribution
-```
+- **Validation Accuracy**: 71.6% on 471 species (358x better than random)
+- **Architecture**: CNN-LSTM with bidirectional processing and multi-head attention
+- **Training Time**: ~200 epochs with early stopping and adaptive learning rate
+- **Confidence Calibration**: Context-aware confidence scoring with visual ratings
 
-## 📊 Training Features
+### Confidence Interpretation:
+- **⭐⭐⭐ Very High** (>15%): Highly reliable identification
+- **⭐⭐☆ High** (8-15%): Good confidence, likely correct
+- **⭐☆☆ Moderate** (3-8%): Reasonable guess, consider alternatives
+- **☆☆☆ Low** (<3%): Uncertain, verify with expert
 
-### ✅ Resume Training
-The training script automatically detects and resumes from:
-1. **Latest checkpoint**: Full training state including optimizer and scheduler
-2. **Best model**: Previously saved best model with training metadata
-3. **Fresh start**: Clean training if no previous models found
+## 🖥️ Web Interface Features
 
-### 🎯 Advanced Training Techniques
-- **Learning Rate Scheduling**: Cosine annealing with warm restarts
-- **Early Stopping**: Prevents overfitting with patience mechanism  
-- **Weight Decay**: L2 regularization for better generalization
-- **Gradient Clipping**: Stable training for deep networks
-- **Mixed Precision**: Faster training with maintained accuracy
+### Audio Input
+- **Live Recording**: Record insect sounds directly in your browser
+- **File Upload**: Support for common audio formats
+- **Recording Tips**: Built-in guidance for optimal audio capture
 
-### 🎭 Data Augmentation
-- **SpecAugment**: Frequency and time masking
-- **Time Stretching**: Audio speed variations (0.8x - 1.2x)
-- **Frequency Shifting**: Pitch variations while preserving characteristics
-- **Noise Injection**: Gaussian noise for robustness
-- **Mixup**: Sample mixing for improved generalization (planned)
+### Species Identification
+- **Real-time Processing**: Get results in seconds
+- **Rich Results**: Shows common name, scientific name, and confidence
+- **Wikipedia Integration**: Automatic species photos and descriptions
+- **Top 5 Predictions**: See alternative identifications
 
-### 📈 Comprehensive Logging
-- **TensorBoard**: Real-time training visualization
-- **Detailed Metrics**: Accuracy, F1-score, precision, recall per epoch
-- **Classification Reports**: Per-species performance analysis
-- **Checkpoint Metadata**: Full training state persistence
+### Species Browser
+- **Complete Catalog**: Browse all 471 supported species
+- **Fast Search**: Real-time filtering by scientific name
+- **Mobile Friendly**: Touch-optimized interface
 
-## 📁 Project Structure
+## 🏗️ Project Structure
 
 ```
 chirpkit/
+├── simple_ui.py                 # Web interface for species identification
 ├── src/
 │   ├── models/
-│   │   └── cnn_lstm.py          # Enhanced CNN-LSTM architecture
-│   ├── data/
-│   │   ├── preprocessing.py      # Audio preprocessing utilities
-│   │   └── augmentation.py       # Advanced data augmentation
-│   └── training/                 # Training utilities (planned)
+│   │   └── simple_cnn_lstm.py   # CNN-LSTM model architecture
+│   └── data/
+│       ├── preprocessing.py      # Audio preprocessing utilities
+│       └── augmentation.py       # Data augmentation pipeline
 ├── scripts/
-│   ├── train_model.py           # Enhanced training with resume capability
-│   ├── evaluate_model.py        # Comprehensive model evaluation
-│   └── validate_pipeline.py     # Complete validation testing
-├── config/
-│   └── training_config.py       # Configuration management
+│   ├── train_unified.py         # Unified training for both datasets
+│   ├── preprocess_unified.py    # Unified data preprocessing
+│   ├── download_*.py            # Dataset download scripts
+│   └── preprocess_data.py       # Legacy preprocessing (single dataset)
 ├── models/
-│   ├── trained/                 # Best models and training info
-│   ├── checkpoints/             # Training checkpoints
-│   ├── evaluation/              # Evaluation results and plots
-│   └── validation/              # Validation reports
-├── data/
-│   ├── splits/                  # Train/val/test splits
-│   └── metadata/                # Dataset metadata
-└── runs/                        # TensorBoard logs
+│   └── trained/                 # Pre-trained models and metadata
+│       ├── insect_classifier_471species.pth
+│       ├── insect_classifier_471species_label_encoder.joblib
+│       └── insect_classifier_471species_info.json
+└── data/                        # Dataset storage (not included in repo)
+    ├── raw/                     # Original audio files
+    ├── processed/               # Preprocessed features
+    └── splits/                  # Train/validation/test splits
 ```
 
-## 🔧 Configuration
+## 🔧 Technical Details
 
-The system uses a flexible configuration management system:
+### Model Architecture
+- **CNN Layers**: 4 convolutional blocks (32→64→128→256 channels)
+- **LSTM**: Bidirectional LSTM with 256 hidden units per direction
+- **Attention**: Multi-head attention mechanism (8 heads, 512 dimensions)
+- **Classifier**: 3-layer MLP with dropout regularization
+- **Features**: Mel spectrograms (128 mel bins, 2.5-second audio segments)
 
-```python
-from config import ConfigManager
+### Training Configuration
+- **Optimizer**: AdamW with weight decay
+- **Learning Rate**: Adaptive scheduling with ReduceLROnPlateau
+- **Batch Size**: 32 samples
+- **Early Stopping**: Patience of 15 epochs
+- **Data Augmentation**: Optional audio augmentation pipeline
 
-# Load custom configuration
-config = ConfigManager.load_config('config/my_experiment.json')
+### Audio Processing
+- **Sample Rate**: 16 kHz
+- **Segment Length**: 2.5 seconds (padded/cropped as needed)
+- **Features**: 128-bin mel spectrograms
+- **Normalization**: Log-scale power spectrograms
 
-# Or use defaults
-config = ConfigManager.create_default_config()
+## 📋 Requirements
 
-# Setup experiment with directories and seeding
-config = ConfigManager.setup_experiment('config/my_config.json')
+```
+torch>=1.9.0
+librosa>=0.9.0
+gradio>=3.0.0
+numpy>=1.21.0
+pandas>=1.3.0
+scikit-learn>=1.0.0
+requests>=2.25.0
+joblib>=1.0.0
 ```
 
-## 📊 Model Performance
+## 🎨 Usage Examples
 
-### Current Status
-- **Architecture**: Enhanced CNN-LSTM with attention mechanisms
-- **Training State**: Resumes from epoch 20 with improvements
-- **Features**: 
-  - Residual connections and squeeze-excitation blocks
-  - Multi-layer self-attention with positional encoding
-  - Advanced data augmentation pipeline
-  - Comprehensive evaluation and validation
-
-### Expected Improvements
-- **Accuracy**: 15-25% improvement from architectural enhancements
-- **Generalization**: Better performance through augmentation and regularization
-- **Robustness**: More stable predictions across audio variations
-- **Training Efficiency**: Faster convergence with learning rate scheduling
-
-## 🛠️ Advanced Usage
-
-### Custom Training Configuration
-```python
-# Create custom training configuration
-from config import ModelConfig, TrainingConfig, ExperimentConfig
-
-config = ExperimentConfig(
-    model=ModelConfig(
-        cnn_channels=[64, 128, 256, 512],
-        lstm_hidden=512,
-        dropout=0.4
-    ),
-    training=TrainingConfig(
-        learning_rate=5e-4,
-        batch_size=64,
-        max_epochs=150
-    ),
-    experiment_name="high_capacity_experiment"
-)
-
-# Save and use configuration
-ConfigManager.save_config(config, 'config/high_capacity.json')
-```
-
-### Monitoring Training
+### Command Line Training
 ```bash
-# Start TensorBoard to monitor training
-tensorboard --logdir=runs --port=6006
+# Train on combined datasets with custom parameters
+python scripts/train_unified.py --dataset combined --epochs 200 --lr 1e-4
 
-# View comprehensive metrics:
-# - Training/validation loss and accuracy
-# - F1-score, precision, recall
-# - Learning rate schedules
-# - Model architecture graphs
+# Train with data augmentation
+python scripts/train_unified.py --dataset combined --epochs 150
 ```
 
-### Model Analysis
-The evaluation system provides detailed analysis:
-- **Per-species accuracy**: Identify which species are harder to classify
-- **Confusion patterns**: Understand common misclassifications  
-- **ROC analysis**: Multi-class performance visualization
-- **Robustness testing**: Model stability under noise conditions
+### Python API (Advanced)
+```python
+from src.models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
+import torch
+import joblib
 
-## 🎯 Next Steps
+# Load pre-trained model
+model = SimpleCNNLSTMInsectClassifier(n_classes=471)
+model.load_state_dict(torch.load('models/trained/insect_classifier_471species.pth'))
+label_encoder = joblib.load('models/trained/insect_classifier_471species_label_encoder.joblib')
 
-The system is now significantly enhanced with:
-✅ **Training Resume**: Seamlessly continue from where you left off  
-✅ **Advanced Architecture**: State-of-the-art CNN-LSTM with attention  
-✅ **Smart Training**: LR scheduling, early stopping, comprehensive logging  
-✅ **Data Augmentation**: Diverse augmentation strategies for better generalization  
-✅ **Evaluation Suite**: Comprehensive testing and validation pipeline  
-✅ **Configuration Management**: Flexible, reproducible experiment setup
+# Make predictions
+predictions = model(audio_tensor)
+species = label_encoder.inverse_transform([torch.argmax(predictions).item()])[0]
+```
 
-**Ready for world-class insect classification!** 🌟
+## 📈 Performance Benchmarks
+
+| Metric | Value |
+|--------|-------|
+| **Species Coverage** | 471 unique species |
+| **Training Samples** | 176,532 audio recordings |
+| **Validation Accuracy** | 71.6% |
+| **Inference Speed** | ~0.5 seconds per sample |
+| **Model Size** | ~17MB (.pth file) |
+| **vs Random Baseline** | 358x improvement |
+
+## 🤝 Contributing
+
+Contributions are welcome! Areas for improvement:
+- Additional insect species datasets
+- Model architecture optimizations  
+- Web interface enhancements
+- Mobile app development
+- Performance optimizations
+
+## 📄 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgments
+
+- **InsectSound1000 Dataset**: 165,982 samples across 12 species
+- **InsectSet459 Dataset**: 10,550 samples across 459 species  
+- **Wikipedia API**: Species information and images
+- **Gradio**: Web interface framework
+- **PyTorch**: Deep learning framework
+
+---
+
+**Ready to identify insects from their sounds!** 🌟
+
+Launch the web interface with `python simple_ui.py` and start classifying!

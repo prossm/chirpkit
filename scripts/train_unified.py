@@ -221,10 +221,9 @@ class UnifiedTrainer:
         import joblib
         joblib.dump(self.label_encoder, self.models_dir / f'{self.model_name}_label_encoder.joblib')
         
-        # Optional: Add augmentation
-        # augmenter = InsectAudioAugmenter()
-        # train_dataset = AugmentedDataset(train_dataset_base, augmenter, augmentation_prob=0.3)
-        train_dataset = train_dataset_base  # No augmentation for now
+        # Add augmentation to improve generalization
+        augmenter = InsectAudioAugmenter()
+        train_dataset = AugmentedDataset(train_dataset_base, augmenter, augmentation_prob=0.5)
         
         # Create data loaders
         self.train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)

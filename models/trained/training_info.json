@@ -1,0 +1,7 @@
+{
+  "last_epoch": 63,
+  "best_val_acc": 0.7290516270841152,
+  "best_epoch": 63,
+  "total_epochs_trained": 63,
+  "last_updated": "2025-08-20T22:04:14.125401"
+}

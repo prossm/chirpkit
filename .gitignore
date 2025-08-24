@@ -1,19 +1,31 @@
+# Python
 venv/
 __pycache__/
 *.pyc
 *.pyo
 *.pyd
-*.so
-*.zip
-*.h5
-*.pth
-*.ckpt
+
+# Environment
 .DS_Store
 .env
 .envrc
+
+# IDEs
 .idea/
 .vscode/
-models/trained/
+
+# Data directories (too large for git)
 data/raw/
 data/processed/
 data/splits/
+
+# Model artifacts (keep trained models in repo, but ignore checkpoints and temporary files)
+models/checkpoints/
+runs/
+*.zip
+*.h5
+*.ckpt
+
+# Keep trained models and their metadata for easy deployment
+# models/trained/ - INCLUDED in git
+species_cache.json

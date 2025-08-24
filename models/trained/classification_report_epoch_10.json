@@ -1,0 +1,87 @@
+{
+  "Aphidoletes aphidimyza": {
+    "precision": 0.7642725598526704,
+    "recall": 0.9453302961275627,
+    "f1-score": 0.845213849287169,
+    "support": 439.0
+  },
+  "Bombus terrestris": {
+    "precision": 0.9179661016949152,
+    "recall": 0.7423245614035088,
+    "f1-score": 0.820854804486208,
+    "support": 1824.0
+  },
+  "Bradysia difformis": {
+    "precision": 0.8273265196342119,
+    "recall": 0.8999414862492686,
+    "f1-score": 0.8621076233183856,
+    "support": 1709.0
+  },
+  "Coccinella septempunctata": {
+    "precision": 0.7029384756657484,
+    "recall": 0.6952770208900999,
+    "f1-score": 0.6990867579908676,
+    "support": 2202.0
+  },
+  "Episyrphus balteatus": {
+    "precision": 0.9775574112734864,
+    "recall": 0.7403162055335968,
+    "f1-score": 0.8425551057130004,
+    "support": 2530.0
+  },
+  "Halyomorpha halys": {
+    "precision": 0.374633431085044,
+    "recall": 0.21291666666666667,
+    "f1-score": 0.27151965993623806,
+    "support": 2400.0
+  },
+  "Myzus persicae": {
+    "precision": 0.6826923076923077,
+    "recall": 0.3879781420765027,
+    "f1-score": 0.49477351916376305,
+    "support": 366.0
+  },
+  "Nezara viridula": {
+    "precision": 0.3703857320613853,
+    "recall": 0.6499272197962155,
+    "f1-score": 0.47186261558784676,
+    "support": 2748.0
+  },
+  "Palomena prasina": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1-score": 0.0,
+    "support": 1424.0
+  },
+  "Rhaphigaster nebulos": {
+    "precision": 0.5226212686567164,
+    "recall": 0.8099024213950127,
+    "f1-score": 0.6352941176470588,
+    "support": 2767.0
+  },
+  "Trialeurodes vaporariorum": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1-score": 0.0,
+    "support": 160.0
+  },
+  "Tuta absoluta": {
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1-score": 0.0,
+    "support": 84.0
+  },
+  "accuracy": 0.6106792473060634,
+  "macro avg": {
+    "precision": 0.5116994839680405,
+    "recall": 0.5069928350115361,
+    "f1-score": 0.49527233776087803,
+    "support": 18653.0
+  },
+  "weighted avg": {
+    "precision": 0.5928148973654063,
+    "recall": 0.6106792473060634,
+    "f1-score": 0.5843539920145037,
+    "support": 18653.0
+  }
+}
