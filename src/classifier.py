@@ -1,7 +1,6 @@
 """
 Main InsectClassifier class for inference-only usage
 """
-import torch
 import numpy as np
 import librosa
 import joblib
@@ -9,6 +8,13 @@ import os
 import glob
 from pathlib import Path
 from typing import Dict, List, Tuple, Optional
+
+# Use flexible dependency management
+try:
+    from .dependencies import get_torch, requires_torch, DependencyManager
+except ImportError:
+    # Fallback for direct execution
+    from chirpkit.dependencies import get_torch, requires_torch, DependencyManager
 
 try:
     from .models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
@@ -33,7 +39,8 @@ class InsectClassifier:
         self.model_dir = Path(model_dir)
         self.model = None
         self.label_encoder = None
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.torch = get_torch()
+        self.device = self._get_device()
         self.n_classes = None
         
         # Audio processing parameters
@@ -42,6 +49,25 @@ class InsectClassifier:
         self.n_mels = 128
         self.n_fft = 2048
         self.hop_length = 512
+        
+        # Validate PyTorch availability
+        if self.torch is None:
+            raise RuntimeError(
+                "PyTorch is required for InsectClassifier but is not available. "
+                f"{DependencyManager.get_failed_imports().get('torch', 'Install with: pip install chirpkit[torch]')}"
+            )
+    
+    def _get_device(self):
+        """Get appropriate device for computation."""
+        if self.torch is None:
+            return None
+        
+        if self.torch.cuda.is_available():
+            return self.torch.device('cuda')
+        elif hasattr(self.torch.backends, 'mps') and self.torch.backends.mps.is_available():
+            return self.torch.device('mps')
+        else:
+            return self.torch.device('cpu')
     
     def load_model(self, model_path: Optional[str] = None, label_encoder_path: Optional[str] = None) -> bool:
         """
@@ -82,7 +108,7 @@ class InsectClassifier:
                 
             print(f"Loading model: {model_path}")
             self.model = SimpleCNNLSTMInsectClassifier(n_classes=self.n_classes)
-            self.model.load_state_dict(torch.load(model_path, map_location=self.device))
+            self.model.load_state_dict(self.torch.load(model_path, map_location=self.device))
             self.model = self.model.to(self.device)
             self.model.eval()
             
@@ -124,7 +150,7 @@ class InsectClassifier:
         mel_db = librosa.power_to_db(mel_spec)
         
         # Convert to tensor and add batch/channel dimensions
-        input_tensor = torch.tensor(mel_db, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
+        input_tensor = self.torch.tensor(mel_db, dtype=self.torch.float32).unsqueeze(0).unsqueeze(0)
         return input_tensor.to(self.device)
     
     def predict_audio(self, audio_file: str, top_k: int = 5) -> Dict:
@@ -149,10 +175,10 @@ class InsectClassifier:
             input_tensor = self._preprocess_audio(audio_file)
             
             # Make prediction
-            with torch.no_grad():
+            with self.torch.no_grad():
                 outputs = self.model(input_tensor)
-                probabilities = torch.softmax(outputs, dim=1)
-                predicted_idx = torch.argmax(outputs, dim=1).item()
+                probabilities = self.torch.softmax(outputs, dim=1)
+                predicted_idx = self.torch.argmax(outputs, dim=1).item()
                 confidence = probabilities[0][predicted_idx].item()
             
             # Get predicted species

@@ -22,18 +22,49 @@ ChirpKit is trained on two comprehensive insect audio datasets:
 
 ## 🚀 Quick Start
 
-### Option 1: Use Pre-trained Model (Recommended)
+### Installation
 
-The repository includes a pre-trained model ready for immediate use:
+ChirpKit supports flexible installation with platform-specific optimizations:
 
 ```bash
 # Clone the repository
-git clone https://github.com/yourusername/chirpkit.git
+git clone https://github.com/patrickmetzger/chirpkit.git
 cd chirpkit
 
-# Install dependencies
-pip install -r requirements.txt
+# Basic installation (CPU-only, universal)
+pip install .
 
+# macOS with Apple Silicon/Intel optimization
+pip install .[full]
+
+# Linux/Windows with optional GPU support
+pip install .[tensorflow-gpu,torch,viz]
+
+# Development installation
+pip install .[dev]
+```
+
+**Platform-Specific Recommendations:**
+- **macOS**: `pip install .[full]` (includes tensorflow-macos with Metal GPU support)
+- **Linux**: `pip install .[tensorflow-gpu,torch]` (with CUDA support)
+- **Windows**: `pip install .[tensorflow,torch]`
+
+### Verify Installation
+
+```bash
+# Check installation health
+chirpkit-doctor
+
+# Get platform-specific installation guide
+chirpkit install-guide
+
+# Auto-fix common issues
+chirpkit-fix
+```
+
+### Option 1: Use Pre-trained Model (Recommended)
+
+```bash
 # Launch the web interface
 python simple_ui.py
 ```
@@ -136,17 +167,147 @@ chirpkit/
 - **Features**: 128-bin mel spectrograms
 - **Normalization**: Log-scale power spectrograms
 
+## 🔧 Troubleshooting
+
+### Common Installation Issues
+
+#### TensorFlow Issues
+
+**Problem**: `AttributeError: module 'tensorflow' has no attribute '__version__'`
+```bash
+# Corrupted TensorFlow installation
+pip uninstall tensorflow tensorflow-macos keras -y
+pip cache purge
+pip install tensorflow-macos  # macOS
+# OR
+pip install tensorflow        # Linux/Windows
+```
+
+**Problem**: Dependency solver failures, version conflicts
+```bash
+# Don't mix conda and pip for ML packages
+# Use virtual environments with pip exclusively:
+python -m venv chirpkit_env
+source chirpkit_env/bin/activate  # Linux/macOS
+chirpkit_env\Scripts\activate     # Windows
+pip install chirpkit[full]
+```
+
+#### Platform-Specific Solutions
+
+**macOS Users:**
+- ✅ Use `tensorflow-macos` (includes Metal GPU support)
+- ✅ Don't install `tensorflow-metal` separately (built-in for TF 2.16+)
+- ✅ CPU-only operation is normal and sufficient for most use cases
+
+**Linux Users:**
+- ✅ Use standard `tensorflow` package  
+- ✅ For GPU: Ensure CUDA drivers installed first
+- ✅ Check GPU availability: `python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"`
+
+**Windows Users:**
+- ✅ Use standard `tensorflow` package
+- ✅ For GPU: Install CUDA toolkit and cuDNN
+- ✅ Consider using WSL2 for better compatibility
+
+#### NumPy Version Conflicts
+
+**Problem**: NumPy 2.x compatibility issues
+```bash
+# Downgrade to compatible version
+pip install "numpy>=1.21.0,<2.0.0"
+```
+
+### Environment Detection
+
+ChirpKit automatically detects your environment and suggests optimal installation:
+
+```bash
+chirpkit install-guide
+```
+
+Example output:
+```
+ChirpKit Installation Recommendations
+====================================
+Platform: Darwin arm64
+Python: 3.11
+
+Recommended Installation:
+  pip install chirpkit[tensorflow-macos]
+
+Notes:
+  • Apple Silicon detected - using tensorflow-macos
+  • GPU acceleration available via Metal Performance Shaders
+  • Consider installing with: pip install chirpkit[full]
+```
+
+### Diagnostic Tools
+
+```bash
+# Comprehensive health check
+chirpkit-doctor
+
+# Auto-fix critical issues
+chirpkit-fix
+
+# Manual dependency check
+python -c "import chirpkit; chirpkit.DependencyManager.validate_installation()"
+```
+
+### Virtual Environment Best Practices
+
+**Recommended Setup:**
+```bash
+# Create isolated environment
+python -m venv chirpkit_env
+source chirpkit_env/bin/activate
+
+# Install chirpkit with appropriate extras
+pip install chirpkit[full]  # Complete installation
+
+# Verify installation
+chirpkit-doctor
+```
+
+**Avoid These Patterns:**
+```bash
+# ❌ Don't mix package managers
+conda install tensorflow-deps
+pip install chirpkit
+
+# ❌ Don't use system Python
+sudo pip install chirpkit
+
+# ❌ Don't ignore version constraints  
+pip install tensorflow==2.6.0 chirpkit  # May conflict
+```
+
 ## 📋 Requirements
 
+ChirpKit uses flexible dependency management with platform-specific optimizations:
+
+**Core Dependencies:**
 ```
-torch>=1.9.0
+numpy>=1.21.0,<2.0.0
 librosa>=0.9.0
-gradio>=3.0.0
-numpy>=1.21.0
-pandas>=1.3.0
 scikit-learn>=1.0.0
-requests>=2.25.0
-joblib>=1.0.0
+pandas>=1.3.0
+soundfile>=0.10.0
+```
+
+**Backend Options (choose one):**
+```bash
+# TensorFlow (recommended)
+pip install chirpkit[tensorflow-macos]  # macOS
+pip install chirpkit[tensorflow]        # Linux/Windows
+pip install chirpkit[tensorflow-gpu]    # With CUDA
+
+# PyTorch (optional)
+pip install chirpkit[torch]
+
+# Complete installation
+pip install chirpkit[full]
 ```
 
 ## 🎨 Usage Examples
