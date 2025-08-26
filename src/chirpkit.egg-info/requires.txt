@@ -1,0 +1,15 @@
+torch
+torchvision
+torchaudio
+tensorflow
+librosa
+soundfile
+scikit-learn
+pandas
+numpy
+matplotlib
+seaborn
+wandb
+fastapi
+uvicorn
+pytest

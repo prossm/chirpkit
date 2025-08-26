@@ -1,0 +1,5 @@
+[console_scripts]
+deploy_model = scripts.deploy_model:main
+download_data = scripts.download_data:main
+preprocess_data = scripts.preprocess_data:main
+train_model = scripts.train_model:main

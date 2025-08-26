@@ -1,0 +1,17 @@
+README.md
+setup.py
+src/chirpkit.egg-info/PKG-INFO
+src/chirpkit.egg-info/SOURCES.txt
+src/chirpkit.egg-info/dependency_links.txt
+src/chirpkit.egg-info/entry_points.txt
+src/chirpkit.egg-info/requires.txt
+src/chirpkit.egg-info/top_level.txt
+src/data/__init__.py
+src/data/augmentation.py
+src/data/preprocessing.py
+src/inference/__init__.py
+src/models/__init__.py
+src/models/cnn_lstm.py
+src/models/simple_cnn_lstm.py
+src/training/__init__.py
+src/utils/__init__.py
