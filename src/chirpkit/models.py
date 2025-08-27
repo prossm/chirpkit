@@ -60,56 +60,42 @@ class ModelManager:
     @classmethod
     def find_any_model(cls) -> Optional[Tuple[Path, Path, Path]]:
         """
-        Find the specific 471-species model and its related files
+        Get the 471-species model files - first try package installation, then development
         
         Returns:
             Tuple of (model_path, encoder_path, info_path) or None if not found
         """
-        # Specific model we're looking for
         target_model_name = "insect_classifier_471species"
         
-        # Search in a few key locations
-        search_paths = [
-            cls.DEFAULT_MODEL_DIR,  # models/trained/
-            Path("models") / "trained",
-            Path(".") / "models" / "trained",
-        ]
-        
-        for search_path in search_paths:
-            try:
-                if not search_path.exists():
-                    logger.debug(f"Search path does not exist: {search_path}")
-                    continue
-                    
-                # Look specifically for the 471-species model
-                model_path = search_path / f"{target_model_name}.pth"
-                encoder_path = search_path / f"{target_model_name}_label_encoder.joblib"
-                info_path = search_path / f"{target_model_name}_info.json"
+        # Try package installation directory first
+        try:
+            import chirpkit
+            package_dir = Path(chirpkit.__file__).parent.parent
+            model_dir = package_dir / "models" / "trained"
+            
+            if model_dir.exists():
+                model_path = model_dir / f"{target_model_name}.pth"
+                encoder_path = model_dir / f"{target_model_name}_label_encoder.joblib"
+                info_path = model_dir / f"{target_model_name}_info.json"
                 
                 if model_path.exists() and encoder_path.exists():
-                    logger.info(f"✅ Found 471-species model in {search_path}")
-                    logger.info(f"   Model: {model_path}")
-                    logger.info(f"   Encoder: {encoder_path}")
-                    
-                    # Create info file if missing
-                    if not info_path.exists():
-                        logger.info("Creating missing info file...")
-                        info_path = cls._create_minimal_info_file(model_path, encoder_path)
-                    else:
-                        logger.info(f"   Info: {info_path}")
-                    
+                    logger.info(f"✅ Found 471-species model in package: {model_dir}")
                     return model_path, encoder_path, info_path
-                    
-            except Exception as e:
-                logger.debug(f"Error searching {search_path}: {e}")
-                continue
+        except Exception as e:
+            logger.debug(f"Could not check package directory: {e}")
         
-        logger.warning(f"❌ Could not find {target_model_name} model in any search location")
-        logger.info("Expected files:")
-        logger.info(f"  - {target_model_name}.pth")
-        logger.info(f"  - {target_model_name}_label_encoder.joblib")
-        logger.info(f"  - {target_model_name}_info.json (optional)")
+        # Fall back to development directory
+        model_dir = cls.DEFAULT_MODEL_DIR
+        if model_dir.exists():
+            model_path = model_dir / f"{target_model_name}.pth"
+            encoder_path = model_dir / f"{target_model_name}_label_encoder.joblib"
+            info_path = model_dir / f"{target_model_name}_info.json"
+            
+            if model_path.exists() and encoder_path.exists():
+                logger.info(f"✅ Found 471-species model in development: {model_dir}")
+                return model_path, encoder_path, info_path
         
+        logger.error(f"❌ Could not find {target_model_name} model files")
         return None
 
     @classmethod

@@ -2,9 +2,13 @@ from setuptools import setup, find_packages
 
 setup(
     name='chirpkit',
-    version='0.1.0',
+    version='0.1.1',
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
+    package_data={
+        '': ['models/trained/*.pth', 'models/trained/*.joblib', 'models/trained/*.json'],
+    },
+    include_package_data=True,
     install_requires=[
         # Core dependencies with broader compatibility ranges
         'numpy>=1.21.0,<2.0.0',
