@@ -46,54 +46,118 @@ class InsectClassifier:
         
     @requires_torch
     async def initialize(self):
-        """Initialize the classifier with PyTorch model"""
+        """Initialize the classifier with PyTorch model and graceful fallbacks"""
         if self.is_initialized:
             return
 
+        self.torch = DependencyManager.get_torch()
+        if self.torch is None:
+            raise RuntimeError("PyTorch not available - ChirpKit requires PyTorch for neural network inference")
+
+        # Set device
+        self.device = self._get_device(self.torch)
+        logger.info(f"Using device: {self.device}")
+
+        # Try to load model with graceful degradation
+        model_loaded = False
         try:
-            self.torch = DependencyManager.get_torch()
-            if self.torch is None:
-                raise RuntimeError("PyTorch not available")
-
-            # Set device
-            self.device = self._get_device(self.torch)
-
-            # Load the model and species labels
             await self._load_model()
-            await self._load_species_labels()
-
-            self.is_initialized = True
-            logger.info("✅ ChirpKit InsectClassifier initialized with PyTorch backend")
-
+            model_loaded = True
+            logger.info("✅ Model loaded successfully")
+        except FileNotFoundError as e:
+            logger.warning(f"⚠️  No trained model found: {e}")
+            logger.info("📋 ChirpKit will attempt to work with basic functionality")
         except Exception as e:
-            logger.error(f"❌ Failed to initialize InsectClassifier: {e}")
-            raise
+            logger.warning(f"⚠️  Model loading failed: {e}")
+            logger.info("📋 ChirpKit will attempt to work with basic functionality")
+
+        # Try to load species labels with fallback
+        try:
+            await self._load_species_labels()
+            logger.info(f"✅ Loaded {len(self.species_labels)} species labels")
+        except Exception as e:
+            logger.warning(f"⚠️  Could not load species labels: {e}")
+            self.species_labels = self._get_default_species_list()
+            logger.info(f"📋 Using default species list with {len(self.species_labels)} common species")
+
+        # If no model was loaded but we have a working PyTorch setup, create a minimal setup
+        if not model_loaded and not self.model:
+            logger.info("🔧 Creating minimal classifier setup for basic functionality")
+            self._create_minimal_setup()
+
+        self.is_initialized = True
+        
+        # Report final status
+        if model_loaded and self.model:
+            logger.info("✅ ChirpKit InsectClassifier fully initialized with trained model")
+        else:
+            logger.info("⚠️  ChirpKit InsectClassifier initialized with limited functionality")
 
     async def _load_model(self):
         """Load the CNN-LSTM PyTorch model"""
         torch = DependencyManager.get_torch()
         
-        # Import the model architecture from existing codebase
-        try:
-            from ...models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
-        except ImportError:
+        # Import the model architecture with comprehensive fallback handling
+        SimpleCNNLSTMInsectClassifier = None
+        
+        # List of import paths to try
+        import_attempts = [
+            # Relative imports
+            ("...models.simple_cnn_lstm", "SimpleCNNLSTMInsectClassifier"),
+            ("..models.simple_cnn_lstm", "SimpleCNNLSTMInsectClassifier"),
+            # Absolute imports
+            ("src.models.simple_cnn_lstm", "SimpleCNNLSTMInsectClassifier"),
+            ("models.simple_cnn_lstm", "SimpleCNNLSTMInsectClassifier"),
+        ]
+        
+        # Try standard imports first
+        for module_path, class_name in import_attempts:
             try:
-                # Fallback import path
-                from src.models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
-            except ImportError:
-                try:
-                    # Another fallback for different project structures
-                    import sys
-                    import os
-                    sys.path.append(os.path.join(os.path.dirname(__file__), '..', '..'))
-                    from models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
-                except ImportError:
-                    # Final fallback - direct import
-                    import importlib.util
-                    spec = importlib.util.spec_from_file_location("simple_cnn_lstm", "src/models/simple_cnn_lstm.py")
-                    module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(module)
-                    SimpleCNNLSTMInsectClassifier = module.SimpleCNNLSTMInsectClassifier
+                if module_path.startswith("..."):
+                    from ...models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
+                elif module_path.startswith(".."):
+                    from ..models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier  
+                else:
+                    module = __import__(module_path, fromlist=[class_name])
+                    SimpleCNNLSTMInsectClassifier = getattr(module, class_name)
+                logger.info(f"Successfully imported model architecture from {module_path}")
+                break
+            except ImportError as e:
+                logger.debug(f"Failed to import from {module_path}: {e}")
+                continue
+        
+        # Try direct file path imports if standard imports failed
+        if SimpleCNNLSTMInsectClassifier is None:
+            import sys
+            import os
+            import importlib.util
+            
+            # Possible file paths to try
+            base_dir = Path(__file__).parent.parent.parent  # Go up to project root
+            file_paths = [
+                base_dir / "src" / "models" / "simple_cnn_lstm.py",
+                base_dir / "models" / "simple_cnn_lstm.py",
+                Path("src/models/simple_cnn_lstm.py"),
+                Path("models/simple_cnn_lstm.py"),
+            ]
+            
+            for file_path in file_paths:
+                if file_path.exists():
+                    try:
+                        spec = importlib.util.spec_from_file_location("simple_cnn_lstm", file_path)
+                        module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(module)
+                        SimpleCNNLSTMInsectClassifier = module.SimpleCNNLSTMInsectClassifier
+                        logger.info(f"Successfully loaded model architecture from {file_path}")
+                        break
+                    except Exception as e:
+                        logger.debug(f"Failed to load from {file_path}: {e}")
+                        continue
+        
+        # Final fallback: create architecture inline
+        if SimpleCNNLSTMInsectClassifier is None:
+            logger.warning("Could not import SimpleCNNLSTMInsectClassifier, creating inline definition")
+            SimpleCNNLSTMInsectClassifier = self._create_fallback_architecture()
 
         # Use model manager to find models
         from .models import find_any_model
@@ -205,13 +269,17 @@ class InsectClassifier:
             return self._create_error_result(str(e))
 
     def _classify_sync(self, processed_audio, detailed: bool) -> Dict[str, Any]:
-        """Synchronous classification"""
+        """Synchronous classification with fallback for untrained models"""
         torch = DependencyManager.get_torch()
+        
+        # Check if we have a trained model
+        if not self._has_trained_model():
+            return self._create_heuristic_result(processed_audio, detailed)
         
         # Extract features exactly as in training pipeline
         features = self._extract_features(processed_audio)
 
-        # Make prediction
+        # Make prediction with trained model
         with torch.no_grad():
             outputs = self.model(features)
             probabilities = torch.softmax(outputs, dim=1)
@@ -247,6 +315,81 @@ class InsectClassifier:
                 'cnn_lstm_architecture': True,
                 'total_species': len(self.species_labels),
                 'pytorch_backend': True
+            }
+        }
+
+    def _has_trained_model(self) -> bool:
+        """Check if we have a trained model (not just architecture)"""
+        return (self.model is not None and 
+                hasattr(self, 'model_path') and 
+                self.model_path is not None)
+
+    def _create_heuristic_result(self, processed_audio, detailed: bool) -> Dict[str, Any]:
+        """Create heuristic-based result when no trained model is available"""
+        # Simple heuristic: analyze basic audio properties
+        try:
+            # Get audio data
+            if hasattr(processed_audio, 'waveform'):
+                audio = processed_audio.waveform
+                sr = processed_audio.sample_rate
+            else:
+                audio = processed_audio
+                sr = self.sample_rate
+
+            # Basic heuristic: higher frequency content suggests insects
+            import librosa
+            spectral_centroids = librosa.feature.spectral_centroid(y=audio, sr=sr)[0]
+            avg_centroid = np.mean(spectral_centroids)
+            
+            # Simple heuristic classification
+            is_likely_insect = avg_centroid > 2000  # Hz
+            confidence = min(0.7, avg_centroid / 10000)  # Cap at 70% for heuristics
+            
+            # Pick a default species based on frequency characteristics
+            if avg_centroid > 6000:
+                default_species = 'Cicada_orni'  # High frequency = cicada-like
+            elif avg_centroid > 4000:
+                default_species = 'Tettigonia_viridissima'  # Mid-high = katydid-like
+            else:
+                default_species = 'Gryllus_bimaculatus'  # Lower = cricket-like
+                
+        except Exception as e:
+            logger.warning(f"Heuristic analysis failed: {e}")
+            is_likely_insect = True
+            confidence = 0.5
+            default_species = 'Gryllus_bimaculatus'
+
+        # Create simple prediction list
+        results = [
+            {'species': default_species, 'confidence': confidence, 'rank': 1}
+        ]
+        
+        # Add a few other common species with lower confidence
+        if detailed:
+            other_species = [s for s in self.species_labels[:4] if s != default_species]
+            for i, species in enumerate(other_species):
+                results.append({
+                    'species': species,
+                    'confidence': max(0.1, confidence - 0.15 * (i + 1)),
+                    'rank': i + 2
+                })
+
+        return {
+            'model': 'ChirpKit-Heuristic',
+            'classification': {
+                'is_insect': is_likely_insect,
+                'species': default_species,
+                'confidence': confidence,
+                'family': self._get_family_from_species(default_species)
+            },
+            'confidence': confidence,
+            'predictions': results,
+            'features': {
+                'chirpkit_powered': True,
+                'neural_network': False,
+                'heuristic_fallback': True,
+                'total_species': len(self.species_labels),
+                'note': 'Using basic heuristics - no trained model available'
             }
         }
 
@@ -295,6 +438,144 @@ class InsectClassifier:
             features = features.to(next(self.model.parameters()).device)
 
         return features
+
+    def _create_fallback_architecture(self):
+        """Create CNN-LSTM architecture inline as fallback when imports fail"""
+        torch = DependencyManager.get_torch()
+        
+        class FallbackCNNLSTMInsectClassifier(torch.nn.Module):
+            """Fallback CNN-LSTM model architecture created inline"""
+            def __init__(self, n_classes: int = 471, dropout: float = 0.3):
+                super().__init__()
+                self.n_classes = n_classes
+                
+                # CNN layers (matching the working architecture)
+                self.conv_layers = torch.nn.ModuleList([
+                    torch.nn.Sequential(
+                        torch.nn.Conv2d(1, 32, kernel_size=3, padding=1),
+                        torch.nn.BatchNorm2d(32),
+                        torch.nn.ReLU(inplace=True),
+                        torch.nn.MaxPool2d(2, 2),
+                        torch.nn.Dropout2d(dropout)
+                    ),
+                    torch.nn.Sequential(
+                        torch.nn.Conv2d(32, 64, kernel_size=3, padding=1),
+                        torch.nn.BatchNorm2d(64),
+                        torch.nn.ReLU(inplace=True),
+                        torch.nn.MaxPool2d(2, 2),
+                        torch.nn.Dropout2d(dropout)
+                    ),
+                    torch.nn.Sequential(
+                        torch.nn.Conv2d(64, 128, kernel_size=3, padding=1),
+                        torch.nn.BatchNorm2d(128),
+                        torch.nn.ReLU(inplace=True),
+                        torch.nn.MaxPool2d(2, 2),
+                        torch.nn.Dropout2d(dropout)
+                    ),
+                    torch.nn.Sequential(
+                        torch.nn.Conv2d(128, 256, kernel_size=3, padding=1),
+                        torch.nn.BatchNorm2d(256),
+                        torch.nn.ReLU(inplace=True),
+                        torch.nn.MaxPool2d(2, 2),
+                        torch.nn.Dropout2d(dropout)
+                    )
+                ])
+                
+                # LSTM
+                self.lstm = torch.nn.LSTM(
+                    input_size=256,
+                    hidden_size=256,
+                    num_layers=2,
+                    batch_first=True,
+                    dropout=dropout,
+                    bidirectional=True
+                )
+                
+                # Attention
+                self.attention = torch.nn.MultiheadAttention(
+                    embed_dim=512,  # 256 * 2 (bidirectional)
+                    num_heads=8,
+                    dropout=dropout
+                )
+                
+                # Classifier
+                self.classifier = torch.nn.Sequential(
+                    torch.nn.Linear(512, 256),
+                    torch.nn.ReLU(),
+                    torch.nn.Dropout(dropout),
+                    torch.nn.Linear(256, 128),
+                    torch.nn.ReLU(),
+                    torch.nn.Dropout(dropout),
+                    torch.nn.Linear(128, n_classes)
+                )
+            
+            def forward(self, x):
+                batch_size = x.size(0)
+                
+                # CNN forward pass
+                for conv_layer in self.conv_layers:
+                    x = conv_layer(x)
+                
+                # Global average pooling over frequency dimension
+                x = x.mean(dim=2)  # [batch, channels, time]
+                x = x.transpose(1, 2)  # [batch, time, channels]
+                
+                # LSTM processing
+                lstm_out, _ = self.lstm(x)
+                
+                # Attention
+                lstm_out = lstm_out.transpose(0, 1)  # [seq, batch, features]
+                attended, _ = self.attention(lstm_out, lstm_out, lstm_out)
+                attended = attended.transpose(0, 1)  # [batch, seq, features]
+                
+                # Pooling
+                features = attended.mean(dim=1)  # Average over time
+                
+                # Classification
+                output = self.classifier(features)
+                return output
+        
+        return FallbackCNNLSTMInsectClassifier
+
+    def _get_default_species_list(self) -> List[str]:
+        """Get a default list of common insect species for fallback"""
+        return [
+            'Gryllus_bimaculatus',  # Two-spotted cricket
+            'Acheta_domesticus',    # House cricket
+            'Teleogryllus_commodus', # Black cricket
+            'Gryllus_campestris',   # Field cricket
+            'Allonemobius_allardi', # Allard's ground cricket
+            'Nemobius_sylvestris',  # Wood cricket
+            'Oecanthus_pellucens',  # Tree cricket
+            'Tettigonia_viridissima', # Great green bush-cricket
+            'Conocephalus_fuscus',  # Long-winged conehead
+            'Pholidoptera_griseoaptera', # Dark bush-cricket
+            'Chorthippus_brunneus', # Field grasshopper
+            'Chorthippus_parallelus', # Meadow grasshopper
+            'Omocestus_viridulus',  # Common green grasshopper
+            'Pseudochorthippus_parallelus', # Meadow grasshopper
+            'Stenobothrus_lineatus', # Stripe-winged grasshopper
+            'Cicada_orni',          # European cicada
+            'Cicadetta_montana',    # New Forest cicada
+            'Magicicada_septendecim', # Periodical cicada
+            'Neotibicen_canicularis', # Dog-day cicada
+            'Tibicen_lyricen'       # Lyric cicada
+        ]
+
+    def _create_minimal_setup(self):
+        """Create a minimal setup when no trained model is available"""
+        # Create a basic architecture for structure (won't be used for actual inference)
+        SimpleCNNLSTMInsectClassifier = self._create_fallback_architecture()
+        
+        # Create a minimal model (not trained, just for structure)
+        self.model = SimpleCNNLSTMInsectClassifier(
+            n_classes=len(self.species_labels),
+            dropout=0.3
+        )
+        self.model = self.model.to(self.device)
+        self.model.eval()
+        
+        logger.info(f"Created minimal model architecture with {len(self.species_labels)} species")
 
     def _get_family_from_species(self, species_name: str) -> str:
         """Map species to family based on taxonomic knowledge"""

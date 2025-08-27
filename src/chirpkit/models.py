@@ -15,6 +15,17 @@ class ModelManager:
     """Manages ChirpKit model downloading, loading, and caching"""
     
     DEFAULT_MODEL_DIR = Path("models/trained")
+    
+    # Additional search paths for models
+    SEARCH_PATHS = [
+        Path("models/trained/"),
+        Path("~/.chirpkit/models/").expanduser(),
+        Path("/usr/local/share/chirpkit/models/"),
+        Path("./models/trained/"),
+        Path("../models/trained/"),
+        Path("models/"),
+        Path("./models/"),
+    ]
     REMOTE_MODEL_BASE_URL = "https://github.com/patrickmetzger/chirpkit/releases/download/v0.1.0/"
     
     DEFAULT_MODELS = {
@@ -60,21 +71,32 @@ class ModelManager:
     @classmethod
     def find_any_model(cls) -> Optional[Tuple[Path, Path, Path]]:
         """
-        Find any available trained model in the models directory
+        Find any available trained model in multiple search directories
         
         Returns:
             Tuple of (model_path, encoder_path, info_path) or None if not found
         """
-        model_dir = cls.DEFAULT_MODEL_DIR
-        if not model_dir.exists():
-            logger.warning(f"Model directory {model_dir} does not exist")
+        # Search through all possible paths
+        all_model_files = []
+        
+        for search_path in cls.SEARCH_PATHS:
+            try:
+                if search_path.exists() and search_path.is_dir():
+                    model_files = list(search_path.glob("*.pth"))
+                    if model_files:
+                        logger.debug(f"Found {len(model_files)} model files in {search_path}")
+                        all_model_files.extend(model_files)
+                else:
+                    logger.debug(f"Search path does not exist: {search_path}")
+            except Exception as e:
+                logger.debug(f"Error searching {search_path}: {e}")
+                continue
+        
+        if not all_model_files:
+            logger.warning(f"No .pth model files found in any search paths: {cls.SEARCH_PATHS}")
             return None
             
-        # Look for .pth files
-        model_files = list(model_dir.glob("*.pth"))
-        if not model_files:
-            logger.warning(f"No .pth model files found in {model_dir}")
-            return None
+        logger.info(f"Found {len(all_model_files)} total model files across all search paths")
             
         # Sort model files by species count (prefer higher species count models)
         def get_species_count(model_path):
@@ -105,13 +127,14 @@ class ModelManager:
             except:
                 return 0
         
-        model_files = sorted(model_files, key=get_species_count, reverse=True)
+        all_model_files = sorted(all_model_files, key=get_species_count, reverse=True)
         
         # Try to find matching encoder and info files
-        for model_path in model_files:
+        for model_path in all_model_files:
             base_name = model_path.stem
+            model_dir = model_path.parent
             
-            # Look for corresponding encoder file
+            # Look for corresponding encoder file (in same directory as model)
             encoder_candidates = [
                 model_dir / f"{base_name}_label_encoder.joblib",
                 model_dir / f"{base_name.replace('_classifier', '')}_label_encoder.joblib",
