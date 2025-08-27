@@ -70,17 +70,33 @@ class ModelManager:
         # Try package installation directory first
         try:
             import chirpkit
-            package_dir = Path(chirpkit.__file__).parent.parent
-            model_dir = package_dir / "models" / "trained"
+            import sys
             
-            if model_dir.exists():
-                model_path = model_dir / f"{target_model_name}.pth"
-                encoder_path = model_dir / f"{target_model_name}_label_encoder.joblib"
-                info_path = model_dir / f"{target_model_name}_info.json"
-                
-                if model_path.exists() and encoder_path.exists():
-                    logger.info(f"✅ Found 471-species model in package: {model_dir}")
-                    return model_path, encoder_path, info_path
+            # Check multiple possible installation locations
+            possible_locations = []
+            
+            # 1. Site-packages models/trained (from data_files)
+            site_packages = Path(chirpkit.__file__).parent.parent.parent
+            possible_locations.append(site_packages / "models" / "trained")
+            
+            # 2. Package directory models/trained 
+            package_dir = Path(chirpkit.__file__).parent
+            possible_locations.append(package_dir / "models" / "trained")
+            
+            # 3. Virtual environment models/trained
+            if hasattr(sys, 'prefix'):
+                possible_locations.append(Path(sys.prefix) / "models" / "trained")
+            
+            for model_dir in possible_locations:
+                if model_dir.exists():
+                    model_path = model_dir / f"{target_model_name}.pth"
+                    encoder_path = model_dir / f"{target_model_name}_label_encoder.joblib"
+                    info_path = model_dir / f"{target_model_name}_info.json"
+                    
+                    if model_path.exists() and encoder_path.exists():
+                        logger.info(f"✅ Found 471-species model in package: {model_dir}")
+                        return model_path, encoder_path, info_path
+                        
         except Exception as e:
             logger.debug(f"Could not check package directory: {e}")
         

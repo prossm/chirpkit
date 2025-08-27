@@ -2,12 +2,16 @@ from setuptools import setup, find_packages
 
 setup(
     name='chirpkit',
-    version='0.1.1',
+    version='0.1.2',
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    package_data={
-        '': ['models/trained/*.pth', 'models/trained/*.joblib', 'models/trained/*.json'],
-    },
+    data_files=[
+        ('models/trained', [
+            'models/trained/insect_classifier_471species.pth',
+            'models/trained/insect_classifier_471species_label_encoder.joblib',
+            'models/trained/insect_classifier_471species_info.json'
+        ]),
+    ],
     include_package_data=True,
     install_requires=[
         # Core dependencies with broader compatibility ranges
