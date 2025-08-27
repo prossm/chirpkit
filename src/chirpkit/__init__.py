@@ -25,9 +25,17 @@ from .dependencies import (
 
 try:
     from .classifier import InsectClassifier
-except ImportError:
+    from .models import ModelManager, find_any_model, list_models
+    from .cli import classify_audio_file, get_classifier_instance
+except ImportError as e:
     # Classifier may not be available if ML dependencies are missing
+    logger.warning(f"Some ChirpKit modules not available: {e}")
     InsectClassifier = None
+    ModelManager = None
+    find_any_model = None
+    list_models = None
+    classify_audio_file = None
+    get_classifier_instance = None
 
 __version__ = "0.1.0"
 __author__ = "Patrick Metzger"
@@ -70,5 +78,10 @@ __all__ = [
     'requires_torch',
     'requires_ui',
     'warn_about_missing_gpu',
-    'InsectClassifier'
+    'InsectClassifier',
+    'ModelManager',
+    'find_any_model',
+    'list_models',
+    'classify_audio_file',
+    'get_classifier_instance'
 ]

@@ -371,5 +371,90 @@ For more information, visit: https://github.com/patrickmetzger/chirpkit
         return 0
 
 
+def classify_audio_file(audio_path: str, detailed: bool = True) -> Dict:
+    """
+    Classify audio file - mirrors the existing CLI functionality
+    
+    This function uses the same logic that makes the CLI work,
+    ensuring consistency between CLI and programmatic usage.
+    
+    Args:
+        audio_path: Path to audio file to classify
+        detailed: Whether to return detailed predictions
+        
+    Returns:
+        Classification results in MoE-compatible format
+    """
+    try:
+        # Import the existing classifier
+        from .classifier import InsectClassifier
+        import librosa
+        import asyncio
+        
+        # Create classifier instance
+        classifier = InsectClassifier()
+        
+        # Load model
+        if not classifier.load_model():
+            raise RuntimeError("Failed to load classifier model")
+            
+        # Load and preprocess audio
+        audio, sr = librosa.load(audio_path, sr=16000)
+        
+        # Create simple audio object for compatibility
+        class SimpleAudio:
+            def __init__(self, waveform, sample_rate):
+                self.waveform = waveform
+                self.sample_rate = sample_rate
+                
+        processed_audio = SimpleAudio(audio, sr)
+        
+        # Run classification
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        try:
+            result = loop.run_until_complete(classifier.classify(processed_audio, detailed=detailed))
+        finally:
+            loop.close()
+            
+        return result
+        
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Audio classification failed: {e}")
+        return {
+            'model': 'ChirpKit-Error',
+            'classification': {
+                'is_insect': False,
+                'species': 'Error',
+                'confidence': 0.0,
+                'family': 'unknown'
+            },
+            'confidence': 0.0,
+            'error': str(e),
+            'features': {
+                'chirpkit_powered': False,
+                'error': True
+            }
+        }
+
+
+def get_classifier_instance():
+    """
+    Get a configured InsectClassifier instance
+    
+    Returns:
+        Initialized InsectClassifier ready for use
+    """
+    from .classifier import InsectClassifier
+    
+    classifier = InsectClassifier()
+    if not classifier.load_model():
+        raise RuntimeError("Failed to initialize ChirpKit classifier")
+    
+    return classifier
+
+
 if __name__ == '__main__':
     sys.exit(main())
