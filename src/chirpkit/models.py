@@ -15,17 +15,6 @@ class ModelManager:
     """Manages ChirpKit model downloading, loading, and caching"""
     
     DEFAULT_MODEL_DIR = Path("models/trained")
-    
-    # Additional search paths for models
-    SEARCH_PATHS = [
-        Path("models/trained/"),
-        Path("~/.chirpkit/models/").expanduser(),
-        Path("/usr/local/share/chirpkit/models/"),
-        Path("./models/trained/"),
-        Path("../models/trained/"),
-        Path("models/"),
-        Path("./models/"),
-    ]
     REMOTE_MODEL_BASE_URL = "https://github.com/patrickmetzger/chirpkit/releases/download/v0.1.0/"
     
     DEFAULT_MODELS = {
@@ -71,110 +60,56 @@ class ModelManager:
     @classmethod
     def find_any_model(cls) -> Optional[Tuple[Path, Path, Path]]:
         """
-        Find any available trained model in multiple search directories
+        Find the specific 471-species model and its related files
         
         Returns:
             Tuple of (model_path, encoder_path, info_path) or None if not found
         """
-        # Search through all possible paths
-        all_model_files = []
+        # Specific model we're looking for
+        target_model_name = "insect_classifier_471species"
         
-        for search_path in cls.SEARCH_PATHS:
+        # Search in a few key locations
+        search_paths = [
+            cls.DEFAULT_MODEL_DIR,  # models/trained/
+            Path("models") / "trained",
+            Path(".") / "models" / "trained",
+        ]
+        
+        for search_path in search_paths:
             try:
-                if search_path.exists() and search_path.is_dir():
-                    model_files = list(search_path.glob("*.pth"))
-                    if model_files:
-                        logger.debug(f"Found {len(model_files)} model files in {search_path}")
-                        all_model_files.extend(model_files)
-                else:
+                if not search_path.exists():
                     logger.debug(f"Search path does not exist: {search_path}")
+                    continue
+                    
+                # Look specifically for the 471-species model
+                model_path = search_path / f"{target_model_name}.pth"
+                encoder_path = search_path / f"{target_model_name}_label_encoder.joblib"
+                info_path = search_path / f"{target_model_name}_info.json"
+                
+                if model_path.exists() and encoder_path.exists():
+                    logger.info(f"✅ Found 471-species model in {search_path}")
+                    logger.info(f"   Model: {model_path}")
+                    logger.info(f"   Encoder: {encoder_path}")
+                    
+                    # Create info file if missing
+                    if not info_path.exists():
+                        logger.info("Creating missing info file...")
+                        info_path = cls._create_minimal_info_file(model_path, encoder_path)
+                    else:
+                        logger.info(f"   Info: {info_path}")
+                    
+                    return model_path, encoder_path, info_path
+                    
             except Exception as e:
                 logger.debug(f"Error searching {search_path}: {e}")
                 continue
         
-        if not all_model_files:
-            logger.warning(f"No .pth model files found in any search paths: {cls.SEARCH_PATHS}")
-            return None
-            
-        logger.info(f"Found {len(all_model_files)} total model files across all search paths")
-            
-        # Sort model files by species count (prefer higher species count models)
-        def get_species_count(model_path):
-            try:
-                # First check for explicit species count in filename
-                if "species" in model_path.name:
-                    parts = model_path.name.split('_')
-                    for part in parts:
-                        if part.endswith('species'):
-                            return int(part.replace('species', ''))
-                
-                # If no explicit count, try to infer from encoder file
-                potential_encoder_files = [
-                    model_path.parent / f"{model_path.stem}_label_encoder.joblib",
-                    model_path.parent / "label_encoder.joblib"
-                ]
-                
-                for encoder_path in potential_encoder_files:
-                    if encoder_path.exists():
-                        try:
-                            import joblib
-                            encoder = joblib.load(encoder_path)
-                            return len(encoder.classes_)
-                        except:
-                            pass
-                            
-                return 0
-            except:
-                return 0
+        logger.warning(f"❌ Could not find {target_model_name} model in any search location")
+        logger.info("Expected files:")
+        logger.info(f"  - {target_model_name}.pth")
+        logger.info(f"  - {target_model_name}_label_encoder.joblib")
+        logger.info(f"  - {target_model_name}_info.json (optional)")
         
-        all_model_files = sorted(all_model_files, key=get_species_count, reverse=True)
-        
-        # Try to find matching encoder and info files
-        for model_path in all_model_files:
-            base_name = model_path.stem
-            model_dir = model_path.parent
-            
-            # Look for corresponding encoder file (in same directory as model)
-            encoder_candidates = [
-                model_dir / f"{base_name}_label_encoder.joblib",
-                model_dir / f"{base_name.replace('_classifier', '')}_label_encoder.joblib",
-                model_dir / "label_encoder.joblib"  # Fallback
-            ]
-            
-            encoder_path = None
-            for candidate in encoder_candidates:
-                if candidate.exists():
-                    encoder_path = candidate
-                    break
-                    
-            if encoder_path is None:
-                logger.warning(f"No encoder file found for {model_path}")
-                continue
-                
-            # Look for corresponding info file
-            info_candidates = [
-                model_dir / f"{base_name}_info.json",
-                model_dir / f"{base_name.replace('_classifier', '')}_info.json", 
-                model_dir / "training_info.json"  # Fallback
-            ]
-            
-            info_path = None
-            for candidate in info_candidates:
-                if candidate.exists():
-                    info_path = candidate
-                    break
-                    
-            if info_path is None:
-                logger.warning(f"No info file found for {model_path}, creating minimal info")
-                info_path = cls._create_minimal_info_file(model_path, encoder_path)
-                
-            logger.info(f"Found model: {model_path}")
-            logger.info(f"Found encoder: {encoder_path}")  
-            logger.info(f"Found info: {info_path}")
-            
-            return model_path, encoder_path, info_path
-            
-        logger.error("No complete model set found")
         return None
 
     @classmethod

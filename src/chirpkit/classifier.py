@@ -4,8 +4,6 @@ ChirpKit Insect Classifier - Neural network-based insect sound identification
 
 import logging
 import numpy as np
-import tempfile
-import soundfile as sf
 import json
 import asyncio
 from pathlib import Path
@@ -46,9 +44,11 @@ class InsectClassifier:
         
     @requires_torch
     async def initialize(self):
-        """Initialize the classifier with PyTorch model and graceful fallbacks"""
+        """Initialize the classifier with graceful degradation"""
         if self.is_initialized:
             return
+
+        logger.info("🚀 Initializing ChirpKit InsectClassifier...")
 
         self.torch = DependencyManager.get_torch()
         if self.torch is None:
@@ -56,157 +56,121 @@ class InsectClassifier:
 
         # Set device
         self.device = self._get_device(self.torch)
-        logger.info(f"Using device: {self.device}")
+        logger.info(f"🖥️  Using device: {self.device}")
 
-        # Try to load model with graceful degradation
-        model_loaded = False
-        try:
-            await self._load_model()
-            model_loaded = True
-            logger.info("✅ Model loaded successfully")
-        except FileNotFoundError as e:
-            logger.warning(f"⚠️  No trained model found: {e}")
-            logger.info("📋 ChirpKit will attempt to work with basic functionality")
-        except Exception as e:
-            logger.warning(f"⚠️  Model loading failed: {e}")
-            logger.info("📋 ChirpKit will attempt to work with basic functionality")
+        # Always try to load architecture (should succeed with fallback approach)
+        model_loaded = await self._load_model()
 
-        # Try to load species labels with fallback
+        # Load species labels (with fallback)
         try:
             await self._load_species_labels()
-            logger.info(f"✅ Loaded {len(self.species_labels)} species labels")
+            logger.info(f"📋 Loaded {len(self.species_labels)} species labels")
         except Exception as e:
-            logger.warning(f"⚠️  Could not load species labels: {e}")
+            logger.warning(f"Could not load species labels: {e}, using defaults")
             self.species_labels = self._get_default_species_list()
             logger.info(f"📋 Using default species list with {len(self.species_labels)} common species")
 
-        # If no model was loaded but we have a working PyTorch setup, create a minimal setup
-        if not model_loaded and not self.model:
-            logger.info("🔧 Creating minimal classifier setup for basic functionality")
-            self._create_minimal_setup()
-
         self.is_initialized = True
-        
+
         # Report final status
         if model_loaded and self.model:
-            logger.info("✅ ChirpKit InsectClassifier fully initialized with trained model")
+            logger.info("✅ ChirpKit fully initialized with trained model")
         else:
-            logger.info("⚠️  ChirpKit InsectClassifier initialized with limited functionality")
+            logger.error("❌ ChirpKit initialization failed")
+            raise RuntimeError("ChirpKit initialization failed - no model available")
 
     async def _load_model(self):
-        """Load the CNN-LSTM PyTorch model"""
+        """Load CNN-LSTM model with fallback-first approach"""
         torch = DependencyManager.get_torch()
-        
-        # Import the model architecture with comprehensive fallback handling
-        SimpleCNNLSTMInsectClassifier = None
-        
-        # List of import paths to try
-        import_attempts = [
-            # Relative imports
-            ("...models.simple_cnn_lstm", "SimpleCNNLSTMInsectClassifier"),
-            ("..models.simple_cnn_lstm", "SimpleCNNLSTMInsectClassifier"),
-            # Absolute imports
-            ("src.models.simple_cnn_lstm", "SimpleCNNLSTMInsectClassifier"),
-            ("models.simple_cnn_lstm", "SimpleCNNLSTMInsectClassifier"),
-        ]
-        
-        # Try standard imports first
-        for module_path, class_name in import_attempts:
-            try:
-                if module_path.startswith("..."):
-                    from ...models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
-                elif module_path.startswith(".."):
-                    from ..models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier  
-                else:
-                    module = __import__(module_path, fromlist=[class_name])
-                    SimpleCNNLSTMInsectClassifier = getattr(module, class_name)
-                logger.info(f"Successfully imported model architecture from {module_path}")
-                break
-            except ImportError as e:
-                logger.debug(f"Failed to import from {module_path}: {e}")
-                continue
-        
-        # Try direct file path imports if standard imports failed
-        if SimpleCNNLSTMInsectClassifier is None:
-            import sys
-            import os
-            import importlib.util
-            
-            # Possible file paths to try
-            base_dir = Path(__file__).parent.parent.parent  # Go up to project root
-            file_paths = [
-                base_dir / "src" / "models" / "simple_cnn_lstm.py",
-                base_dir / "models" / "simple_cnn_lstm.py",
-                Path("src/models/simple_cnn_lstm.py"),
-                Path("models/simple_cnn_lstm.py"),
-            ]
-            
-            for file_path in file_paths:
-                if file_path.exists():
-                    try:
-                        spec = importlib.util.spec_from_file_location("simple_cnn_lstm", file_path)
-                        module = importlib.util.module_from_spec(spec)
-                        spec.loader.exec_module(module)
-                        SimpleCNNLSTMInsectClassifier = module.SimpleCNNLSTMInsectClassifier
-                        logger.info(f"Successfully loaded model architecture from {file_path}")
-                        break
-                    except Exception as e:
-                        logger.debug(f"Failed to load from {file_path}: {e}")
-                        continue
-        
-        # Final fallback: create architecture inline
-        if SimpleCNNLSTMInsectClassifier is None:
-            logger.warning("Could not import SimpleCNNLSTMInsectClassifier, creating inline definition")
-            SimpleCNNLSTMInsectClassifier = self._create_fallback_architecture()
+        if not torch:
+            logger.error("PyTorch not available")
+            return False
 
-        # Use model manager to find models
+        logger.info("🏗️  Creating built-in CNN-LSTM architecture...")
+        
+        # Step 1: ALWAYS create the fallback architecture first (this should never fail)
+        try:
+            SimpleCNNLSTMInsectClassifier = self._create_fallback_architecture()
+            logger.info("✅ Built-in architecture created successfully")
+        except Exception as e:
+            logger.error(f"❌ Failed to create fallback architecture: {e}")
+            return False
+
+        # Step 2: Determine number of classes and model parameters
+        await self._determine_model_parameters()
+
+        # Step 3: Create the model instance
+        try:
+            self.model = SimpleCNNLSTMInsectClassifier(
+                n_classes=self.n_classes,
+                dropout=0.3
+            )
+            self.model = self.model.to(self.device)
+            self.model.eval()
+            logger.info(f"✅ Model architecture initialized with {self.n_classes} classes")
+        except Exception as e:
+            logger.error(f"❌ Failed to create model instance: {e}")
+            return False
+
+        # Step 4: Load trained weights (required)
+        await self._try_load_pretrained_weights()
+
+        return True
+
+    async def _determine_model_parameters(self):
+        """Determine model parameters from available sources"""
         from .models import find_any_model
         
+        # Try to find a trained model to get parameters from
         if self.model_path is None:
-            # Try to find any available model
             model_files = find_any_model()
             if model_files:
                 self.model_path, encoder_path, info_path = model_files
-                logger.info(f"Using discovered model: {self.model_path}")
-            else:
-                raise FileNotFoundError("No trained model found. Run training or download a pre-trained model.")
+                logger.info(f"🔍 Found model files: {self.model_path}")
 
-        # Load model info to get n_classes
-        info_path = str(self.model_path).replace('.pth', '_info.json')
-        if Path(info_path).exists():
-            with open(info_path, 'r') as f:
-                model_info = json.load(f)
-                self.n_classes = model_info['n_classes']
-                logger.info(f"Model supports {self.n_classes} species")
-        else:
-            # Try to infer from encoder
+        # Try to get class count from model info
+        if self.model_path:
+            info_path = str(self.model_path).replace('.pth', '_info.json')
+            if Path(info_path).exists():
+                try:
+                    with open(info_path, 'r') as f:
+                        model_info = json.load(f)
+                        self.n_classes = model_info['n_classes']
+                        logger.info(f"📊 Model supports {self.n_classes} species (from info file)")
+                        return
+                except Exception as e:
+                    logger.debug(f"Could not read info file: {e}")
+
+            # Try to get from encoder
             encoder_path = str(self.model_path).replace('.pth', '_label_encoder.joblib')
             if Path(encoder_path).exists():
-                import joblib
-                encoder = joblib.load(encoder_path)
-                self.n_classes = len(encoder.classes_)
-                logger.info(f"Inferred {self.n_classes} species from encoder")
-            else:
-                logger.warning("Could not determine number of classes, using default 471")
+                try:
+                    import joblib
+                    encoder = joblib.load(encoder_path)
+                    self.n_classes = len(encoder.classes_)
+                    logger.info(f"📊 Model supports {self.n_classes} species (from encoder)")
+                    return
+                except Exception as e:
+                    logger.debug(f"Could not read encoder file: {e}")
 
-        # Create and load model with exact architecture from training
-        self.model = SimpleCNNLSTMInsectClassifier(
-            n_classes=self.n_classes,
-            dropout=0.3  # Match training parameters
-        )
-        
-        device = self._get_device(torch)
-        
-        # Load state dict with error handling
+        # Use default if nothing found
+        logger.info(f"📊 Using default {self.n_classes} species")
+
+    async def _try_load_pretrained_weights(self) -> bool:
+        """Load pre-trained weights - required for functionality"""
+        if not self.model_path or not Path(self.model_path).exists():
+            logger.error("❌ No trained model found - ChirpKit requires a trained model")
+            raise FileNotFoundError(f"Trained model not found: {self.model_path}")
+
         try:
-            state_dict = torch.load(self.model_path, map_location=device)
+            logger.info(f"📥 Loading trained model from {self.model_path}...")
+            state_dict = self.torch.load(self.model_path, map_location=self.device)
             self.model.load_state_dict(state_dict)
-            self.model = self.model.to(device)
-            self.model.eval()
-            logger.info(f"Model loaded successfully on {device}")
+            logger.info("✅ Trained model loaded successfully")
+            return True
         except Exception as e:
-            logger.error(f"Failed to load model state: {e}")
-            raise RuntimeError(f"Model loading failed: {e}")
+            logger.error(f"❌ Failed to load trained model: {e}")
+            raise RuntimeError(f"Could not load trained model: {e}")
 
     def _get_device(self, torch):
         """Get appropriate device for computation."""
@@ -253,6 +217,10 @@ class InsectClassifier:
         if not self.is_initialized:
             await self.initialize()
 
+        if not self.model:
+            logger.error("No model available for classification")
+            return self._create_error_result("Model not available")
+
         try:
             # Run classification in thread pool to avoid blocking
             loop = asyncio.get_event_loop()
@@ -269,12 +237,8 @@ class InsectClassifier:
             return self._create_error_result(str(e))
 
     def _classify_sync(self, processed_audio, detailed: bool) -> Dict[str, Any]:
-        """Synchronous classification with fallback for untrained models"""
+        """Synchronous classification for insect species"""
         torch = DependencyManager.get_torch()
-        
-        # Check if we have a trained model
-        if not self._has_trained_model():
-            return self._create_heuristic_result(processed_audio, detailed)
         
         # Extract features exactly as in training pipeline
         features = self._extract_features(processed_audio)
@@ -315,81 +279,6 @@ class InsectClassifier:
                 'cnn_lstm_architecture': True,
                 'total_species': len(self.species_labels),
                 'pytorch_backend': True
-            }
-        }
-
-    def _has_trained_model(self) -> bool:
-        """Check if we have a trained model (not just architecture)"""
-        return (self.model is not None and 
-                hasattr(self, 'model_path') and 
-                self.model_path is not None)
-
-    def _create_heuristic_result(self, processed_audio, detailed: bool) -> Dict[str, Any]:
-        """Create heuristic-based result when no trained model is available"""
-        # Simple heuristic: analyze basic audio properties
-        try:
-            # Get audio data
-            if hasattr(processed_audio, 'waveform'):
-                audio = processed_audio.waveform
-                sr = processed_audio.sample_rate
-            else:
-                audio = processed_audio
-                sr = self.sample_rate
-
-            # Basic heuristic: higher frequency content suggests insects
-            import librosa
-            spectral_centroids = librosa.feature.spectral_centroid(y=audio, sr=sr)[0]
-            avg_centroid = np.mean(spectral_centroids)
-            
-            # Simple heuristic classification
-            is_likely_insect = avg_centroid > 2000  # Hz
-            confidence = min(0.7, avg_centroid / 10000)  # Cap at 70% for heuristics
-            
-            # Pick a default species based on frequency characteristics
-            if avg_centroid > 6000:
-                default_species = 'Cicada_orni'  # High frequency = cicada-like
-            elif avg_centroid > 4000:
-                default_species = 'Tettigonia_viridissima'  # Mid-high = katydid-like
-            else:
-                default_species = 'Gryllus_bimaculatus'  # Lower = cricket-like
-                
-        except Exception as e:
-            logger.warning(f"Heuristic analysis failed: {e}")
-            is_likely_insect = True
-            confidence = 0.5
-            default_species = 'Gryllus_bimaculatus'
-
-        # Create simple prediction list
-        results = [
-            {'species': default_species, 'confidence': confidence, 'rank': 1}
-        ]
-        
-        # Add a few other common species with lower confidence
-        if detailed:
-            other_species = [s for s in self.species_labels[:4] if s != default_species]
-            for i, species in enumerate(other_species):
-                results.append({
-                    'species': species,
-                    'confidence': max(0.1, confidence - 0.15 * (i + 1)),
-                    'rank': i + 2
-                })
-
-        return {
-            'model': 'ChirpKit-Heuristic',
-            'classification': {
-                'is_insect': is_likely_insect,
-                'species': default_species,
-                'confidence': confidence,
-                'family': self._get_family_from_species(default_species)
-            },
-            'confidence': confidence,
-            'predictions': results,
-            'features': {
-                'chirpkit_powered': True,
-                'neural_network': False,
-                'heuristic_fallback': True,
-                'total_species': len(self.species_labels),
-                'note': 'Using basic heuristics - no trained model available'
             }
         }
 
@@ -561,21 +450,6 @@ class InsectClassifier:
             'Neotibicen_canicularis', # Dog-day cicada
             'Tibicen_lyricen'       # Lyric cicada
         ]
-
-    def _create_minimal_setup(self):
-        """Create a minimal setup when no trained model is available"""
-        # Create a basic architecture for structure (won't be used for actual inference)
-        SimpleCNNLSTMInsectClassifier = self._create_fallback_architecture()
-        
-        # Create a minimal model (not trained, just for structure)
-        self.model = SimpleCNNLSTMInsectClassifier(
-            n_classes=len(self.species_labels),
-            dropout=0.3
-        )
-        self.model = self.model.to(self.device)
-        self.model.eval()
-        
-        logger.info(f"Created minimal model architecture with {len(self.species_labels)} species")
 
     def _get_family_from_species(self, species_name: str) -> str:
         """Map species to family based on taxonomic knowledge"""
