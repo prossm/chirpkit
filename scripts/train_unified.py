@@ -15,7 +15,9 @@ from datetime import datetime
 from pathlib import Path
 
 # Add src to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
+sys.path.insert(0, src_path)  # Insert at beginning to prioritize local modules
+
 from models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
 
 # TensorBoard
@@ -28,7 +30,7 @@ from sklearn.utils.class_weight import compute_class_weight
 import matplotlib.pyplot as plt
 import seaborn as sns
 
-# Augmentation
+# Augmentation - use full path to avoid conflicts
 from data.augmentation import InsectAudioAugmenter, AugmentedDataset
 
 # Custom Dataset for on-the-fly loading
@@ -226,8 +228,8 @@ class UnifiedTrainer:
         train_dataset = AugmentedDataset(train_dataset_base, augmenter, augmentation_prob=0.5)
         
         # Create data loaders
-        self.train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-        self.val_loader = DataLoader(val_dataset, batch_size=32)
+        self.train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+        self.val_loader = DataLoader(val_dataset, batch_size=64)
         
         print(f"✅ Loaded {len(train_dataset)} train, {len(val_dataset)} val samples")
         print(f"🦗 {len(self.label_encoder.classes_)} unique species:")
@@ -468,7 +470,7 @@ def main():
     parser.add_argument('--model-name', help='Custom model name (optional)')
     parser.add_argument('--epochs', type=int, default=100, help='Maximum epochs')
     parser.add_argument('--patience', type=int, default=15, help='Early stopping patience')
-    parser.add_argument('--lr', type=float, default=1e-4, help='Learning rate (lower for fine-tuning)')
+    parser.add_argument('--lr', type=float, default=1.41e-4, help='Learning rate (scaled for batch size 64)')
     parser.add_argument('--weight-decay', type=float, default=1e-4, help='Weight decay')
     parser.add_argument('--no-resume', action='store_true', help='Don\'t resume from checkpoint')
     

@@ -55,8 +55,8 @@ val_dataset = NpyDataset(val_features_path, val_labels_path, label_encoder=label
 # train_dataset = AugmentedDataset(train_dataset_base, augmenter, augmentation_prob=0.3)
 train_dataset = train_dataset_base  # No augmentation for now
 
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-val_loader = DataLoader(val_dataset, batch_size=32)
+train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
+val_loader = DataLoader(val_dataset, batch_size=64)
 
 print(f"Train samples: {len(train_dataset)} | Val samples: {len(val_dataset)}")
 print("DataLoaders created. Starting training loop...")
@@ -111,8 +111,8 @@ for i, (cls, weight) in enumerate(zip(label_encoder.classes_, class_weights)):
 
 print(f"🧪 TESTING: Using standard CrossEntropyLoss (no class weights)")
 
-# Simpler approach - higher LR, no class weights
-optimizer = optim.Adam(model.parameters(), lr=3e-3, weight_decay=1e-4)  
+# Simpler approach - higher LR scaled for batch size 64, no class weights
+optimizer = optim.Adam(model.parameters(), lr=4.24e-3, weight_decay=1e-4)  
 criterion = nn.CrossEntropyLoss()  # No class weights
 
 # Simple learning rate scheduler that works

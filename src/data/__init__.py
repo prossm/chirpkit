@@ -1,6 +1,6 @@
 """Data processing utilities for insect sound classification"""
 
-from .preprocessing import preprocess_audio
-from .augmentation import AudioAugmentation
+from .preprocessing import InsectAudioPreprocessor
+from .augmentation import InsectAudioAugmenter, AugmentedDataset
 
-__all__ = ["preprocess_audio", "AudioAugmentation"]
+__all__ = ["InsectAudioPreprocessor", "InsectAudioAugmenter", "AugmentedDataset"]
