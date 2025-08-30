@@ -53,8 +53,9 @@ class NpyDataset(Dataset):
 class UnifiedTrainer:
     """Unified training for multiple datasets"""
     
-    def __init__(self, dataset_name='insectsound1000', model_name=None):
+    def __init__(self, dataset_name='insectsound1000', model_name=None, batch_size=64):
         self.dataset_name = dataset_name
+        self.batch_size = batch_size
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
         # Data paths based on dataset
@@ -228,8 +229,8 @@ class UnifiedTrainer:
         train_dataset = AugmentedDataset(train_dataset_base, augmenter, augmentation_prob=0.5)
         
         # Create data loaders
-        self.train_loader = DataLoader(train_dataset, batch_size=64, shuffle=True)
-        self.val_loader = DataLoader(val_dataset, batch_size=64)
+        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
+        self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size)
         
         print(f"✅ Loaded {len(train_dataset)} train, {len(val_dataset)} val samples")
         print(f"🦗 {len(self.label_encoder.classes_)} unique species:")
@@ -472,6 +473,7 @@ def main():
     parser.add_argument('--patience', type=int, default=15, help='Early stopping patience')
     parser.add_argument('--lr', type=float, default=1.41e-4, help='Learning rate (scaled for batch size 64)')
     parser.add_argument('--weight-decay', type=float, default=1e-4, help='Weight decay')
+    parser.add_argument('--batch-size', type=int, default=64, help='Batch size for training and validation')
     parser.add_argument('--no-resume', action='store_true', help='Don\'t resume from checkpoint')
     
     args = parser.parse_args()
@@ -483,7 +485,8 @@ def main():
     # Create trainer
     trainer = UnifiedTrainer(
         dataset_name=args.dataset,
-        model_name=args.model_name
+        model_name=args.model_name,
+        batch_size=args.batch_size
     )
     
     # Load data and create model
