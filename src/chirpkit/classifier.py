@@ -246,9 +246,12 @@ class InsectClassifier:
         search_name = scientific_name.replace('_', ' ')
         
         try:
-            # Search Wikipedia for the species
+            # Search Wikipedia for the species with proper User-Agent header
             search_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(search_name)}"
-            response = requests.get(search_url, timeout=5)
+            headers = {
+                'User-Agent': 'ChirpKit/1.0 (https://github.com/patrickmetzger/chirpkit; contact@chirpkit.ai) Wikipedia Integration'
+            }
+            response = requests.get(search_url, headers=headers, timeout=10)
             
             if response.status_code == 200:
                 data = response.json()
@@ -298,9 +301,12 @@ class InsectClassifier:
         search_name = scientific_name.replace('_', ' ')
         
         try:
-            # Search Wikipedia for the species
+            # Search Wikipedia for the species with proper User-Agent header
             search_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(search_name)}"
-            response = requests.get(search_url, timeout=5)
+            headers = {
+                'User-Agent': 'ChirpKit/1.0 (https://github.com/patrickmetzger/chirpkit; contact@chirpkit.ai) Wikipedia Integration'
+            }
+            response = requests.get(search_url, headers=headers, timeout=10)
             
             if response.status_code == 200:
                 data = response.json()
