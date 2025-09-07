@@ -229,8 +229,11 @@ class UnifiedTrainer:
         train_dataset = AugmentedDataset(train_dataset_base, augmenter, augmentation_prob=0.5)
         
         # Create data loaders
-        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True)
+        self.train_loader = DataLoader(train_dataset, batch_size=self.batch_size, shuffle=True, drop_last=True)
         self.val_loader = DataLoader(val_dataset, batch_size=self.batch_size)
+        
+        # Store dataset reference for manual shuffling
+        self.train_dataset = train_dataset
         
         print(f"✅ Loaded {len(train_dataset)} train, {len(val_dataset)} val samples")
         print(f"🦗 {len(self.label_encoder.classes_)} unique species:")
@@ -285,6 +288,15 @@ class UnifiedTrainer:
         
         print(f"⚙️ Training setup: AdamW optimizer, lr={lr}, weight_decay={weight_decay}")
         print(f"⚙️ LR Scheduler: ReduceLROnPlateau with patience=5")
+    
+    def shuffle_data_each_epoch(self):
+        """Recreate data loader with new shuffle for each epoch"""
+        self.train_loader = DataLoader(
+            self.train_dataset, 
+            batch_size=self.batch_size, 
+            shuffle=True,
+            drop_last=True
+        )
         
     def train_epoch(self, epoch):
         """Train for one epoch"""
@@ -295,6 +307,11 @@ class UnifiedTrainer:
         
         for batch_idx, (X_batch, y_batch) in enumerate(self.train_loader):
             X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
+            
+            # Debug: Show first few samples of first batch for first 3 epochs to verify shuffling
+            if batch_idx == 0 and epoch <= 287:  # Show for a few epochs to verify shuffling
+                sample_indices = [f"{X_batch[i].sum().item():.2f}" for i in range(min(5, len(X_batch)))]
+                print(f"  Epoch {epoch} first batch sample checksums: {sample_indices}")
             
             self.optimizer.zero_grad()
             outputs = self.model(X_batch)
@@ -359,9 +376,17 @@ class UnifiedTrainer:
             print("📂 Found checkpoint, resuming training...")
             checkpoint = torch.load(checkpoint_path, map_location=self.device)
             self.model.load_state_dict(checkpoint['model_state_dict'])
-            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-            if 'scheduler_state_dict' in checkpoint:
-                self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+            
+            # Check if we should reset optimizer/scheduler (for learning rate changes)
+            reset_optimizer = getattr(self, 'reset_optimizer', False)
+            if not reset_optimizer:
+                self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+                if 'scheduler_state_dict' in checkpoint:
+                    self.scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
+                print(f"✅ Resumed optimizer and scheduler states")
+            else:
+                print(f"🔄 Reset optimizer and scheduler with new learning rate")
+            
             start_epoch = checkpoint['epoch'] + 1
             best_val_acc = checkpoint.get('best_val_acc', 0.0)
             # Reset patience when resuming with new training setup
@@ -371,6 +396,8 @@ class UnifiedTrainer:
         
         # Training loop
         for epoch in range(start_epoch, max_epochs + 1):
+            # Ensure fresh shuffling each epoch
+            self.shuffle_data_each_epoch()
             print(f"\n{'='*60}")
             print(f"Epoch {epoch}/{max_epochs}")
             print(f"{'='*60}")
@@ -469,12 +496,13 @@ def main():
                        default='combined',
                        help='Dataset to train on (use "combined" for both datasets)')
     parser.add_argument('--model-name', help='Custom model name (optional)')
-    parser.add_argument('--epochs', type=int, default=100, help='Maximum epochs')
+    parser.add_argument('--epochs', type=int, default=500, help='Maximum epochs')
     parser.add_argument('--patience', type=int, default=15, help='Early stopping patience')
     parser.add_argument('--lr', type=float, default=1.41e-4, help='Learning rate (scaled for batch size 64)')
     parser.add_argument('--weight-decay', type=float, default=1e-4, help='Weight decay')
     parser.add_argument('--batch-size', type=int, default=64, help='Batch size for training and validation')
     parser.add_argument('--no-resume', action='store_true', help='Don\'t resume from checkpoint')
+    parser.add_argument('--reset-optimizer', action='store_true', help='Reset optimizer and scheduler while keeping model weights')
     
     args = parser.parse_args()
     
@@ -493,6 +521,10 @@ def main():
     trainer.load_data()
     trainer.create_model()
     trainer.setup_training(lr=args.lr, weight_decay=args.weight_decay)
+    
+    # Set reset_optimizer flag if requested
+    if args.reset_optimizer:
+        trainer.reset_optimizer = True
     
     # Train
     best_acc = trainer.train(

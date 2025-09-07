@@ -233,9 +233,10 @@ for epoch in range(start_epoch, max_epochs + 1):
     writer.add_scalar('Precision/val', val_precision, epoch)
     writer.add_scalar('Recall/val', val_recall, epoch)
     writer.add_scalar('Learning_Rate', current_lr, epoch)
-    # Early stopping check
+    # Early stopping check  
     if val_acc > best_val_acc + min_delta:
         patience_counter = 0
+        print(f"🎉 New best validation accuracy: {val_acc:.4f}")
     else:
         patience_counter += 1
     
@@ -289,11 +290,12 @@ for epoch in range(start_epoch, max_epochs + 1):
             print(f"📊 Classification report saved to {report_path}")
     
     print(f"Epoch {epoch} completed. Checkpoint saved. Patience: {patience_counter}/{patience}")
+    print(f"📊 Samples seen this epoch: {total_train} (batch_size=64, batches={len(train_loader)})")
     print("=" * 60)
     
     # Early stopping check
     if patience_counter >= patience:
-        print(f"\nEarly stopping triggered! No improvement for {patience} epochs.")
+        print(f"\n🛑 Early stopping triggered! No improvement for {patience} epochs.")
         break
 
 print(f"\nTraining completed! Best validation accuracy: {best_val_acc:.4f}")

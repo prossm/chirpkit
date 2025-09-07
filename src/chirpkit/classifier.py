@@ -6,6 +6,8 @@ import logging
 import numpy as np
 import json
 import asyncio
+import requests
+import urllib.parse
 from pathlib import Path
 from typing import Dict, List, Any, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor
@@ -42,6 +44,11 @@ class InsectClassifier:
         self.n_fft = 2048
         self.hop_length = 512
         
+        # Wikipedia integration
+        self.species_cache = {}
+        self.cache_file = Path("species_cache.json")
+        self.enable_enrichment = True
+        
     @requires_torch
     async def initialize(self):
         """Initialize the classifier with graceful degradation"""
@@ -69,6 +76,10 @@ class InsectClassifier:
             logger.warning(f"Could not load species labels: {e}, using defaults")
             self.species_labels = self._get_default_species_list()
             logger.info(f"📋 Using default species list with {len(self.species_labels)} common species")
+        
+        # Load species cache for Wikipedia data
+        await self._load_species_cache()
+        logger.info(f"📚 Loaded species cache with {len(self.species_cache)} entries")
 
         self.is_initialized = True
 
@@ -203,6 +214,89 @@ class InsectClassifier:
         self.species_labels = list(self.label_encoder.classes_)
         logger.info(f"Loaded {len(self.species_labels)} species from label encoder")
 
+    async def _load_species_cache(self):
+        """Load species information cache"""
+        try:
+            if self.cache_file.exists():
+                with open(self.cache_file, 'r') as f:
+                    self.species_cache = json.load(f)
+            else:
+                self.species_cache = {}
+        except Exception as e:
+            logger.warning(f"Could not load species cache: {e}")
+            self.species_cache = {}
+
+    async def _save_species_cache(self):
+        """Save species information cache"""
+        try:
+            with open(self.cache_file, 'w') as f:
+                json.dump(self.species_cache, f, indent=2)
+        except Exception as e:
+            logger.warning(f"Could not save species cache: {e}")
+
+    async def _get_species_info(self, scientific_name: str) -> Dict[str, Any]:
+        """Get species common name and image from Wikipedia"""
+        if not self.enable_enrichment:
+            return self._get_minimal_species_info(scientific_name)
+            
+        if scientific_name in self.species_cache:
+            return self.species_cache[scientific_name]
+        
+        # Format scientific name for Wikipedia search
+        search_name = scientific_name.replace('_', ' ')
+        
+        try:
+            # Search Wikipedia for the species
+            search_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(search_name)}"
+            response = requests.get(search_url, timeout=5)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                common_name = data.get('title', search_name)
+                description = data.get('extract', '')
+                image_url = data.get('thumbnail', {}).get('source', '')
+                
+                # Try to extract common name from description
+                if description and ',' in description:
+                    # Often format is "Common name, scientific description..."
+                    potential_common = description.split(',')[0].strip()
+                    if len(potential_common) < 50 and not potential_common.startswith('The'):
+                        common_name = potential_common
+                
+                species_info = {
+                    'common_name': common_name,
+                    'description': description[:200] + '...' if len(description) > 200 else description,
+                    'image_url': image_url,
+                    'wikipedia_url': f"https://en.wikipedia.org/wiki/{urllib.parse.quote(search_name)}",
+                    'scientific_name': search_name
+                }
+            else:
+                # Fallback if Wikipedia page not found
+                species_info = self._get_minimal_species_info(scientific_name)
+                
+        except Exception as e:
+            logger.debug(f"Error fetching Wikipedia info for {scientific_name}: {e}")
+            species_info = self._get_minimal_species_info(scientific_name)
+        
+        # Cache the result
+        self.species_cache[scientific_name] = species_info
+        # Save cache asynchronously (don't await to avoid blocking)
+        asyncio.create_task(self._save_species_cache())
+        
+        return species_info
+
+    def _get_minimal_species_info(self, scientific_name: str) -> Dict[str, Any]:
+        """Get minimal species info when Wikipedia is not available"""
+        search_name = scientific_name.replace('_', ' ')
+        return {
+            'common_name': search_name,
+            'description': f'No additional information available for {search_name}',
+            'image_url': '',
+            'wikipedia_url': '',
+            'scientific_name': search_name
+        }
+
     async def classify(self, processed_audio, detailed: bool = True) -> Dict[str, Any]:
         """
         Classify processed audio for insect species
@@ -252,6 +346,7 @@ class InsectClassifier:
         # Get top predictions
         top_indices = np.argsort(probs_numpy)[::-1][:5]
         
+        # Get top predictions with species info
         results = []
         for i, idx in enumerate(top_indices):
             species_name = self.species_labels[idx] if idx < len(self.species_labels) else f"Species_{idx}"
@@ -262,25 +357,70 @@ class InsectClassifier:
             })
 
         top_result = results[0]
+        top_species = top_result['species']
+        
+        # Get enriched information for top result (async)
+        species_info = await self._get_species_info(top_species)
 
-        return {
+        # Enhanced classification result with Wikipedia integration
+        classification_result = {
             'model': 'ChirpKit-CNN-LSTM',
             'classification': {
                 'is_insect': top_result['confidence'] > 0.01,  # Lower threshold for 471 species
-                'species': top_result['species'],
+                'species': {
+                    'scientific_name': species_info['scientific_name'],
+                    'common_name': species_info['common_name'],
+                    'original_id': top_species  # Keep original for compatibility
+                },
                 'confidence': top_result['confidence'],
-                'family': self._get_family_from_species(top_result['species'])
+                'family': self._get_family_from_species(top_species)
             },
             'confidence': top_result['confidence'],
             'predictions': results if detailed else results[:3],
+            'enrichment': {
+                'description': species_info['description'],
+                'image_url': species_info['image_url'],
+                'wikipedia_url': species_info['wikipedia_url'],
+                'cached': top_species in self.species_cache
+            } if self.enable_enrichment else None,
             'features': {
                 'chirpkit_powered': True,
                 'neural_network': True,
                 'cnn_lstm_architecture': True,
                 'total_species': len(self.species_labels),
-                'pytorch_backend': True
+                'pytorch_backend': True,
+                'wikipedia_integration': self.enable_enrichment
             }
         }
+        
+        # For detailed results, also enrich alternative predictions
+        if detailed and self.enable_enrichment:
+            enriched_predictions = []
+            for pred in results[:5]:  # Top 5 only to avoid too many API calls
+                if pred['rank'] == 1:
+                    # Already have this one
+                    enriched_predictions.append({
+                        **pred,
+                        'species_info': species_info
+                    })
+                else:
+                    # Get info for alternatives (but don't await to avoid blocking)
+                    try:
+                        alt_info = await self._get_species_info(pred['species'])
+                        enriched_predictions.append({
+                            **pred,
+                            'species_info': alt_info
+                        })
+                    except Exception:
+                        # If enrichment fails, use basic info
+                        enriched_predictions.append({
+                            **pred,
+                            'species_info': self._get_minimal_species_info(pred['species'])
+                        })
+            
+            classification_result['enriched_predictions'] = enriched_predictions
+            
+        return classification_result
 
     def _extract_features(self, processed_audio):
         """Extract features exactly matching training pipeline"""
@@ -547,6 +687,11 @@ class InsectClassifier:
         """Check if classifier is available"""
         return self.is_initialized and self.model is not None
 
+    def set_enrichment_enabled(self, enabled: bool):
+        """Enable or disable Wikipedia enrichment for integration control"""
+        self.enable_enrichment = enabled
+        logger.info(f"Wikipedia enrichment {'enabled' if enabled else 'disabled'}")
+
     def cleanup(self):
         """Cleanup resources"""
         if self.executor:
@@ -644,12 +789,31 @@ class InsectClassifier:
         predictions = result['predictions'][:top_k]
         top_prediction = predictions[0]
         
-        return {
-            'species': top_prediction['species'],
-            'confidence': float(top_prediction['confidence']),
-            'top_predictions': [(p['species'], p['confidence']) for p in predictions],
-            'scientific_name': top_prediction['species'].replace('_', ' ')
-        }
+        # Handle both old and new response formats
+        if 'enrichment' in result and result['enrichment']:
+            # New enriched format
+            species_info = result['classification']['species']
+            enrichment = result['enrichment']
+            
+            return {
+                'species': species_info['common_name'],
+                'scientific_name': species_info['scientific_name'],
+                'confidence': float(top_prediction['confidence']),
+                'top_predictions': [(p['species'], p['confidence']) for p in predictions],
+                'description': enrichment['description'],
+                'image_url': enrichment['image_url'],
+                'wikipedia_url': enrichment['wikipedia_url'],
+                'enriched': True
+            }
+        else:
+            # Legacy format for backwards compatibility
+            return {
+                'species': top_prediction['species'],
+                'confidence': float(top_prediction['confidence']),
+                'top_predictions': [(p['species'], p['confidence']) for p in predictions],
+                'scientific_name': top_prediction['species'].replace('_', ' '),
+                'enriched': False
+            }
 
     def get_species_list(self) -> List[str]:
         """Get list of all species the model can classify"""
