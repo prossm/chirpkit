@@ -8,6 +8,7 @@ import requests
 from pathlib import Path
 from typing import Optional, Dict, Tuple
 from .dependencies import DependencyManager
+from ._version import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -15,7 +16,7 @@ class ModelManager:
     """Manages ChirpKit model downloading, loading, and caching"""
     
     DEFAULT_MODEL_DIR = Path("models/trained")
-    REMOTE_MODEL_BASE_URL = "https://github.com/patrickmetzger/chirpkit/releases/download/v0.1.0/"
+    REMOTE_MODEL_BASE_URL = f"https://github.com/patrickmetzger/chirpkit/releases/download/v{__version__}/"
     
     DEFAULT_MODELS = {
         "471species": {

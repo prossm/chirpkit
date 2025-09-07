@@ -8,6 +8,7 @@ import platform
 import subprocess
 import importlib
 import logging
+from ._version import __version__
 from typing import List, Dict, Optional, Tuple
 import argparse
 
@@ -342,7 +343,7 @@ For more information, visit: https://github.com/patrickmetzger/chirpkit
     parser.add_argument(
         '--version', 
         action='version', 
-        version='chirpkit 0.1.0'
+        version=f'chirpkit {__version__}'
     )
     
     subparsers = parser.add_subparsers(dest='command', help='Available commands')

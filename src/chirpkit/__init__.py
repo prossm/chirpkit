@@ -37,7 +37,7 @@ except ImportError as e:
     classify_audio_file = None
     get_classifier_instance = None
 
-__version__ = "0.1.0"
+from ._version import __version__
 __author__ = "Patrick Metzger"
 
 # Check core dependencies on import

@@ -14,6 +14,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 # Use our dependency management system
 from .dependencies import DependencyManager, requires_torch
+from ._version import __version__
 
 logger = logging.getLogger(__name__)
 
@@ -249,7 +250,7 @@ class InsectClassifier:
             # Search Wikipedia for the species with proper User-Agent header
             search_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(search_name)}"
             headers = {
-                'User-Agent': 'ChirpKit/1.0 (https://github.com/patrickmetzger/chirpkit; contact@chirpkit.ai) Wikipedia Integration'
+                'User-Agent': f'ChirpKit/{__version__} (https://github.com/patrickmetzger/chirpkit; contact@chirpkit.ai) Wikipedia Integration'
             }
             response = requests.get(search_url, headers=headers, timeout=10)
             
@@ -304,7 +305,7 @@ class InsectClassifier:
             # Search Wikipedia for the species with proper User-Agent header
             search_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(search_name)}"
             headers = {
-                'User-Agent': 'ChirpKit/1.0 (https://github.com/patrickmetzger/chirpkit; contact@chirpkit.ai) Wikipedia Integration'
+                'User-Agent': f'ChirpKit/{__version__} (https://github.com/patrickmetzger/chirpkit; contact@chirpkit.ai) Wikipedia Integration'
             }
             response = requests.get(search_url, headers=headers, timeout=10)
             

@@ -1,8 +1,20 @@
 from setuptools import setup, find_packages
+import os
+import sys
+
+# Get version from package
+def get_version():
+    """Get version from chirpkit package"""
+    version_file = os.path.join('src', 'chirpkit', '_version.py')
+    with open(version_file, 'r') as f:
+        for line in f:
+            if line.startswith('__version__'):
+                return line.split('=')[1].strip(' \'"')
+    return '0.1.2'  # Fallback
 
 setup(
     name='chirpkit',
-    version='0.1.2',
+    version=get_version(),
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
     data_files=[
