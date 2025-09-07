@@ -13,11 +13,22 @@ async def classify_with_enrichment_example():
     classifier = InsectClassifier()
     await classifier.initialize()
     
-    # Example audio classification
+    # Example audio classification with processed audio data
+    # Note: You need to preprocess your audio file first
+    import librosa
     audio_file = "path/to/insect_sound.wav"
+    audio, sr = librosa.load(audio_file, sr=16000)
+    
+    # Create audio object
+    class SimpleAudio:
+        def __init__(self, waveform, sample_rate):
+            self.waveform = waveform
+            self.sample_rate = sample_rate
+    
+    processed_audio = SimpleAudio(audio, sr)
     
     # Method 1: Use the async API (recommended for web apps)
-    result = await classifier.classify(audio_file, detailed=True)
+    result = await classifier.classify(processed_audio, detailed=True)
     
     print("=== Enhanced Classification Result ===")
     print(f"Model: {result['model']}")
@@ -89,8 +100,19 @@ def api_endpoint_example():
             classifier = InsectClassifier()
             await classifier.initialize()
             
+            # Preprocess audio
+            import librosa
+            audio, sr = librosa.load(audio_file_path, sr=16000)
+            
+            class SimpleAudio:
+                def __init__(self, waveform, sample_rate):
+                    self.waveform = waveform
+                    self.sample_rate = sample_rate
+            
+            processed_audio = SimpleAudio(audio, sr)
+            
             # Classify with full Wikipedia enrichment
-            result = await classifier.classify(audio_file_path, detailed=True)
+            result = await classifier.classify(processed_audio, detailed=True)
             
             # Return API response with all enrichment data
             return {

@@ -286,6 +286,65 @@ class InsectClassifier:
         
         return species_info
 
+    def _get_species_info_sync(self, scientific_name: str) -> Dict[str, Any]:
+        """Get species common name and image from Wikipedia (synchronous version)"""
+        if not self.enable_enrichment:
+            return self._get_minimal_species_info(scientific_name)
+            
+        if scientific_name in self.species_cache:
+            return self.species_cache[scientific_name]
+        
+        # Format scientific name for Wikipedia search
+        search_name = scientific_name.replace('_', ' ')
+        
+        try:
+            # Search Wikipedia for the species
+            search_url = f"https://en.wikipedia.org/api/rest_v1/page/summary/{urllib.parse.quote(search_name)}"
+            response = requests.get(search_url, timeout=5)
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                common_name = data.get('title', search_name)
+                description = data.get('extract', '')
+                image_url = data.get('thumbnail', {}).get('source', '')
+                
+                # Try to extract common name from description
+                if description and ',' in description:
+                    # Often format is "Common name, scientific description..."
+                    potential_common = description.split(',')[0].strip()
+                    if len(potential_common) < 50 and not potential_common.startswith('The'):
+                        common_name = potential_common
+                
+                species_info = {
+                    'common_name': common_name,
+                    'description': description[:200] + '...' if len(description) > 200 else description,
+                    'image_url': image_url,
+                    'wikipedia_url': f"https://en.wikipedia.org/wiki/{urllib.parse.quote(search_name)}",
+                    'scientific_name': search_name
+                }
+            else:
+                # Fallback if Wikipedia page not found
+                species_info = self._get_minimal_species_info(scientific_name)
+                
+        except Exception as e:
+            logger.debug(f"Error fetching Wikipedia info for {scientific_name}: {e}")
+            species_info = self._get_minimal_species_info(scientific_name)
+        
+        # Cache the result (synchronous save)
+        self.species_cache[scientific_name] = species_info
+        self._save_species_cache_sync()
+        
+        return species_info
+
+    def _save_species_cache_sync(self):
+        """Save species information cache (synchronous version)"""
+        try:
+            with open(self.cache_file, 'w') as f:
+                json.dump(self.species_cache, f, indent=2)
+        except Exception as e:
+            logger.warning(f"Could not save species cache: {e}")
+
     def _get_minimal_species_info(self, scientific_name: str) -> Dict[str, Any]:
         """Get minimal species info when Wikipedia is not available"""
         search_name = scientific_name.replace('_', ' ')
@@ -359,8 +418,8 @@ class InsectClassifier:
         top_result = results[0]
         top_species = top_result['species']
         
-        # Get enriched information for top result (async)
-        species_info = await self._get_species_info(top_species)
+        # Get enriched information for top result (sync)
+        species_info = self._get_species_info_sync(top_species)
 
         # Enhanced classification result with Wikipedia integration
         classification_result = {
@@ -404,9 +463,9 @@ class InsectClassifier:
                         'species_info': species_info
                     })
                 else:
-                    # Get info for alternatives (but don't await to avoid blocking)
+                    # Get info for alternatives (sync version)
                     try:
-                        alt_info = await self._get_species_info(pred['species'])
+                        alt_info = self._get_species_info_sync(pred['species'])
                         enriched_predictions.append({
                             **pred,
                             'species_info': alt_info
