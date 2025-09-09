@@ -13,6 +13,7 @@ import json
 import argparse
 from datetime import datetime
 from pathlib import Path
+import time
 
 # Add src to path
 src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
@@ -359,7 +360,7 @@ class UnifiedTrainer:
         
         return avg_loss, accuracy, f1, precision, recall, all_predictions, all_targets
     
-    def train(self, max_epochs=100, patience=15, resume=True):
+    def train(self, max_epochs=1000, patience=15, resume=True):
         """Main training loop"""
         print(f"🚀 Starting training: {max_epochs} max epochs, patience={patience}")
         
@@ -395,11 +396,15 @@ class UnifiedTrainer:
             print(f"🔄 Reset patience counter for new training cycle")
         
         # Training loop
+        training_start_time = time.time()
         for epoch in range(start_epoch, max_epochs + 1):
             # Ensure fresh shuffling each epoch
             self.shuffle_data_each_epoch()
+            epoch_start_time = time.time()
+            current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            
             print(f"\n{'='*60}")
-            print(f"Epoch {epoch}/{max_epochs}")
+            print(f"Epoch {epoch}/{max_epochs} - Started at {current_time}")
             print(f"{'='*60}")
             
             # Train
@@ -414,11 +419,26 @@ class UnifiedTrainer:
             except:
                 current_lr = self.scheduler.get_last_lr()[0]
             
-            # Print metrics
+            # Calculate epoch timing
+            epoch_end_time = time.time()
+            epoch_duration = epoch_end_time - epoch_start_time
+            total_elapsed = epoch_end_time - training_start_time
+            
+            # Estimate remaining time
+            epochs_completed = epoch - start_epoch + 1
+            avg_epoch_time = total_elapsed / epochs_completed
+            epochs_remaining = max_epochs - epoch
+            estimated_remaining = avg_epoch_time * epochs_remaining
+            
+            # Print metrics with timing
+            completion_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             print(f"Train: Loss={train_loss:.4f}, Acc={train_acc:.4f}")
             print(f"Val: Loss={val_loss:.4f}, Acc={val_acc:.4f}, F1={val_f1:.4f}")
             print(f"Precision={val_precision:.4f}, Recall={val_recall:.4f}")
             print(f"LR: {current_lr:.2e}")
+            print(f"⏱️  Epoch Duration: {epoch_duration:.1f}s | Completed at: {completion_time}")
+            print(f"📊 Avg Epoch Time: {avg_epoch_time:.1f}s | Est. Remaining: {estimated_remaining/3600:.1f}h")
+            print(f"🏆 Best Model: Val Acc {best_val_acc:.4f} | Patience: {patience_counter}/{patience}")
             
             # Log to TensorBoard
             writer.add_scalar('Loss/train', train_loss, epoch)
@@ -496,7 +516,7 @@ def main():
                        default='combined',
                        help='Dataset to train on (use "combined" for both datasets)')
     parser.add_argument('--model-name', help='Custom model name (optional)')
-    parser.add_argument('--epochs', type=int, default=500, help='Maximum epochs')
+    parser.add_argument('--epochs', type=int, default=1000, help='Maximum epochs')
     parser.add_argument('--patience', type=int, default=15, help='Early stopping patience')
     parser.add_argument('--lr', type=float, default=1.41e-4, help='Learning rate (scaled for batch size 64)')
     parser.add_argument('--weight-decay', type=float, default=1e-4, help='Weight decay')

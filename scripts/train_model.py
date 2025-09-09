@@ -9,6 +9,7 @@ from torch.utils.tensorboard import SummaryWriter
 import os
 import json
 from datetime import datetime
+import time
 # Label encoding
 from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import classification_report, confusion_matrix, f1_score, precision_score, recall_score
@@ -174,9 +175,15 @@ else:
     print("Starting fresh training...")
 
 # Training loop - now with more epochs and resume capability
-max_epochs = 100
+max_epochs = 1000
+training_start_time = time.time()
+
 for epoch in range(start_epoch, max_epochs + 1):
-    print(f"Starting epoch {epoch}...")
+    epoch_start_time = time.time()
+    current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print(f"\n{'='*60}")
+    print(f"Epoch {epoch}/{max_epochs} - Started at {current_time}")
+    print(f"{'='*60}")
     model.train()
     total_loss = 0
     total_train = 0
@@ -195,8 +202,23 @@ for epoch in range(start_epoch, max_epochs + 1):
         correct_train += (predicted == y_batch).sum().item()
     avg_loss = total_loss / len(train_loader)
     train_acc = correct_train / total_train
+    # Calculate epoch timing
+    epoch_end_time = time.time()
+    epoch_duration = epoch_end_time - epoch_start_time
+    total_elapsed = epoch_end_time - training_start_time
+    
+    # Estimate remaining time
+    epochs_completed = epoch - start_epoch + 1
+    avg_epoch_time = total_elapsed / epochs_completed
+    epochs_remaining = max_epochs - epoch
+    estimated_remaining = avg_epoch_time * epochs_remaining
+    
+    completion_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"Epoch {epoch} - Train Loss: {avg_loss:.4f}")
     print(f"Epoch {epoch} - Train Accuracy: {train_acc:.4f}")
+    print(f"⏱️  Epoch Duration: {epoch_duration:.1f}s | Completed at: {completion_time}")
+    print(f"📊 Avg Epoch Time: {avg_epoch_time:.1f}s | Est. Remaining: {estimated_remaining/3600:.1f}h")
+    print(f"🏆 Best Model: Val Acc {best_val_acc:.4f} | Patience: {patience_counter}/{patience}")
     print(f"💾 Logging to TensorBoard: epoch {epoch}")
     writer.add_scalar('Loss/train', avg_loss, epoch)
     writer.add_scalar('Accuracy/train', train_acc, epoch)

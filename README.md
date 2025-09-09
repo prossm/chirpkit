@@ -91,7 +91,7 @@ python scripts/train_unified.py --dataset combined
 
 - **Validation Accuracy**: 71.6% on 471 species (358x better than random)
 - **Architecture**: CNN-LSTM with bidirectional processing and multi-head attention
-- **Training Time**: ~200 epochs with early stopping and adaptive learning rate
+- **Training Time**: Up to 1000 epochs with early stopping and adaptive learning rate
 - **Confidence Calibration**: Context-aware confidence scoring with visual ratings
 
 ### Confidence Interpretation:
@@ -315,10 +315,10 @@ pip install chirpkit[full]
 ### Command Line Training
 ```bash
 # Train on combined datasets with custom parameters
-python scripts/train_unified.py --dataset combined --epochs 200 --lr 1e-4
+python scripts/train_unified.py --dataset combined --epochs 500 --lr 1e-4
 
 # Train with data augmentation
-python scripts/train_unified.py --dataset combined --epochs 150
+python scripts/train_unified.py --dataset combined --epochs 300
 ```
 
 ### Python API (Advanced)
