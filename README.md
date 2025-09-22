@@ -14,11 +14,27 @@ A comprehensive Python system for identifying **471 insect species** from audio 
 
 ## 📊 Dataset Information
 
-ChirpKit is trained on two comprehensive insect audio datasets:
+ChirpKit is trained on four globally balanced insect audio datasets:
 
-- **InsectSound1000**: 165,982 samples across 12 common species
-- **InsectSet459**: 10,550 samples across 459 diverse species  
-- **Combined Total**: 176,532 audio samples representing 471 unique species
+### Datasets Overview
+- **InsectSound1000**: 1,000 samples (subsampled from 165,982) across 12 European species
+- **InsectSet459**: 10,550 samples across 459 diverse global species  
+- **SINA**: 265 samples across ~203 North American species (crickets, katydids)
+- **Xeno-canto**: ~34,700 community recordings of global grasshoppers and crickets
+- **Combined Total**: ~46,515 strategically balanced audio samples for global representation
+
+### Geographic Balance Strategy
+- **🇪🇺 Europe**: InsectSound1000 (subsampled to 1k to remove European bias)
+- **🌍 Global**: InsectSet459 (full dataset for species diversity)
+- **🇺🇸 North America**: SINA (full dataset for regional balance)
+- **🌍 Global Community**: Xeno-canto (full dataset for comprehensive coverage)
+
+### Storage Requirements
+- **Total Storage**: ~251GB (downloaded datasets)
+- **InsectSound1000**: 99GB (original), ~600MB (after 1k subsampling)
+- **InsectSet459**: 98GB 
+- **SINA**: 424MB
+- **Xeno-canto**: 54GB (partial download, ~1,829 of 34,703 files)
 
 ## 🚀 Quick Start
 
@@ -81,10 +97,31 @@ Access the web UI at `http://localhost:7860` to:
 # Download and preprocess datasets
 python scripts/download_insectsound1000.py
 python scripts/download_insectset459.py
-python scripts/preprocess_unified.py --dataset both
+python scripts/download_sina.py
+python scripts/download_xenocanto.py    # Requires Xeno-canto account (see below)
+python scripts/preprocess_unified.py --dataset all
 
 # Train the unified model on both datasets
 python scripts/train_unified.py --dataset combined
+```
+
+### Xeno-canto Dataset Setup
+
+The Xeno-canto dataset requires a free account and API token:
+
+1. **Create Account**: Register at https://xeno-canto.org/auth/register
+2. **Verify Email**: Check your email and verify your account
+3. **Get API Token**: Once verified, you'll receive an API token for downloads
+4. **Update Script**: Add your API token to `scripts/download_xenocanto.py`
+
+**Resume Downloads**: If downloads are interrupted, you can resume from where you left off:
+```bash
+# Check how many files are already downloaded
+find data/raw/xenocanto/audio -name "*.mp3" | wc -l
+
+# Resume from specific page (each page = 100 files)
+# If you have 6,700 files, start from page 68: (6700/100 = 67, so start page 68)
+python scripts/download_xenocanto.py --start-page 68
 ```
 
 ## 🎯 Model Performance
@@ -363,8 +400,10 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## 🙏 Acknowledgments
 
-- **InsectSound1000 Dataset**: 165,982 samples across 12 species
-- **InsectSet459 Dataset**: 10,550 samples across 459 species  
+- **InsectSound1000 Dataset**: 165,982 samples across 12 European species (subsampled to 1k)
+- **InsectSet459 Dataset**: 10,550 samples across 459 global species
+- **SINA Dataset**: 265 North American cricket and katydid recordings
+- **Xeno-canto Dataset**: ~34,700 global grasshopper and cricket community recordings
 - **Wikipedia API**: Species information and images
 - **Gradio**: Web interface framework
 - **PyTorch**: Deep learning framework

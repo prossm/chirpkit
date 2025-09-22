@@ -117,7 +117,7 @@ optimizer = optim.Adam(model.parameters(), lr=4.24e-3, weight_decay=1e-4)
 criterion = nn.CrossEntropyLoss()  # No class weights
 
 # Simple learning rate scheduler that works
-scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=100, eta_min=1e-6)
+scheduler = optim.lr_scheduler.CosineAnnealingLR(optimizer, T_max=2000, eta_min=1e-6)
 
 import signal
 import sys
@@ -125,7 +125,7 @@ import sys
 # Graceful interrupt handling
 def signal_handler(sig, frame):
     print(f"\n🛑 Training interrupted! Saving checkpoint...")
-    global model, optimizer, scheduler, epoch, best_val_acc, patience_counter
+    global model, optimizer, scheduler, epoch, best_val_acc, best_epoch, patience_counter
     try:
         checkpoint = {
             'epoch': epoch,
@@ -133,6 +133,7 @@ def signal_handler(sig, frame):
             'optimizer_state_dict': optimizer.state_dict(),
             'scheduler_state_dict': scheduler.state_dict(),
             'best_val_acc': best_val_acc,
+            'best_epoch': best_epoch,
             'patience_counter': patience_counter,
             'timestamp': datetime.now().isoformat()
         }
@@ -148,6 +149,7 @@ signal.signal(signal.SIGINT, signal_handler)
 # Resume training functionality
 start_epoch = 1
 best_val_acc = 0.0
+best_epoch = 0
 checkpoint_path = 'models/checkpoints/latest_checkpoint.pth'
 
 # Early stopping variables
@@ -165,6 +167,7 @@ if os.path.exists(checkpoint_path):
         scheduler.load_state_dict(checkpoint['scheduler_state_dict'])
     start_epoch = checkpoint['epoch'] + 1
     best_val_acc = checkpoint['best_val_acc']
+    best_epoch = checkpoint.get('best_epoch', 0)
     patience_counter = checkpoint.get('patience_counter', 0)
     print(f"Resuming from epoch {start_epoch}, best val acc: {best_val_acc:.4f}")
     print(f"Patience counter: {patience_counter}/{patience}")
@@ -175,7 +178,7 @@ else:
     print("Starting fresh training...")
 
 # Training loop - now with more epochs and resume capability
-max_epochs = 1000
+max_epochs = 2000
 training_start_time = time.time()
 
 for epoch in range(start_epoch, max_epochs + 1):
@@ -218,7 +221,7 @@ for epoch in range(start_epoch, max_epochs + 1):
     print(f"Epoch {epoch} - Train Accuracy: {train_acc:.4f}")
     print(f"⏱️  Epoch Duration: {epoch_duration:.1f}s | Completed at: {completion_time}")
     print(f"📊 Avg Epoch Time: {avg_epoch_time:.1f}s | Est. Remaining: {estimated_remaining/3600:.1f}h")
-    print(f"🏆 Best Model: Val Acc {best_val_acc:.4f} | Patience: {patience_counter}/{patience}")
+    print(f"🏆 Best Model: Epoch {best_epoch}, Val Acc {best_val_acc:.4f}")
     print(f"💾 Logging to TensorBoard: epoch {epoch}")
     writer.add_scalar('Loss/train', avg_loss, epoch)
     writer.add_scalar('Accuracy/train', train_acc, epoch)
@@ -272,6 +275,7 @@ for epoch in range(start_epoch, max_epochs + 1):
         'optimizer_state_dict': optimizer.state_dict(),
         'scheduler_state_dict': scheduler.state_dict(),
         'best_val_acc': best_val_acc,
+        'best_epoch': best_epoch,
         'val_acc': val_acc,
         'train_loss': avg_loss,
         'train_acc': train_acc,
@@ -283,6 +287,7 @@ for epoch in range(start_epoch, max_epochs + 1):
     # Save best model and training info
     if epoch == start_epoch or val_acc > best_val_acc:
         best_val_acc = val_acc
+        best_epoch = epoch
         torch.save(model.state_dict(), 'models/trained/cnn_lstm_best.pth')
         
         # Save training information

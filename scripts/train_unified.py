@@ -60,17 +60,17 @@ class UnifiedTrainer:
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
         
         # Data paths based on dataset
-        if dataset_name in ['insectsound1000', 'insectset459']:
+        if dataset_name in ['insectsound1000', 'insectset459', 'sina', 'xenocanto']:
             # Use splits from unified preprocessor
             self.splits_dir = Path(f'data/splits/{dataset_name}')
             if not self.splits_dir.exists():
                 self.splits_dir = Path('data/splits')  # Fallback to original location
         elif dataset_name == 'combined':
-            # Combined dataset mode - will load both datasets
+            # Combined dataset mode - will load all available datasets
             self.splits_dir = Path('data/splits/combined')
             self.splits_dir.mkdir(parents=True, exist_ok=True)
         else:
-            raise ValueError(f"Unknown dataset: {dataset_name}. Available: insectsound1000, insectset459, combined")
+            raise ValueError(f"Unknown dataset: {dataset_name}. Available: insectsound1000, insectset459, sina, xenocanto, combined")
         
         # Model save paths - unified location with descriptive naming
         self.models_dir = Path('models/trained')
@@ -129,7 +129,7 @@ class UnifiedTrainer:
         all_val_features = []
         all_val_labels = []
         
-        for dataset in ['insectsound1000', 'insectset459']:
+        for dataset in ['insectsound1000', 'insectset459', 'sina', 'xenocanto']:
             splits_dir = Path(f'data/splits/{dataset}')
             if not splits_dir.exists():
                 print(f"⚠️ Skipping {dataset} - splits not found at {splits_dir}")
@@ -271,11 +271,12 @@ class UnifiedTrainer:
         
         return self.model
     
-    def setup_training(self, lr=1e-4, weight_decay=1e-4):
+    def setup_training(self, lr=1e-4, weight_decay=1e-4, diversity_weight=0.1):
         """Setup optimizer, criterion, scheduler"""
         # Use AdamW optimizer for better performance
         self.optimizer = optim.AdamW(self.model.parameters(), lr=lr, weight_decay=weight_decay)
         self.criterion = nn.CrossEntropyLoss()
+        self.diversity_weight = diversity_weight
         
         # Better learning rate scheduler - ReduceLROnPlateau
         self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(
@@ -289,6 +290,7 @@ class UnifiedTrainer:
         
         print(f"⚙️ Training setup: AdamW optimizer, lr={lr}, weight_decay={weight_decay}")
         print(f"⚙️ LR Scheduler: ReduceLROnPlateau with patience=5")
+        print(f"🎲 Attention diversity weight: {diversity_weight}")
     
     def shuffle_data_each_epoch(self):
         """Recreate data loader with new shuffle for each epoch"""
@@ -300,9 +302,10 @@ class UnifiedTrainer:
         )
         
     def train_epoch(self, epoch):
-        """Train for one epoch"""
+        """Train for one epoch with attention diversity loss"""
         self.model.train()
         total_loss = 0
+        total_diversity_loss = 0
         total_correct = 0
         total_samples = 0
         
@@ -315,24 +318,37 @@ class UnifiedTrainer:
                 print(f"  Epoch {epoch} first batch sample checksums: {sample_indices}")
             
             self.optimizer.zero_grad()
-            outputs = self.model(X_batch)
-            loss = self.criterion(outputs, y_batch)
-            loss.backward()
+            
+            # Forward pass with attention weights
+            outputs, attention_weights = self.model(X_batch, return_attention=True)
+            
+            # Classification loss
+            classification_loss = self.criterion(outputs, y_batch)
+            
+            # Attention diversity loss (encourage exploration)
+            diversity_loss = self.model.compute_attention_diversity_loss(attention_weights)
+            
+            # Combined loss
+            total_batch_loss = classification_loss + self.diversity_weight * diversity_loss
+            
+            total_batch_loss.backward()
             
             # Gradient clipping
             torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
             
             self.optimizer.step()
             
-            total_loss += loss.item()
+            total_loss += classification_loss.item()
+            total_diversity_loss += diversity_loss.item()
             _, predicted = torch.max(outputs, 1)
             total_correct += (predicted == y_batch).sum().item()
             total_samples += y_batch.size(0)
         
         avg_loss = total_loss / len(self.train_loader)
+        avg_diversity_loss = total_diversity_loss / len(self.train_loader)
         accuracy = total_correct / total_samples
         
-        return avg_loss, accuracy
+        return avg_loss, accuracy, avg_diversity_loss
     
     def validate(self):
         """Validation step"""
@@ -360,7 +376,7 @@ class UnifiedTrainer:
         
         return avg_loss, accuracy, f1, precision, recall, all_predictions, all_targets
     
-    def train(self, max_epochs=1000, patience=15, resume=True):
+    def train(self, max_epochs=2000, patience=15, resume=True):
         """Main training loop"""
         print(f"🚀 Starting training: {max_epochs} max epochs, patience={patience}")
         
@@ -370,6 +386,7 @@ class UnifiedTrainer:
         # Resume training
         start_epoch = 1
         best_val_acc = 0.0
+        best_epoch = 0
         patience_counter = 0
         checkpoint_path = self.checkpoints_dir / f'{self.model_name}_checkpoint.pth'
         
@@ -390,6 +407,7 @@ class UnifiedTrainer:
             
             start_epoch = checkpoint['epoch'] + 1
             best_val_acc = checkpoint.get('best_val_acc', 0.0)
+            best_epoch = checkpoint.get('best_epoch', 0)
             # Reset patience when resuming with new training setup
             patience_counter = 0  # Fresh start for patience
             print(f"✅ Resumed from epoch {start_epoch}, best val acc: {best_val_acc:.4f}")
@@ -408,7 +426,7 @@ class UnifiedTrainer:
             print(f"{'='*60}")
             
             # Train
-            train_loss, train_acc = self.train_epoch(epoch)
+            train_loss, train_acc, diversity_loss = self.train_epoch(epoch)
             
             # Validate
             val_loss, val_acc, val_f1, val_precision, val_recall, predictions, targets = self.validate()
@@ -433,12 +451,13 @@ class UnifiedTrainer:
             # Print metrics with timing
             completion_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             print(f"Train: Loss={train_loss:.4f}, Acc={train_acc:.4f}")
+            print(f"🎲 Attention Diversity Loss: {diversity_loss:.4f}")
             print(f"Val: Loss={val_loss:.4f}, Acc={val_acc:.4f}, F1={val_f1:.4f}")
             print(f"Precision={val_precision:.4f}, Recall={val_recall:.4f}")
             print(f"LR: {current_lr:.2e}")
             print(f"⏱️  Epoch Duration: {epoch_duration:.1f}s | Completed at: {completion_time}")
             print(f"📊 Avg Epoch Time: {avg_epoch_time:.1f}s | Est. Remaining: {estimated_remaining/3600:.1f}h")
-            print(f"🏆 Best Model: Val Acc {best_val_acc:.4f} | Patience: {patience_counter}/{patience}")
+            print(f"🏆 Best Model: Epoch {best_epoch}, Val Acc {best_val_acc:.4f}")
             
             # Log to TensorBoard
             writer.add_scalar('Loss/train', train_loss, epoch)
@@ -449,6 +468,7 @@ class UnifiedTrainer:
             writer.add_scalar('Precision/val', val_precision, epoch)
             writer.add_scalar('Recall/val', val_recall, epoch)
             writer.add_scalar('Learning_Rate', current_lr, epoch)
+            writer.add_scalar('Attention_Diversity_Loss', diversity_loss, epoch)
             
             # Early stopping check
             if val_acc > best_val_acc + 1e-4:
@@ -467,6 +487,7 @@ class UnifiedTrainer:
                 'optimizer_state_dict': self.optimizer.state_dict(),
                 'scheduler_state_dict': self.scheduler.state_dict(),
                 'best_val_acc': best_val_acc,
+                'best_epoch': best_epoch,
                 'val_acc': val_acc,
                 'train_loss': train_loss,
                 'train_acc': train_acc,
@@ -479,6 +500,7 @@ class UnifiedTrainer:
             # Save best model only when we improve
             if val_acc > best_val_acc:
                 best_val_acc = val_acc
+                best_epoch = epoch
                 torch.save(self.model.state_dict(), self.models_dir / f'{self.model_name}.pth')
                 print(f"💾 Saved new best model with accuracy: {best_val_acc:.4f}")
                 
@@ -512,15 +534,16 @@ class UnifiedTrainer:
 def main():
     parser = argparse.ArgumentParser(description='Train insect classifier on unified datasets')
     parser.add_argument('--dataset', 
-                       choices=['insectsound1000', 'insectset459', 'combined'], 
+                       choices=['insectsound1000', 'insectset459', 'sina', 'xenocanto', 'combined'], 
                        default='combined',
-                       help='Dataset to train on (use "combined" for both datasets)')
+                       help='Dataset to train on (use "combined" for all datasets)')
     parser.add_argument('--model-name', help='Custom model name (optional)')
     parser.add_argument('--epochs', type=int, default=1000, help='Maximum epochs')
     parser.add_argument('--patience', type=int, default=15, help='Early stopping patience')
     parser.add_argument('--lr', type=float, default=1.41e-4, help='Learning rate (scaled for batch size 64)')
     parser.add_argument('--weight-decay', type=float, default=1e-4, help='Weight decay')
     parser.add_argument('--batch-size', type=int, default=64, help='Batch size for training and validation')
+    parser.add_argument('--diversity-weight', type=float, default=0.1, help='Weight for attention diversity loss (exploration)')
     parser.add_argument('--no-resume', action='store_true', help='Don\'t resume from checkpoint')
     parser.add_argument('--reset-optimizer', action='store_true', help='Reset optimizer and scheduler while keeping model weights')
     
@@ -540,7 +563,7 @@ def main():
     # Load data and create model
     trainer.load_data()
     trainer.create_model()
-    trainer.setup_training(lr=args.lr, weight_decay=args.weight_decay)
+    trainer.setup_training(lr=args.lr, weight_decay=args.weight_decay, diversity_weight=args.diversity_weight)
     
     # Set reset_optimizer flag if requested
     if args.reset_optimizer:

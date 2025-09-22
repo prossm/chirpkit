@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Unified preprocessing script for both InsectSound1000 and InsectSet459 datasets
+Unified preprocessing script for InsectSound1000, InsectSet459, and SINA datasets
+Creates globally balanced insect classifier with European, global, and North American species
 """
 import os
 import sys
@@ -27,14 +28,29 @@ class UnifiedDatasetProcessor:
                 'data_dir': self.base_data_dir / 'insectsound1000',
                 'metadata_file': 'metadata.csv',
                 'audio_dir': 'versions/1/InsectSound1000',
-                'format': 'insectsound1000'
+                'format': 'insectsound1000',
+                'region': 'Europe'
             },
             'insectset459': {
                 'data_dir': self.base_data_dir / 'insectset459',
                 'metadata_file': 'InsectSet459_Train_Val_Annotation.csv',
                 'audio_dir': 'Train',  # For training data
                 'validation_dir': 'Validation',  # For validation data  
-                'format': 'insectset459'
+                'format': 'insectset459',
+                'region': 'Global'
+            },
+            'sina': {
+                'data_dir': self.base_data_dir / 'sina',
+                'audio_dir': 'audio',  # Extracted from ZIP
+                'format': 'sina',
+                'region': 'North America'
+            },
+            'xenocanto': {
+                'data_dir': self.base_data_dir / 'xenocanto',
+                'metadata_file': 'xenocanto_metadata.json',
+                'audio_dir': 'audio',
+                'format': 'xenocanto',
+                'region': 'Global Community'
             }
         }
     
@@ -57,10 +73,40 @@ class UnifiedDatasetProcessor:
         elif config['format'] == 'insectset459':
             # InsectSet459 format: different structure
             return self._process_insectset459_metadata(df, config)
+        elif config['format'] == 'sina':
+            # SINA format: use metadata from SINA text files
+            return self._process_sina_metadata(config)
+        elif config['format'] == 'xenocanto':
+            # Xeno-canto format: JSON metadata file
+            return self._process_xenocanto_metadata(config)
     
     def _process_insectsound1000_metadata(self, df, config):
-        """Process InsectSound1000 metadata format"""
+        """Process InsectSound1000 metadata format with balanced subsampling"""
         print(f"📊 Processing InsectSound1000 metadata: {len(df)} samples")
+        
+        # IMPORTANT: Subsample to 1000 files to remove European bias
+        # Use stratified sampling to maintain species diversity
+        subsample_size = 1000
+        
+        if len(df) > subsample_size:
+            print(f"🎯 Subsampling {len(df)} -> {subsample_size} files for geographic balance")
+            
+            # Group by species and sample proportionally
+            species_counts = df['species'].value_counts()
+            sampled_dfs = []
+            
+            for species, count in species_counts.items():
+                species_df = df[df['species'] == species]
+                # Calculate proportional sample size
+                n_samples = max(1, int((count / len(df)) * subsample_size))
+                n_samples = min(n_samples, len(species_df))  # Don't exceed available
+                
+                sampled = species_df.sample(n=n_samples, random_state=42)
+                sampled_dfs.append(sampled)
+                print(f"  {species}: {count} -> {n_samples} samples")
+            
+            df = pd.concat(sampled_dfs, ignore_index=True)
+            print(f"✅ Subsampled to {len(df)} files maintaining species diversity")
         
         processed_data = []
         for _, row in df.iterrows():
@@ -69,7 +115,8 @@ class UnifiedDatasetProcessor:
                 'filepath': Path(row['filepath']),  # Use filepath as-is
                 'species': row['species'],
                 'split': 'train',  # Will be split later
-                'dataset': 'insectsound1000'
+                'dataset': 'insectsound1000',
+                'region': 'Europe'
             })
         
         return pd.DataFrame(processed_data)
@@ -218,12 +265,89 @@ class UnifiedDatasetProcessor:
         print(f"🦗 {len(unique_species)} unique species")
         
         return splits_dir
+    
+    def _process_sina_metadata(self, config):
+        """Process SINA metadata from text files"""
+        print("📊 Processing SINA metadata from text files")
+        
+        # Load SINA media.txt file
+        media_file = config['data_dir'] / 'audio' / 'media.txt'
+        
+        if not media_file.exists():
+            raise FileNotFoundError(f"SINA media.txt not found: {media_file}")
+        
+        import pandas as pd
+        # Read tab-separated media.txt
+        df = pd.read_csv(media_file, sep='\t')
+        
+        processed_data = []
+        wav_dir = config['data_dir'] / 'wav_files'
+        
+        for _, row in df.iterrows():
+            media_id = row.get('MediaID', f'sina_{len(processed_data)}')
+            species = row.get('TaxonID', 'unknown_species')
+            
+            # Look for corresponding audio file
+            safe_species = species.replace(' ', '_').replace('/', '_')
+            filename = f"{media_id}_{safe_species}.wav"
+            filepath = wav_dir / filename
+            
+            if filepath.exists():
+                processed_data.append({
+                    'filepath': filepath,
+                    'species': species,
+                    'split': 'train',
+                    'dataset': 'sina',
+                    'region': 'North America'
+                })
+        
+        print(f"✅ Processed {len(processed_data)} SINA recordings")
+        return pd.DataFrame(processed_data)
+    
+    def _process_xenocanto_metadata(self, config):
+        """Process Xeno-canto JSON metadata"""
+        print("📊 Processing Xeno-canto metadata from JSON")
+        
+        metadata_file = config['data_dir'] / config['audio_dir'] / config['metadata_file']
+        
+        if not metadata_file.exists():
+            raise FileNotFoundError(f"Xeno-canto metadata not found: {metadata_file}")
+        
+        import json
+        with open(metadata_file, 'r') as f:
+            metadata = json.load(f)
+        
+        processed_data = []
+        audio_dir = config['data_dir'] / config['audio_dir']
+        
+        for item in metadata:
+            filename = item.get('filename', '')
+            species = item.get('scientific_name', 'unknown_species')
+            
+            if not species or species == 'unknown_species':
+                species = item.get('species', 'unknown_species')
+            
+            filepath = audio_dir / filename
+            
+            if filepath.exists():
+                processed_data.append({
+                    'filepath': filepath,
+                    'species': species,
+                    'split': 'train',
+                    'dataset': 'xenocanto',
+                    'region': 'Global Community',
+                    'country': item.get('country', 'Unknown'),
+                    'quality': item.get('quality', 'Unknown')
+                })
+        
+        print(f"✅ Processed {len(processed_data)} Xeno-canto recordings")
+        return pd.DataFrame(processed_data)
 
 def main():
     parser = argparse.ArgumentParser(description='Preprocess insect audio datasets')
     parser.add_argument('--dataset', 
-                       choices=['insectsound1000', 'insectset459', 'both'], 
-                       default='both',
+                       choices=['insectsound1000', 'insectset459', 'sina', 'xenocanto', 'all'], 
+                       default='all',
                        help='Dataset to preprocess')
     parser.add_argument('--limit', type=int, help='Limit number of samples for testing')
     parser.add_argument('--no-splits', action='store_true', help='Skip creating train/val/test splits')
@@ -233,7 +357,9 @@ def main():
     
     processor = UnifiedDatasetProcessor()
     
-    if args.dataset == 'both':
+    if args.dataset == 'all':
+        datasets = ['insectsound1000', 'insectset459', 'sina', 'xenocanto']
+    elif args.dataset == 'both':
         datasets = ['insectsound1000', 'insectset459']
     else:
         datasets = [args.dataset]

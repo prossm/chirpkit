@@ -26,7 +26,7 @@ class TrainingConfig:
     batch_size: int = 32
     learning_rate: float = 1e-3
     weight_decay: float = 1e-4
-    max_epochs: int = 1000
+    max_epochs: int = 2000
     patience: int = 15
     min_delta: float = 1e-4
     

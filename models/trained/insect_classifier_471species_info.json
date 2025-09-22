@@ -1,9 +1,9 @@
 {
   "dataset": "combined",
   "model_name": "insect_classifier_471species",
-  "last_epoch": 566,
-  "best_val_acc": 0.7378727497595163,
-  "best_epoch": 566,
+  "last_epoch": 948,
+  "best_val_acc": 0.7476295176583757,
+  "best_epoch": 948,
   "n_classes": 471,
   "species_list": [
     "Acanthoventris_drewseni",
@@ -478,5 +478,5 @@
     "Zeuneriana_abbreviata",
     "Zvenella_geniculata"
   ],
-  "last_updated": "2025-09-09T12:13:59.414029"
+  "last_updated": "2025-09-13T01:57:42.935649"
 }
