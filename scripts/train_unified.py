@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """
-Unified training script for both InsectSound1000 and InsectSet459 datasets
+Unified training script for multiple insect sound datasets
+Supports: InsectSound1000, InsectSet459, SINA, Xeno-canto, and combined mode (609 species)
 """
 import torch
 import torch.nn as nn
@@ -26,10 +27,7 @@ from torch.utils.tensorboard import SummaryWriter
 
 # Label encoding
 from sklearn.preprocessing import LabelEncoder
-from sklearn.metrics import classification_report, confusion_matrix, f1_score, precision_score, recall_score
-from sklearn.utils.class_weight import compute_class_weight
-import matplotlib.pyplot as plt
-import seaborn as sns
+from sklearn.metrics import f1_score, precision_score, recall_score
 
 # Augmentation - use full path to avoid conflicts
 from data.augmentation import InsectAudioAugmenter, AugmentedDataset
@@ -54,10 +52,21 @@ class NpyDataset(Dataset):
 class UnifiedTrainer:
     """Unified training for multiple datasets"""
     
-    def __init__(self, dataset_name='insectsound1000', model_name=None, batch_size=64):
+    def __init__(self, dataset_name='insectsound1000', model_name=None, batch_size=64, gradient_accumulation_steps=1, force_cpu=False):
         self.dataset_name = dataset_name
         self.batch_size = batch_size
-        self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        self.gradient_accumulation_steps = gradient_accumulation_steps
+        self.reset_optimizer = False  # Flag for resetting optimizer on resume
+
+        # Device selection: use CPU by default for stability (MPS causes bus errors)
+        if force_cpu:
+            self.device = torch.device('cpu')
+        elif torch.cuda.is_available():
+            self.device = torch.device('cuda')
+        else:
+            self.device = torch.device('cpu')
+
+        # Note: MPS disabled due to bus errors in complex training loops
         
         # Data paths based on dataset
         if dataset_name in ['insectsound1000', 'insectset459', 'sina', 'xenocanto']:
@@ -105,10 +114,13 @@ class UnifiedTrainer:
         if not all(f.exists() for f in [train_features, train_labels, val_features, val_labels]):
             raise FileNotFoundError(f"Split files not found in {self.splits_dir}. Run preprocessing first.")
         
-        # Fit label encoder on training labels
+        # Fit label encoder on ALL labels (train + val) to avoid unseen label errors
         train_labels_raw = np.load(train_labels)
+        val_labels_raw = np.load(val_labels)
+        all_labels = np.concatenate([train_labels_raw, val_labels_raw])
         self.label_encoder = LabelEncoder()
-        self.label_encoder.fit(train_labels_raw)
+        self.label_encoder.fit(all_labels)
+        print(f"🏷️  Label encoder fitted on {len(self.label_encoder.classes_)} unique species")
         
         return self._create_datasets_from_splits(train_features, train_labels, val_features, val_labels)
     
@@ -163,11 +175,37 @@ class UnifiedTrainer:
         combined_val_labels = np.concatenate(all_val_labels, axis=0)
         
         print(f"🔗 Combined: {len(combined_train_features)} train, {len(combined_val_features)} val")
-        
-        # Fit label encoder on combined training labels
+
+        # Filter out species with too few samples (< 10 in training set)
+        from collections import Counter
+        train_species_counts = Counter(combined_train_labels)
+        min_samples_per_species = 10
+
+        species_to_keep = {species for species, count in train_species_counts.items()
+                          if count >= min_samples_per_species}
+
+        if len(species_to_keep) < len(train_species_counts):
+            filtered_species = len(train_species_counts) - len(species_to_keep)
+            print(f"🗑️  Filtering out {filtered_species} species with < {min_samples_per_species} training samples")
+
+            # Filter training data
+            train_mask = np.array([label in species_to_keep for label in combined_train_labels])
+            combined_train_features = combined_train_features[train_mask]
+            combined_train_labels = combined_train_labels[train_mask]
+
+            # Filter validation data
+            val_mask = np.array([label in species_to_keep for label in combined_val_labels])
+            combined_val_features = combined_val_features[val_mask]
+            combined_val_labels = combined_val_labels[val_mask]
+
+            print(f"✅ After filtering: {len(combined_train_features)} train, {len(combined_val_features)} val")
+
+        # Fit label encoder on ALL labels (train + val) to avoid unseen label errors
+        all_labels = np.concatenate([combined_train_labels, combined_val_labels])
         self.label_encoder = LabelEncoder()
-        self.label_encoder.fit(combined_train_labels)
-        
+        self.label_encoder.fit(all_labels)
+        print(f"🏷️  Label encoder fitted on {len(self.label_encoder.classes_)} unique species")
+
         # Save combined splits for future use
         np.save(self.splits_dir / 'X_train.npy', combined_train_features)
         np.save(self.splits_dir / 'y_train.npy', combined_train_labels)
@@ -271,26 +309,83 @@ class UnifiedTrainer:
         
         return self.model
     
-    def setup_training(self, lr=1e-4, weight_decay=1e-4, diversity_weight=0.1):
+    def setup_training(self, lr=1e-4, weight_decay=1e-4, diversity_weight=0.1, use_class_weights=True, label_smoothing=0.1,
+                       use_cosine_schedule=True, warmup_epochs=10, max_epochs=2000):
         """Setup optimizer, criterion, scheduler"""
         # Use AdamW optimizer for better performance
         self.optimizer = optim.AdamW(self.model.parameters(), lr=lr, weight_decay=weight_decay)
-        self.criterion = nn.CrossEntropyLoss()
+        self.base_lr = lr  # Store base learning rate for warmup
+        self.use_cosine_schedule = use_cosine_schedule
+        self.warmup_epochs = warmup_epochs
+
+        # Compute class weights for imbalanced dataset
+        if use_class_weights and hasattr(self, 'train_dataset'):
+            from collections import Counter
+            import torch
+
+            # Get all training labels
+            all_labels = []
+            for i in range(len(self.train_dataset.dataset) if hasattr(self.train_dataset, 'dataset') else len(self.train_dataset)):
+                try:
+                    _, label = self.train_dataset.dataset[i] if hasattr(self.train_dataset, 'dataset') else self.train_dataset[i]
+                    all_labels.append(label.item())
+                except:
+                    pass
+
+            # Calculate class weights (inverse frequency)
+            label_counts = Counter(all_labels)
+            n_samples = len(all_labels)
+            n_classes = len(self.label_encoder.classes_)
+
+            # Weight = n_samples / (n_classes * count_for_class)
+            class_weights = torch.zeros(n_classes)
+            for class_idx, count in label_counts.items():
+                class_weights[class_idx] = n_samples / (n_classes * count)
+
+            # Normalize weights to prevent extreme values
+            class_weights = class_weights / class_weights.mean()
+            class_weights = class_weights.to(self.device)
+
+            self.criterion = nn.CrossEntropyLoss(weight=class_weights, label_smoothing=label_smoothing)
+            print(f"⚖️  Using class weights: min={class_weights.min():.2f}, max={class_weights.max():.2f}, mean={class_weights.mean():.2f}")
+        else:
+            self.criterion = nn.CrossEntropyLoss(label_smoothing=label_smoothing)
+
+        print(f"✨ Label smoothing: {label_smoothing} (prevents overconfidence)")
         self.diversity_weight = diversity_weight
-        
-        # Better learning rate scheduler - ReduceLROnPlateau
-        self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(
-            self.optimizer, 
-            mode='max',  # Monitor validation accuracy (higher is better)
-            factor=0.5,  # Reduce LR by half when plateau
-            patience=5,  # Wait 5 epochs before reducing
-            min_lr=1e-7,  # Minimum learning rate
-            verbose=True
-        )
-        
+
+        # Learning rate scheduler setup
+        n_classes = len(self.label_encoder.classes_)
+
+        if use_cosine_schedule:
+            # Cosine Annealing with Warmup (modern approach)
+            self.scheduler = optim.lr_scheduler.CosineAnnealingWarmRestarts(
+                self.optimizer,
+                T_0=max_epochs // 4,  # First restart after 1/4 of training
+                T_mult=2,  # Double the period after each restart
+                eta_min=1e-7  # Minimum learning rate
+            )
+            scheduler_name = f"CosineAnnealing with {warmup_epochs}-epoch warmup"
+        else:
+            # ReduceLROnPlateau (fallback)
+            scheduler_patience = max(10, min(20, n_classes // 30))
+            self.scheduler = optim.lr_scheduler.ReduceLROnPlateau(
+                self.optimizer,
+                mode='max',
+                factor=0.5,
+                patience=scheduler_patience,
+                min_lr=1e-7,
+                verbose=True
+            )
+            scheduler_name = f"ReduceLROnPlateau (patience={scheduler_patience})"
+
+        effective_batch_size = self.batch_size * self.gradient_accumulation_steps
         print(f"⚙️ Training setup: AdamW optimizer, lr={lr}, weight_decay={weight_decay}")
-        print(f"⚙️ LR Scheduler: ReduceLROnPlateau with patience=5")
+        print(f"⚙️ Batch size: {self.batch_size} x {self.gradient_accumulation_steps} accumulation = {effective_batch_size} effective")
+        print(f"⚙️ LR Scheduler: {scheduler_name}")
         print(f"🎲 Attention diversity weight: {diversity_weight}")
+        if use_class_weights:
+            print(f"⚖️  Class-weighted loss: ENABLED")
     
     def shuffle_data_each_epoch(self):
         """Recreate data loader with new shuffle for each epoch"""
@@ -304,46 +399,64 @@ class UnifiedTrainer:
     def train_epoch(self, epoch):
         """Train for one epoch with attention diversity loss"""
         self.model.train()
+
+        # Apply warmup if using cosine schedule
+        if self.use_cosine_schedule and epoch <= self.warmup_epochs:
+            # Linear warmup: gradually increase LR from 0 to base_lr
+            warmup_factor = epoch / self.warmup_epochs
+            for param_group in self.optimizer.param_groups:
+                param_group['lr'] = self.base_lr * warmup_factor
+            if epoch == 1:
+                print(f"🔥 Warmup: LR = {self.base_lr * warmup_factor:.2e}")
+
         total_loss = 0
         total_diversity_loss = 0
         total_correct = 0
         total_samples = 0
-        
+
+        total_batches = len(self.train_loader)
+
         for batch_idx, (X_batch, y_batch) in enumerate(self.train_loader):
             X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
-            
-            # Debug: Show first few samples of first batch for first 3 epochs to verify shuffling
-            if batch_idx == 0 and epoch <= 287:  # Show for a few epochs to verify shuffling
-                sample_indices = [f"{X_batch[i].sum().item():.2f}" for i in range(min(5, len(X_batch)))]
-                print(f"  Epoch {epoch} first batch sample checksums: {sample_indices}")
-            
-            self.optimizer.zero_grad()
-            
+
+            # Real-time progress bar
+            progress_pct = (batch_idx + 1) / total_batches * 100
+            bar_length = 30
+            filled_length = int(bar_length * progress_pct // 100)
+            bar = '█' * filled_length + '░' * (bar_length - filled_length)
+            print(f"    📊 Epoch {epoch} [{bar}] {batch_idx + 1}/{total_batches} ({progress_pct:.1f}%)", end='\r', flush=True)
+
             # Forward pass with attention weights
             outputs, attention_weights = self.model(X_batch, return_attention=True)
-            
+
             # Classification loss
             classification_loss = self.criterion(outputs, y_batch)
-            
+
             # Attention diversity loss (encourage exploration)
             diversity_loss = self.model.compute_attention_diversity_loss(attention_weights)
-            
-            # Combined loss
-            total_batch_loss = classification_loss + self.diversity_weight * diversity_loss
-            
+
+            # Combined loss (normalize by accumulation steps)
+            total_batch_loss = (classification_loss + self.diversity_weight * diversity_loss) / self.gradient_accumulation_steps
+
             total_batch_loss.backward()
-            
-            # Gradient clipping
-            torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
-            
-            self.optimizer.step()
+
+            # Only update weights after accumulating gradients
+            if (batch_idx + 1) % self.gradient_accumulation_steps == 0 or (batch_idx + 1) == total_batches:
+                # Gradient clipping
+                torch.nn.utils.clip_grad_norm_(self.model.parameters(), max_norm=1.0)
+
+                self.optimizer.step()
+                self.optimizer.zero_grad()
             
             total_loss += classification_loss.item()
             total_diversity_loss += diversity_loss.item()
             _, predicted = torch.max(outputs, 1)
             total_correct += (predicted == y_batch).sum().item()
             total_samples += y_batch.size(0)
-        
+
+        # Clear progress line and move to next line
+        print()  # Move to next line after progress tracking
+
         avg_loss = total_loss / len(self.train_loader)
         avg_diversity_loss = total_diversity_loss / len(self.train_loader)
         accuracy = total_correct / total_samples
@@ -356,9 +469,17 @@ class UnifiedTrainer:
         total_loss = 0
         all_predictions = []
         all_targets = []
-        
+
+        total_val_batches = len(self.val_loader)
+
         with torch.no_grad():
-            for X_batch, y_batch in self.val_loader:
+            for batch_idx, (X_batch, y_batch) in enumerate(self.val_loader):
+                # Validation progress bar
+                progress_pct = (batch_idx + 1) / total_val_batches * 100
+                bar_length = 30
+                filled_length = int(bar_length * progress_pct // 100)
+                bar = '█' * filled_length + '░' * (bar_length - filled_length)
+                print(f"    🔍 Validating [{bar}] {batch_idx + 1}/{total_val_batches} ({progress_pct:.1f}%)", end='\r', flush=True)
                 X_batch, y_batch = X_batch.to(self.device), y_batch.to(self.device)
                 outputs = self.model(X_batch)
                 loss = self.criterion(outputs, y_batch)
@@ -367,7 +488,10 @@ class UnifiedTrainer:
                 _, predicted = torch.max(outputs, 1)
                 all_predictions.extend(predicted.cpu().numpy())
                 all_targets.extend(y_batch.cpu().numpy())
-        
+
+        # Clear validation progress line
+        print()
+
         avg_loss = total_loss / len(self.val_loader)
         accuracy = sum(p == t for p, t in zip(all_predictions, all_targets)) / len(all_targets)
         f1 = f1_score(all_targets, all_predictions, average='weighted')
@@ -477,8 +601,11 @@ class UnifiedTrainer:
             else:
                 patience_counter += 1
             
-            # Step scheduler with validation accuracy for ReduceLROnPlateau
-            self.scheduler.step(val_acc)
+            # Step scheduler (different calls for different scheduler types)
+            if self.use_cosine_schedule:
+                self.scheduler.step()  # CosineAnnealing doesn't need metric
+            else:
+                self.scheduler.step(val_acc)  # ReduceLROnPlateau needs validation accuracy
             
             # Save checkpoint
             checkpoint = {
@@ -538,32 +665,58 @@ def main():
                        default='combined',
                        help='Dataset to train on (use "combined" for all datasets)')
     parser.add_argument('--model-name', help='Custom model name (optional)')
-    parser.add_argument('--epochs', type=int, default=1000, help='Maximum epochs')
-    parser.add_argument('--patience', type=int, default=15, help='Early stopping patience')
-    parser.add_argument('--lr', type=float, default=1.41e-4, help='Learning rate (scaled for batch size 64)')
+    parser.add_argument('--epochs', type=int, default=2000, help='Maximum epochs')
+    parser.add_argument('--patience', type=int, default=50, help='Early stopping patience (50 for complex datasets)')
+    parser.add_argument('--lr', type=float, default=3e-4, help='Learning rate (optimized for batch size 16)')
     parser.add_argument('--weight-decay', type=float, default=1e-4, help='Weight decay')
-    parser.add_argument('--batch-size', type=int, default=64, help='Batch size for training and validation')
-    parser.add_argument('--diversity-weight', type=float, default=0.1, help='Weight for attention diversity loss (exploration)')
+    parser.add_argument('--batch-size', type=int, default=16, help='Batch size (8-16 recommended for 609 classes)')
+    parser.add_argument('--gradient-accumulation', type=int, default=4, help='Gradient accumulation steps (effective batch = batch-size * this)')
+    parser.add_argument('--diversity-weight', type=float, default=0.02, help='Attention diversity loss weight (lower = more specialization)')
+    parser.add_argument('--label-smoothing', type=float, default=0.1, help='Label smoothing factor (0.0-0.2, prevents overconfidence)')
+    parser.add_argument('--use-cosine-schedule', action='store_true', help='Use cosine annealing schedule instead of ReduceLROnPlateau')
+    parser.add_argument('--warmup-epochs', type=int, default=10, help='Number of warmup epochs (for cosine schedule)')
+    parser.add_argument('--no-class-weights', action='store_true', help='Disable class weighting for imbalanced data')
     parser.add_argument('--no-resume', action='store_true', help='Don\'t resume from checkpoint')
     parser.add_argument('--reset-optimizer', action='store_true', help='Reset optimizer and scheduler while keeping model weights')
+    parser.add_argument('--force-cpu', action='store_true', help='Force CPU training (disable GPU acceleration)')
     
     args = parser.parse_args()
     
     print(f"🦗 Unified Insect Classifier Training")
     print(f"Dataset: {args.dataset}")
-    print(f"Device: {'CUDA' if torch.cuda.is_available() else 'CPU'}")
+    # Device info
+    if args.force_cpu:
+        device_name = "CPU (forced)"
+    elif torch.backends.mps.is_available():
+        device_name = "MPS (Apple Silicon GPU)"
+    elif torch.cuda.is_available():
+        device_name = "CUDA"
+    else:
+        device_name = "CPU"
+    print(f"Device: {device_name}")
     
     # Create trainer
     trainer = UnifiedTrainer(
         dataset_name=args.dataset,
         model_name=args.model_name,
-        batch_size=args.batch_size
+        batch_size=args.batch_size,
+        gradient_accumulation_steps=args.gradient_accumulation,
+        force_cpu=args.force_cpu
     )
     
     # Load data and create model
     trainer.load_data()
     trainer.create_model()
-    trainer.setup_training(lr=args.lr, weight_decay=args.weight_decay, diversity_weight=args.diversity_weight)
+    trainer.setup_training(
+        lr=args.lr,
+        weight_decay=args.weight_decay,
+        diversity_weight=args.diversity_weight,
+        use_class_weights=not args.no_class_weights,
+        label_smoothing=args.label_smoothing,
+        use_cosine_schedule=args.use_cosine_schedule,
+        warmup_epochs=args.warmup_epochs,
+        max_epochs=args.epochs
+    )
     
     # Set reset_optimizer flag if requested
     if args.reset_optimizer:

@@ -11,16 +11,30 @@ import pandas as pd
 import argparse
 from sklearn.model_selection import train_test_split
 
-# Add src to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+# Add src to path (use insert to prioritize local modules)
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 from data.preprocessing import InsectAudioPreprocessor
 
 class UnifiedDatasetProcessor:
     """Handle preprocessing for multiple insect audio datasets"""
-    
-    def __init__(self, base_data_dir='data/raw'):
+
+    def __init__(self, base_data_dir='data/raw', use_enhanced=True):
         self.base_data_dir = Path(base_data_dir)
-        self.preprocessor = InsectAudioPreprocessor()
+        # Use enhanced features for 80% target accuracy
+        # 256 mel bins, 22050 Hz, 40 MFCCs with deltas
+        if use_enhanced:
+            self.preprocessor = InsectAudioPreprocessor(
+                target_sr=22050,      # Higher sample rate for high-freq insect calls
+                duration=2.5,
+                n_fft=4096,           # 4x better frequency resolution
+                hop_length=256,       # Better temporal resolution
+                n_mels=256,           # 2x frequency resolution
+                n_mfcc=40,            # Richer timbre features
+                use_enhanced=True
+            )
+        else:
+            # Fallback to basic features
+            self.preprocessor = InsectAudioPreprocessor()
         
         # Dataset configurations
         self.datasets = {
@@ -58,27 +72,30 @@ class UnifiedDatasetProcessor:
         """Load metadata for specified dataset"""
         if dataset_name not in self.datasets:
             raise ValueError(f"Unknown dataset: {dataset_name}. Available: {list(self.datasets.keys())}")
-        
+
         config = self.datasets[dataset_name]
-        metadata_path = config['data_dir'] / config['metadata_file']
-        
-        if not metadata_path.exists():
-            raise FileNotFoundError(f"Metadata file not found: {metadata_path}")
-        
-        df = pd.read_csv(metadata_path)
-        
-        if config['format'] == 'insectsound1000':
-            # InsectSound1000 format: filepath, species
-            return self._process_insectsound1000_metadata(df, config)
-        elif config['format'] == 'insectset459':
-            # InsectSet459 format: different structure
-            return self._process_insectset459_metadata(df, config)
-        elif config['format'] == 'sina':
+
+        if config['format'] == 'sina':
             # SINA format: use metadata from SINA text files
             return self._process_sina_metadata(config)
         elif config['format'] == 'xenocanto':
             # Xeno-canto format: JSON metadata file
             return self._process_xenocanto_metadata(config)
+        else:
+            # CSV-based formats
+            metadata_path = config['data_dir'] / config['metadata_file']
+
+            if not metadata_path.exists():
+                raise FileNotFoundError(f"Metadata file not found: {metadata_path}")
+
+            df = pd.read_csv(metadata_path)
+
+            if config['format'] == 'insectsound1000':
+                # InsectSound1000 format: filepath, species
+                return self._process_insectsound1000_metadata(df, config)
+            elif config['format'] == 'insectset459':
+                # InsectSet459 format: different structure
+                return self._process_insectset459_metadata(df, config)
     
     def _process_insectsound1000_metadata(self, df, config):
         """Process InsectSound1000 metadata format with balanced subsampling"""
@@ -124,27 +141,30 @@ class UnifiedDatasetProcessor:
     def _process_insectset459_metadata(self, df, config):
         """Process InsectSet459 metadata format"""
         print(f"📊 Processing InsectSet459 metadata: {len(df)} samples")
-        
+
         # Map splits based on directory structure
         train_base = config['data_dir'] / config['audio_dir']
         val_base = config['data_dir'] / config['validation_dir'] if 'validation_dir' in config else None
-        
+
         processed_data = []
         for _, row in df.iterrows():
             # InsectSet459 CSV format: file_name, species_name, subset
             filename = row.get('file_name', '')
             species = row.get('species_name', '')
             split = row.get('subset', 'Train')  # Train or Validation
-            
+
             if not filename or not species:
                 continue
-                
+
+            # Normalize species name: convert underscores to spaces
+            species = species.replace('_', ' ')
+
             # Determine file path based on split
             if split.lower() == 'validation' and val_base:
                 filepath = val_base / filename
             else:
                 filepath = train_base / filename
-            
+
             processed_data.append({
                 'filepath': filepath,
                 'species': species,
@@ -233,21 +253,61 @@ class UnifiedDatasetProcessor:
     def create_splits(self, features, labels, output_dir, test_size=0.2, val_size=0.1):
         """Create train/validation/test splits"""
         print(f"🔄 Creating data splits...")
-        
+
+        # Filter out species with only 1 sample (can't be split)
+        import pandas as pd
+        from collections import Counter
+
+        label_counts = Counter(labels)
+        single_sample_species = [label for label, count in label_counts.items() if count == 1]
+
+        if single_sample_species:
+            print(f"⚠️  Found {len(single_sample_species)} species with only 1 sample")
+            print(f"🗑️  Removing single-sample species for proper train/test splitting")
+
+            # Create mask to filter out single-sample species
+            mask = [label not in single_sample_species for label in labels]
+            features = features[mask]
+            labels = labels[mask]
+
+            print(f"📊 After filtering: {len(features)} samples, {len(set(labels))} species")
+
         # Create splits directory
         splits_dir = output_dir.parent.parent / 'splits' / output_dir.name
         splits_dir.mkdir(parents=True, exist_ok=True)
-        
-        # First split: train+val vs test
-        X_temp, X_test, y_temp, y_test = train_test_split(
-            features, labels, test_size=test_size, stratify=labels, random_state=42
-        )
+
+        # Check if we have enough samples for stratified splitting
+        min_class_count = min(Counter(labels).values())
+        test_samples = int(len(features) * test_size)
+        unique_classes = len(set(labels))
+
+        if test_samples < unique_classes or min_class_count < 2:
+            print(f"⚠️  Cannot use stratified splitting:")
+            print(f"   Test samples: {test_samples}, Unique classes: {unique_classes}")
+            print(f"   Min class count: {min_class_count}")
+            print(f"🔄 Using random splitting instead")
+            # Use random split for datasets with insufficient samples per class
+            X_temp, X_test, y_temp, y_test = train_test_split(
+                features, labels, test_size=test_size, random_state=42
+            )
+        else:
+            # First split: train+val vs test
+            X_temp, X_test, y_temp, y_test = train_test_split(
+                features, labels, test_size=test_size, stratify=labels, random_state=42
+            )
         
         # Second split: train vs val
         val_size_adjusted = val_size / (1 - test_size)  # Adjust for the reduced dataset
-        X_train, X_val, y_train, y_val = train_test_split(
-            X_temp, y_temp, test_size=val_size_adjusted, stratify=y_temp, random_state=42
-        )
+        min_class_count_temp = min(Counter(y_temp).values())
+        if len(X_temp) < 30 or min_class_count_temp < 2:
+            print(f"🔄 Using random split for train/val (min class: {min_class_count_temp})")
+            X_train, X_val, y_train, y_val = train_test_split(
+                X_temp, y_temp, test_size=val_size_adjusted, random_state=42
+            )
+        else:
+            X_train, X_val, y_train, y_val = train_test_split(
+                X_temp, y_temp, test_size=val_size_adjusted, stratify=y_temp, random_state=42
+            )
         
         # Save splits
         np.save(splits_dir / 'X_train.npy', X_train)
@@ -305,30 +365,54 @@ class UnifiedDatasetProcessor:
         return pd.DataFrame(processed_data)
     
     def _process_xenocanto_metadata(self, config):
-        """Process Xeno-canto JSON metadata"""
+        """Process Xeno-canto JSON metadata with species name mapping"""
         print("📊 Processing Xeno-canto metadata from JSON")
-        
+
         metadata_file = config['data_dir'] / config['audio_dir'] / config['metadata_file']
-        
+
         if not metadata_file.exists():
             raise FileNotFoundError(f"Xeno-canto metadata not found: {metadata_file}")
-        
+
         import json
         with open(metadata_file, 'r') as f:
             metadata = json.load(f)
-        
+
+        # Load species mapping
+        mapping_file = Path('data/xenocanto_species_mapping.json')
+        species_mapping = {}
+        if mapping_file.exists():
+            with open(mapping_file, 'r') as f:
+                mapping_data = json.load(f)
+                # Extract just the species -> scientific_name mapping
+                species_mapping = {
+                    species: data['scientific_name']
+                    for species, data in mapping_data.items()
+                    if not data['scientific_name'].startswith('UNMAPPED_')
+                }
+            print(f"📋 Loaded mapping for {len(species_mapping)} species")
+        else:
+            print("⚠️  No species mapping file found - using original names")
+
         processed_data = []
         audio_dir = config['data_dir'] / config['audio_dir']
-        
+        mapped_count = 0
+
         for item in metadata:
             filename = item.get('filename', '')
-            species = item.get('scientific_name', 'unknown_species')
-            
-            if not species or species == 'unknown_species':
-                species = item.get('species', 'unknown_species')
-            
+            original_species = item.get('scientific_name', 'unknown_species')
+
+            if not original_species or original_species == 'unknown_species':
+                original_species = item.get('species', 'unknown_species')
+
+            # Apply species mapping if available
+            if original_species in species_mapping:
+                species = species_mapping[original_species]
+                mapped_count += 1
+            else:
+                species = original_species
+
             filepath = audio_dir / filename
-            
+
             if filepath.exists():
                 processed_data.append({
                     'filepath': filepath,
@@ -339,8 +423,9 @@ class UnifiedDatasetProcessor:
                     'country': item.get('country', 'Unknown'),
                     'quality': item.get('quality', 'Unknown')
                 })
-        
+
         print(f"✅ Processed {len(processed_data)} Xeno-canto recordings")
+        print(f"🔄 Applied mapping to {mapped_count} species names")
         return pd.DataFrame(processed_data)
 
 def main():

@@ -12,7 +12,8 @@ from pathlib import Path
 from datetime import datetime
 
 # Add src to path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'src'))
+src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
+sys.path.insert(0, src_path)
 
 from models.bayesian_cnn_lstm import BayesianInsectClassifier
 from training.advanced_trainer import AdvancedInsectTrainer
@@ -80,7 +81,9 @@ class BayesianTrainingPipeline:
     
     def setup_advanced_training(self, train_dataset, val_dataset, config):
         """Setup advanced trainer with exploration and uncertainty"""
-        self.trainer = AdvancedInsectTrainer(self.model, device=self.device)
+        # Create log directory based on dataset name
+        log_dir = f'runs/bayesian_{self.dataset_name}_experiment'
+        self.trainer = AdvancedInsectTrainer(self.model, device=self.device, log_dir=log_dir)
         
         self.trainer.setup_training(
             train_dataset=train_dataset,
@@ -116,7 +119,9 @@ class BayesianTrainingPipeline:
         history = self.trainer.train(
             epochs=config['epochs'],
             patience=config['patience'],
-            save_dir=config['save_dir']
+            save_dir=config['save_dir'],
+            resume=config.get('resume', False),
+            checkpoint_dir=config.get('checkpoint_dir', 'models/bayesian_checkpoints')
         )
         
         return history
@@ -202,11 +207,15 @@ def main():
     
     # Model arguments
     parser.add_argument('--pretrained', type=str, help='Path to pretrained model to start from')
+    parser.add_argument('--new-model', action='store_true', help='Start fresh training (default is to resume from checkpoint)')
+    parser.add_argument('--resume', action='store_true', help='Resume from latest checkpoint (default behavior)')  # Keep for backward compatibility
+    parser.add_argument('--checkpoint-dir', type=str, default='models/bayesian_checkpoints',
+                       help='Directory for saving/loading checkpoints')
     parser.add_argument('--model-name', type=str, help='Custom model name')
     
     # Training arguments
     parser.add_argument('--epochs', type=int, default=500, help='Maximum epochs')
-    parser.add_argument('--patience', type=int, default=25, help='Early stopping patience')
+    parser.add_argument('--patience', type=int, default=50, help='Early stopping patience')
     parser.add_argument('--batch-size', type=int, default=32, help='Batch size')
     parser.add_argument('--lr', type=float, default=1e-4, help='Initial learning rate')
     parser.add_argument('--weight-decay', type=float, default=1e-4, help='Weight decay')
@@ -219,6 +228,11 @@ def main():
     parser.add_argument('--diversity-weight', type=float, default=0.1,
                        help='Weight for attention diversity loss')
     
+    # Device arguments
+    parser.add_argument('--device', type=str, default='auto',
+                       choices=['auto', 'cpu', 'cuda', 'mps'],
+                       help='Device to use (auto, cpu, cuda, mps)')
+
     # Output arguments
     parser.add_argument('--save-dir', type=str, default='models/bayesian_advanced',
                        help='Directory to save models')
@@ -234,18 +248,23 @@ def main():
     print(f"🎲 Exploration: {args.exploration_prob}")
     print(f"🔍 Uncertainty weight: {args.uncertainty_weight}")
     print(f"👁️ Diversity weight: {args.diversity_weight}")
+
+    # Default behavior is to resume unless --new-model is specified
+    should_resume = not args.new_model or args.resume
+    print(f"🔄 Resume from checkpoint: {'Yes' if should_resume else 'No (fresh start)'}")
     print("=" * 80)
-    
+
     # Initialize pipeline
-    pipeline = BayesianTrainingPipeline(dataset_name=args.dataset)
-    
+    pipeline = BayesianTrainingPipeline(dataset_name=args.dataset, device=args.device)
+
     # Load data
     train_dataset, val_dataset, n_classes = pipeline.load_data()
-    
+
     # Create Bayesian model
     model = pipeline.create_bayesian_model(n_classes, args.pretrained)
-    
+
     # Training configuration
+
     config = {
         'batch_size': args.batch_size,
         'learning_rate': args.lr,
@@ -253,7 +272,9 @@ def main():
         'exploration_prob': args.exploration_prob,
         'epochs': args.epochs,
         'patience': args.patience,
-        'save_dir': args.save_dir
+        'save_dir': args.save_dir,
+        'resume': should_resume,
+        'checkpoint_dir': args.checkpoint_dir
     }
     
     # Setup advanced training

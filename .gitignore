@@ -18,9 +18,15 @@ __pycache__/
 data/raw/
 data/processed/
 data/splits/
+data/features/
 
 # Model artifacts (keep trained models in repo, but ignore checkpoints and temporary files)
 models/checkpoints/
+models/bayesian_checkpoints/
+models/hybrid_stacked/
+models/enhanced_advanced/
+models/ensemble_advanced/
+models/adaptive_ensemble_advanced/
 runs/
 *.zip
 *.h5

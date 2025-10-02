@@ -93,7 +93,13 @@ def init_weights(m):
         nn.init.constant_(m.bias, 0)
 
 model.apply(init_weights)
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+# Setup device with MPS support
+if torch.backends.mps.is_available():
+    device = torch.device('mps')
+elif torch.cuda.is_available():
+    device = torch.device('cuda')
+else:
+    device = torch.device('cpu')
 model = model.to(device)
 
 # Calculate class weights to handle imbalance

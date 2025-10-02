@@ -1,0 +1,2242 @@
+{
+  "Greek Predatory Bush-cricket": {
+    "scientific_name": "Saga hellenica",
+    "mapping_type": "direct_mapping",
+    "recording_count": 701
+  },
+  "Schmidt's Marbled Bush-cricket": {
+    "scientific_name": "Barbitistes constrictus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 631
+  },
+  "Great Green Bush-cricket": {
+    "scientific_name": "Tettigonia viridissima",
+    "mapping_type": "direct_mapping",
+    "recording_count": 616
+  },
+  "Mediterranean Katydid": {
+    "scientific_name": "Tettigonia viridissima",
+    "mapping_type": "direct_mapping",
+    "recording_count": 589
+  },
+  "Limnos Bush-cricket": {
+    "scientific_name": "Poecilimon zimmeri",
+    "mapping_type": "direct_mapping",
+    "recording_count": 550
+  },
+  "La Greca's Slender Bush-cricket": {
+    "scientific_name": "Tessellana lagrecai",
+    "mapping_type": "direct_mapping",
+    "recording_count": 437
+  },
+  "Field Cricket": {
+    "scientific_name": "Gryllus campestris",
+    "mapping_type": "direct_mapping",
+    "recording_count": 330
+  },
+  "Arabian Sickle Bush-cricke": {
+    "scientific_name": "Saga ephippigera",
+    "mapping_type": "direct_mapping",
+    "recording_count": 321
+  },
+  "Upland Green Bush-cricket": {
+    "scientific_name": "Tettigonia cantans",
+    "mapping_type": "direct_mapping",
+    "recording_count": 267
+  },
+  "Black Saw Bush-cricket": {
+    "scientific_name": "Barbitistes serricauda",
+    "mapping_type": "direct_mapping",
+    "recording_count": 232
+  },
+  "Raymond's Bush-cricket": {
+    "scientific_name": "Raymond's Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 198
+  },
+  "Eisentraut's Bow-winged Grasshopper": {
+    "scientific_name": "Eisentraut's Bow-winged grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 190
+  },
+  "Two-spotted Cricket": {
+    "scientific_name": "Gryllomorpha dalmatina",
+    "mapping_type": "direct_mapping",
+    "recording_count": 173
+  },
+  "Ornate Bright Bush-cricket": {
+    "scientific_name": "Ornate Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 169
+  },
+  "Large Conehead": {
+    "scientific_name": "Ruspolia nitidula",
+    "mapping_type": "direct_mapping",
+    "recording_count": 166
+  },
+  "Balkan Ornate Bush-cricket": {
+    "scientific_name": "Balkan Ornate Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 163
+  },
+  "Rough Saddle Bush-cricket": {
+    "scientific_name": "Rough Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 163
+  },
+  "Southern Saw-tailed Bush-cricket": {
+    "scientific_name": "Barbitistes serricauda",
+    "mapping_type": "direct_mapping",
+    "recording_count": 161
+  },
+  "Saint-Paul's Bright Bush-cricket": {
+    "scientific_name": "Saint-Paul's Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 156
+  },
+  "Sepia Bush-cricket": {
+    "scientific_name": "Sepiana sepium",
+    "mapping_type": "direct_mapping",
+    "recording_count": 155
+  },
+  "Lily Bush-cricket": {
+    "scientific_name": "Tylopsis lilifolia",
+    "mapping_type": "direct_mapping",
+    "recording_count": 132
+  },
+  "More-modest Plump Bush-cricket": {
+    "scientific_name": "More-modest Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 126
+  },
+  "Mediterranean Bush-cricket": {
+    "scientific_name": "Mediterranean Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 123
+  },
+  "Blackwinged Saw Bush-cricket": {
+    "scientific_name": "Blackwinged Saw Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 119
+  },
+  "Saw-tailed Bush-cricket": {
+    "scientific_name": "Barbitistes serricauda",
+    "mapping_type": "direct_mapping",
+    "recording_count": 118
+  },
+  "Iberian Field Grasshopper": {
+    "scientific_name": "Chorthippus vagans",
+    "mapping_type": "direct_mapping",
+    "recording_count": 117
+  },
+  "Large Saw-tailed Bush-cricket": {
+    "scientific_name": "Barbitistes serricauda",
+    "mapping_type": "direct_mapping",
+    "recording_count": 115
+  },
+  "Catalan Saddle Bush-cricket": {
+    "scientific_name": "Ephippiger catalanus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 114
+  },
+  "Bog Bush-cricket": {
+    "scientific_name": "Metrioptera brachyptera",
+    "mapping_type": "direct_mapping",
+    "recording_count": 112
+  },
+  "European mole cricket": {
+    "scientific_name": "Gryllotalpa gryllotalpa",
+    "mapping_type": "direct_mapping",
+    "recording_count": 110
+  },
+  "French Grasshopper": {
+    "scientific_name": "Euchorthippus declivus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 108
+  },
+  "Spiny-legged Bush-cricket": {
+    "scientific_name": "Spiny-legged Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 107
+  },
+  "Balkan Saw Bush-cricket": {
+    "scientific_name": "Balkan Saw Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 105
+  },
+  "Hidden Marbled Bush-cricket": {
+    "scientific_name": "Hidden Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 100
+  },
+  "Macedonian Bright Bush-cricket": {
+    "scientific_name": "Macedonian Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 99
+  },
+  "Pelopponesian Bright Bush-cricket": {
+    "scientific_name": "Pelopponesian Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 88
+  },
+  "Pyrenean Grasshopper": {
+    "scientific_name": "Chorthippus scalaris",
+    "mapping_type": "direct_mapping",
+    "recording_count": 87
+  },
+  "Basque Bush-cricket": {
+    "scientific_name": "Basque Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 87
+  },
+  "Heath Bushcricket": {
+    "scientific_name": "Gampsocleis glabra",
+    "mapping_type": "direct_mapping",
+    "recording_count": 81
+  },
+  "Zwick's Bright Bush-cricket": {
+    "scientific_name": "Zwick's Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 81
+  },
+  "Alpine Saw Bush-cricket": {
+    "scientific_name": "Barbitistes alpinus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 80
+  },
+  "Woodland Grasshopper": {
+    "scientific_name": "Omocestus rufipes",
+    "mapping_type": "direct_mapping",
+    "recording_count": 80
+  },
+  "Rufous Grasshopper": {
+    "scientific_name": "Rufous grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 80
+  },
+  "Common Straw Grasshopper": {
+    "scientific_name": "Pseudochorthippus parallelus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 75
+  },
+  "Fischer's Bush-cricket": {
+    "scientific_name": "Barbitistes fischeri",
+    "mapping_type": "direct_mapping",
+    "recording_count": 75
+  },
+  "Zimmer's Bright Bush-cricket": {
+    "scientific_name": "Zimmer's Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 74
+  },
+  "Pyrenean Bush-cricket": {
+    "scientific_name": "Pyrenean Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 71
+  },
+  "Eastern Mountain Bush-cricket": {
+    "scientific_name": "Barbitistes obtusus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 68
+  },
+  "Noble Bright Bush-cricket": {
+    "scientific_name": "Poecilimon nobilis",
+    "mapping_type": "direct_mapping",
+    "recording_count": 68
+  },
+  "Zapatero's Saddle Bush-cricket": {
+    "scientific_name": "Zapatero's Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 66
+  },
+  "Large Speckled Bush-cricket": {
+    "scientific_name": "Large Speckled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 64
+  },
+  "Striped Marsh-cricket": {
+    "scientific_name": "Pteronemobius heydenii",
+    "mapping_type": "direct_mapping",
+    "recording_count": 64
+  },
+  "Werner's Bright Bush-cricket": {
+    "scientific_name": "Werner's Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 63
+  },
+  "Dark Bush-cricket": {
+    "scientific_name": "Pholidoptera griseoaptera",
+    "mapping_type": "direct_mapping",
+    "recording_count": 59
+  },
+  "Chopard's Bright Bush-cricket": {
+    "scientific_name": "Chopard's Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 59
+  },
+  "African mole cricket": {
+    "scientific_name": "Gryllotalpa africana",
+    "mapping_type": "direct_mapping",
+    "recording_count": 58
+  },
+  "Exposed Saddle Bush-cricket": {
+    "scientific_name": "Exposed Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 58
+  },
+  "Reed Cricket": {
+    "scientific_name": "Pseudogryllus exiguus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 58
+  },
+  "Blunt Plump Bush-cricket": {
+    "scientific_name": "Blunt Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 57
+  },
+  "Bei-Bienko's Bush-cricket": {
+    "scientific_name": "Bei-Bienko's Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 57
+  },
+  "Indian House Cricket": {
+    "scientific_name": "Acheta domesticus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 55
+  },
+  "Italian Ornate Bush-cricket": {
+    "scientific_name": "Italian Ornate Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 55
+  },
+  "Vineyard Mole-cricket": {
+    "scientific_name": "Gryllotalpa vineae",
+    "mapping_type": "direct_mapping",
+    "recording_count": 54
+  },
+  "Ebner's Bright Bush-cricket": {
+    "scientific_name": "Ebner's Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 53
+  },
+  "Corsican Bush-cricket": {
+    "scientific_name": "Corsican Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 52
+  },
+  "Sierra Nevadan Saddle Bush-cricket": {
+    "scientific_name": "Sierra Nevadan Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 52
+  },
+  "Sickle-bearing Bush-cricket": {
+    "scientific_name": "Phaneroptera falcata",
+    "mapping_type": "direct_mapping",
+    "recording_count": 52
+  },
+  "Pacific Ducetia": {
+    "scientific_name": "Ducetia japonica",
+    "mapping_type": "direct_mapping",
+    "recording_count": 51
+  },
+  "Large Marsh Grasshopper": {
+    "scientific_name": "Large Marsh grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 51
+  },
+  "Thyme Pygmy Wart-biter": {
+    "scientific_name": "Decticus verrucivorus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 51
+  },
+  "Tree Cricket": {
+    "scientific_name": "Oecanthus pellucens",
+    "mapping_type": "direct_mapping",
+    "recording_count": 51
+  },
+  "Eurasian meadow katydid": {
+    "scientific_name": "Pseudochorthippus parallelus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 51
+  },
+  "Wing-buzzing Grasshopper": {
+    "scientific_name": "Wing-buzzing grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 51
+  },
+  "Hooked Bright Bush-cricket": {
+    "scientific_name": "Poecilimon hamatus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 51
+  },
+  "Elegant Bright Bush-cricket": {
+    "scientific_name": "Elegant Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 50
+  },
+  "Greek Marbled Bush-cricket": {
+    "scientific_name": "Greek Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 50
+  },
+  "Fat-bellied Saddle Bush-cricket": {
+    "scientific_name": "Fat-bellied Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 50
+  },
+  "African Meadow Katydid": {
+    "scientific_name": "Ornithacris cavroisi",
+    "mapping_type": "direct_mapping",
+    "recording_count": 50
+  },
+  "Splendid Bush-cricket": {
+    "scientific_name": "Splendid Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 48
+  },
+  "Long-tailed Speckled Bush-cricket": {
+    "scientific_name": "Long-tailed Speckled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 47
+  },
+  "Alpine Saddle-backed Bush-cricket": {
+    "scientific_name": "Alpine Saddle-backed Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 47
+  },
+  "Desert Cricket": {
+    "scientific_name": "Gryllomorpha dalmatina",
+    "mapping_type": "direct_mapping",
+    "recording_count": 46
+  },
+  "Durmitor Bright Bush-cricket": {
+    "scientific_name": "Durmitor Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 46
+  },
+  "Lesser Mottled Grasshopper": {
+    "scientific_name": "Lesser Mottled grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 46
+  },
+  "Long-winged Conehead": {
+    "scientific_name": "Conocephalus fuscus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 44
+  },
+  "Chopard's Mountain Bush-cricket": {
+    "scientific_name": "Chopard's Mountain Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 44
+  },
+  "Albarracin Mountain Bush-cricket": {
+    "scientific_name": "Albarracin Mountain Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 44
+  },
+  "Field Grasshopper": {
+    "scientific_name": "Field grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 43
+  },
+  "Oblong Meadow Bush-cricket": {
+    "scientific_name": "Oblong Meadow Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 43
+  },
+  "Rambur's Saddle Bush-cricket": {
+    "scientific_name": "Ephippiger ramburi",
+    "mapping_type": "direct_mapping",
+    "recording_count": 43
+  },
+  "Gargano Marbled Bush-cricket": {
+    "scientific_name": "Gargano Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 43
+  },
+  "Iberian Grasshopper": {
+    "scientific_name": "Iberian grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 42
+  },
+  "Wood Cricket": {
+    "scientific_name": "Nemobius sylvestris",
+    "mapping_type": "direct_mapping",
+    "recording_count": 42
+  },
+  "Master Plump Bush-cricket": {
+    "scientific_name": "Master Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 41
+  },
+  "Pyrenean Meadow Bush-cricket": {
+    "scientific_name": "Pyrenean Meadow Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 41
+  },
+  "Meadow Grasshopper": {
+    "scientific_name": "Meadow grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 41
+  },
+  "Transionian Bright Bush-cricket": {
+    "scientific_name": "Transionian Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 41
+  },
+  "Fuss' Bright Bush-cricket": {
+    "scientific_name": "Fuss' Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 40
+  },
+  "Ponel's Bush-cricket": {
+    "scientific_name": "Ponel's Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 40
+  },
+  "House cricket": {
+    "scientific_name": "Acheta domesticus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 40
+  },
+  "Similar Bright Bush-cricket": {
+    "scientific_name": "Similar Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 40
+  },
+  "Vichet's Bush-cricket": {
+    "scientific_name": "Vichet's Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 39
+  },
+  "Bellied Bright Bush-cricket": {
+    "scientific_name": "Bellied Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 39
+  },
+  "Corsican Grasshopper": {
+    "scientific_name": "Corsican grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 39
+  },
+  "Lost Bright Bush-cricket": {
+    "scientific_name": "Lost Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 39
+  },
+  "Short-tailed Bull Bush-cricket": {
+    "scientific_name": "Short-tailed Bull Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 38
+  },
+  "Wartbiter": {
+    "scientific_name": "Decticus verrucivorus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 37
+  },
+  "Paros Bright Bush-cricket": {
+    "scientific_name": "Paros Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 37
+  },
+  "Iberian Striped Bush-cricket": {
+    "scientific_name": "Iberian Striped Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 36
+  },
+  "Common Green Grasshopper": {
+    "scientific_name": "Common Green grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 36
+  },
+  "Tinkling leaf-runner": {
+    "scientific_name": "Mecopoda elongata",
+    "mapping_type": "direct_mapping",
+    "recording_count": 36
+  },
+  "Roesel\u2019s Bush-cricket": {
+    "scientific_name": "Roesel\u2019s Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 35
+  },
+  "Spanish Saddle Bush-cricket": {
+    "scientific_name": "Ephippiger hispanicus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 35
+  },
+  "Macpherson's Striped Bush-cricket": {
+    "scientific_name": "Macpherson's Striped Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 35
+  },
+  "Idi Marbled Bush-cricket": {
+    "scientific_name": "Idi Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 35
+  },
+  "Bronze Glandular Bush-cricket": {
+    "scientific_name": "Bronze Glandular Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 35
+  },
+  "Iberian Straw Grasshopper": {
+    "scientific_name": "Iberian Straw grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 34
+  },
+  "Calabrian Green Bush-cricket": {
+    "scientific_name": "Calabrian Green Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 34
+  },
+  "Lesbos Bush-cricket": {
+    "scientific_name": "Lesbos Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 33
+  },
+  "Yellow-striped Saddle Bush-cricket": {
+    "scientific_name": "Yellow-striped Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 33
+  },
+  "Obese Bright Bush-cricket": {
+    "scientific_name": "Obese Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 33
+  },
+  "Orbelicos Bright Bush-cricket": {
+    "scientific_name": "Orbelicos Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 33
+  },
+  "Italian Bow-winged Grasshopper": {
+    "scientific_name": "Chorthippus italicus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 33
+  },
+  "Corsican Saddle Bush-cricket": {
+    "scientific_name": "Ephippiger corsicus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 33
+  },
+  "Two-toothed Bush-cricket": {
+    "scientific_name": "Two-toothed Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 32
+  },
+  "Vicentine Saw-tailed Bush-cricket": {
+    "scientific_name": "Barbitistes vicetinus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 32
+  },
+  "Domogled Meadow Bush-cricket": {
+    "scientific_name": "Domogled Meadow Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 32
+  },
+  "Cordoba Bush-cricket": {
+    "scientific_name": "Cordoba Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 31
+  },
+  "Elegant Saddle Bush-cricket": {
+    "scientific_name": "Elegant Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 31
+  },
+  "Mieg's Saddle Bush-cricket": {
+    "scientific_name": "Mieg's Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 31
+  },
+  "Dark-palped Toothed Grasshopper": {
+    "scientific_name": "Dark-palped Toothed grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 31
+  },
+  "Durmitor Plump Bush-cricket": {
+    "scientific_name": "Durmitor Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 31
+  },
+  "Spanish Green Bush-cricket": {
+    "scientific_name": "Spanish Green Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 31
+  },
+  "Sardinian Green Bush-cricket": {
+    "scientific_name": "Sardinian Green Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 30
+  },
+  "Japanese burrowing cricket": {
+    "scientific_name": "Velarifictorus micado",
+    "mapping_type": "direct_mapping",
+    "recording_count": 30
+  },
+  "Ghiliani's Alpine Bush-cricket": {
+    "scientific_name": "Ghiliani's Alpine Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 30
+  },
+  "Thessalian Bright Bush-cricket": {
+    "scientific_name": "Thessalian Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 30
+  },
+  "Apennine Saddle Bush-cricket": {
+    "scientific_name": "Ephippiger apenninius",
+    "mapping_type": "direct_mapping",
+    "recording_count": 29
+  },
+  "Slender Bright Bush-cricket": {
+    "scientific_name": "Slender Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 29
+  },
+  "Giulia's Marbled Bush-cricket": {
+    "scientific_name": "Giulia's Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 28
+  },
+  "Festive Toothed Grasshopper": {
+    "scientific_name": "Festive Toothed grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 28
+  },
+  "Mottled Grasshopper": {
+    "scientific_name": "Mottled grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 28
+  },
+  "House Cricket": {
+    "scientific_name": "Acheta domesticus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 28
+  },
+  "Pygmy Saddle Bush-cricket": {
+    "scientific_name": "Pygmy Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 27
+  },
+  "White-tipped Grasshopper": {
+    "scientific_name": "White-tipped grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 27
+  },
+  "Ambitious Meadow Bush-cricket": {
+    "scientific_name": "Ambitious Meadow Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 27
+  },
+  "French Mountain Bush-cricket": {
+    "scientific_name": "French Mountain Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 27
+  },
+  "Blackish Meadow Katydid": {
+    "scientific_name": "UNMAPPED_Blackish Meadow Katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 27
+  },
+  "Perez's Saddle Bush-cricke": {
+    "scientific_name": "Ephippiger perezi",
+    "mapping_type": "direct_mapping",
+    "recording_count": 27
+  },
+  "Toothless Bush-cricket": {
+    "scientific_name": "Toothless Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 26
+  },
+  "Stripe-winged Grasshopper": {
+    "scientific_name": "Stripe-winged grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 26
+  },
+  "Stone-jumping Bush-cricket": {
+    "scientific_name": "Stone-jumping Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 26
+  },
+  "Ligurian Alpine Bush-cricket": {
+    "scientific_name": "Ligurian Alpine Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 26
+  },
+  "Abruzzo Saddle Bush-cricket": {
+    "scientific_name": "Abruzzo Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 26
+  },
+  "Oceanic field cricket": {
+    "scientific_name": "Gryllus species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 26
+  },
+  "Cyprian Plump Bush-cricket": {
+    "scientific_name": "Cyprian Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 25
+  },
+  "Croatian Meadow Bush-cricket": {
+    "scientific_name": "Croatian Meadow Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 25
+  },
+  "Greek Ornate Bush-cricket": {
+    "scientific_name": "Greek Ornate Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 25
+  },
+  "Abruzzo Wart-biter": {
+    "scientific_name": "UNMAPPED_Abruzzo Wart-biter",
+    "mapping_type": "unmapped",
+    "recording_count": 25
+  },
+  "Heath Grasshopper": {
+    "scientific_name": "Heath grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 25
+  },
+  "Iberian Banded Grasshopper": {
+    "scientific_name": "Iberian Banded grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 25
+  },
+  "Carlotta's Saddle Bush-cricket": {
+    "scientific_name": "Ephippiger carlottae",
+    "mapping_type": "direct_mapping",
+    "recording_count": 25
+  },
+  "Gran Sasso Italian Grasshopper": {
+    "scientific_name": "Gran Sasso Italian grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 25
+  },
+  "Cavanna's Saddle Bush-cricket": {
+    "scientific_name": "Cavanna's Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 25
+  },
+  "Marianne's Marbled Bush-cricket": {
+    "scientific_name": "Marianne's Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 24
+  },
+  "Cuenca Meadow Bush-cricket": {
+    "scientific_name": "Cuenca Meadow Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 24
+  },
+  "Marianne's Bright Bush-cricket": {
+    "scientific_name": "Marianne's Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 24
+  },
+  "Bonfils' Bush-cricket": {
+    "scientific_name": "Barbitistes bonfillsi",
+    "mapping_type": "direct_mapping",
+    "recording_count": 24
+  },
+  "Hvar Saw Bush-cricket": {
+    "scientific_name": "Hvar Saw Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 23
+  },
+  "Eastern Cricket": {
+    "scientific_name": "UNMAPPED_Eastern Cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 23
+  },
+  "Brunner's Saddle Bush-cricket": {
+    "scientific_name": "Brunner's Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 23
+  },
+  "Moroccan Locust": {
+    "scientific_name": "UNMAPPED_Moroccan Locust",
+    "mapping_type": "unmapped",
+    "recording_count": 22
+  },
+  "Mercantour Alpine Bush-cricket": {
+    "scientific_name": "Mercantour Alpine Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 22
+  },
+  "Orina Slender Bush-cricket": {
+    "scientific_name": "Orina Slender Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 22
+  },
+  "Baccetti's Bush-cricket": {
+    "scientific_name": "Baccetti's Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 22
+  },
+  "Rattle Grasshopper": {
+    "scientific_name": "Rattle grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 22
+  },
+  "Striped Bush-cricket": {
+    "scientific_name": "Striped Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 21
+  },
+  "Speckled Bush-cricket": {
+    "scientific_name": "Speckled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 21
+  },
+  "Uvarov's Marbled Bush-cricket": {
+    "scientific_name": "Uvarov's Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 21
+  },
+  "Black-horned tree cricket": {
+    "scientific_name": "Oecanthus nigricornis",
+    "mapping_type": "direct_mapping",
+    "recording_count": 21
+  },
+  "Sierra Nevadan Pygmy Wart-biter": {
+    "scientific_name": "UNMAPPED_Sierra Nevadan Pygmy Wart-biter",
+    "mapping_type": "unmapped",
+    "recording_count": 21
+  },
+  "Cottian Alpine Bush-cricket": {
+    "scientific_name": "Cottian Alpine Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 21
+  },
+  "Whitish Meadow Katydid": {
+    "scientific_name": "UNMAPPED_Whitish Meadow Katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 21
+  },
+  "Unarmed Saddle Bush-cricket": {
+    "scientific_name": "Unarmed Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 20
+  },
+  "Swiss Saddle Bush-cricket": {
+    "scientific_name": "Ephippiger helveticus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 20
+  },
+  "Corsican Marbled Bush-cricket": {
+    "scientific_name": "Corsican Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 20
+  },
+  "Short-winged Conehead": {
+    "scientific_name": "UNMAPPED_Short-winged Conehead",
+    "mapping_type": "unmapped",
+    "recording_count": 20
+  },
+  "Cadiz Saddle Bush-cricket": {
+    "scientific_name": "Cadiz Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 20
+  },
+  "Iberian Bush-cricket": {
+    "scientific_name": "Iberian Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 20
+  },
+  "Italian Bush-cricket": {
+    "scientific_name": "Italian Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 20
+  },
+  "Yersin's Grasshopper": {
+    "scientific_name": "Yersin's grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 20
+  },
+  "Tenerife Green Bush-cricket": {
+    "scientific_name": "Tenerife Green Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 19
+  },
+  "Wood-louse Glandular Bush-cricket": {
+    "scientific_name": "Wood-louse Glandular Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 19
+  },
+  "Balkan Green Bush-cricket": {
+    "scientific_name": "Balkan Green Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 19
+  },
+  "Burr's Bush-cricket": {
+    "scientific_name": "Burr's Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 19
+  },
+  "Lesser Predatory Bush-cricket": {
+    "scientific_name": "Lesser Predatory Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 19
+  },
+  "Brunner's Plump Bush-cricket": {
+    "scientific_name": "Brunner's Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 19
+  },
+  "Broad-tipped Conehead": {
+    "scientific_name": "Ruspolia nitidula",
+    "mapping_type": "direct_mapping",
+    "recording_count": 19
+  },
+  "Enlarged Bright Bush-cricket": {
+    "scientific_name": "Enlarged Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 18
+  },
+  "Four-spotted tree cricket": {
+    "scientific_name": "Oecanthus species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 18
+  },
+  "Silver-bell cricket": {
+    "scientific_name": "UNMAPPED_Silver-bell cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 18
+  },
+  "Erimanthos Bright Bush-cricket": {
+    "scientific_name": "Erimanthos Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 18
+  },
+  "Illyrican Walking Bush-cricket": {
+    "scientific_name": "Illyrican Walking Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 18
+  },
+  "Macedonian Walking Bush-cricket": {
+    "scientific_name": "Macedonian Walking Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 18
+  },
+  "Bog Bush-Cricket": {
+    "scientific_name": "Bog Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 18
+  },
+  "Prenj Meadow Bush-cricket": {
+    "scientific_name": "Prenj Meadow Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 18
+  },
+  "Short-winged Tonged Bush-cricket": {
+    "scientific_name": "Short-winged Tonged Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 17
+  },
+  "Iberian Desert Grasshopper": {
+    "scientific_name": "Iberian Desert grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 17
+  },
+  "Ikaria Bright Bush-cricket": {
+    "scientific_name": "Ikaria Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 17
+  },
+  "Cangas Mountain Bush-cricket": {
+    "scientific_name": "Cangas Mountain Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 17
+  },
+  "Danube Wide-winged Bush-cricket": {
+    "scientific_name": "Danube Wide-winged Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 17
+  },
+  "Gravel Grasshopper": {
+    "scientific_name": "Chorthippus mollis",
+    "mapping_type": "direct_mapping",
+    "recording_count": 17
+  },
+  "Caribbean meadow katydid": {
+    "scientific_name": "UNMAPPED_Caribbean meadow katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 17
+  },
+  "Apulian Wart-biter": {
+    "scientific_name": "Decticus albifrons",
+    "mapping_type": "direct_mapping",
+    "recording_count": 17
+  },
+  "Nonveiller's Bright Bush-cricket": {
+    "scientific_name": "Nonveiller's Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 16
+  },
+  "Pindos Bright Bush-cricket": {
+    "scientific_name": "Pindos Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 16
+  },
+  "Greek Bush-cricket": {
+    "scientific_name": "Greek Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 16
+  },
+  "Mole Cricket": {
+    "scientific_name": "Gryllotalpa gryllotalpa",
+    "mapping_type": "direct_mapping",
+    "recording_count": 16
+  },
+  "Short-tailed Plump Bush-cricket": {
+    "scientific_name": "Short-tailed Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 16
+  },
+  "Brunner's Bright Bush-cricket": {
+    "scientific_name": "Brunner's Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 16
+  },
+  "Allard\u2019s ground cricket": {
+    "scientific_name": "UNMAPPED_Allard\u2019s ground cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 16
+  },
+  "Dirphys Greek Bush-cricket": {
+    "scientific_name": "Dirphys Greek Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 16
+  },
+  "Sardinian Mimetic Bush-cricket": {
+    "scientific_name": "Tylopsis lilifolia",
+    "mapping_type": "direct_mapping",
+    "recording_count": 16
+  },
+  "Eastern Alpine Bush-cricket": {
+    "scientific_name": "Eastern Alpine Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 16
+  },
+  "Brunner's Bush-cricket": {
+    "scientific_name": "Brunner's Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 15
+  },
+  "Splendid Marbled Bush-cricket": {
+    "scientific_name": "Splendid Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 15
+  },
+  "Pantel's Grasshopper": {
+    "scientific_name": "Pantel's grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 15
+  },
+  "Stilt-legged Bush-cricket": {
+    "scientific_name": "Stilt-legged Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 15
+  },
+  "Lesina Bush-cricket": {
+    "scientific_name": "Lesina Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 15
+  },
+  "Mount Ida Marbled Bush-cricket": {
+    "scientific_name": "Mount Ida Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 15
+  },
+  "Sierra Nevadan Grasshopper": {
+    "scientific_name": "Sierra Nevadan grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 15
+  },
+  "Single-spined Bright Bush-cricket": {
+    "scientific_name": "Single-spined Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 15
+  },
+  "Black-marked Bush-cricket": {
+    "scientific_name": "Black-marked Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 14
+  },
+  "Eastern Saw-tailed Bush cricket": {
+    "scientific_name": "UNMAPPED_Eastern Saw-tailed Bush cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 14
+  },
+  "Granada Pygmy Wart-biter": {
+    "scientific_name": "Decticus verrucivorus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 14
+  },
+  "Dancona's Marbled Bush-cricket": {
+    "scientific_name": "Dancona's Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 13
+  },
+  "Corsican Mountain Bush-cricket": {
+    "scientific_name": "Corsican Mountain Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 13
+  },
+  "Lesser Marsh Grasshopper": {
+    "scientific_name": "Lesser Marsh grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 13
+  },
+  "Sicilian Bush-cricket": {
+    "scientific_name": "Sicilian Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 13
+  },
+  "Iberian Meadow Bush-cricket": {
+    "scientific_name": "Iberian Meadow Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 13
+  },
+  "Curve-tailed Plump Bush-cricket": {
+    "scientific_name": "Curve-tailed Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 12
+  },
+  "Keeled Plump Bush-cricket": {
+    "scientific_name": "Keeled Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 12
+  },
+  "Fieber's Walking Bush-cricket": {
+    "scientific_name": "Fieber's Walking Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 12
+  },
+  "Graceful Bush-cricket": {
+    "scientific_name": "Graceful Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 12
+  },
+  "Epirus Dancing Grasshopper": {
+    "scientific_name": "Epirus Dancing grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 12
+  },
+  "Lucas' Dark Bush-cricket": {
+    "scientific_name": "Lucas' Dark Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 12
+  },
+  "Pink-palped Toothed Grasshopper": {
+    "scientific_name": "Pink-palped Toothed grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 12
+  },
+  "Andros Bright Bush-cricket": {
+    "scientific_name": "Andros Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 12
+  },
+  "Trapani Bush-cricket": {
+    "scientific_name": "Trapani Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 11
+  },
+  "Maquis Bush-cricket": {
+    "scientific_name": "Maquis Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 11
+  },
+  "Lleida Saddle Bush-cricket": {
+    "scientific_name": "Lleida Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 11
+  },
+  "Pre-Pyrenean Saddle Bush-cricket": {
+    "scientific_name": "Pre-Pyrenean Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 11
+  },
+  "Provence Saddle Bush-cricket": {
+    "scientific_name": "Provence Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 11
+  },
+  "Messina's Grasshopper": {
+    "scientific_name": "Messina's grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 11
+  },
+  "Cyclades Bush-cricket": {
+    "scientific_name": "Cyclades Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 10
+  },
+  "Notario's Saddle Bush-cricket": {
+    "scientific_name": "Notario's Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 10
+  },
+  "Cantabrian Meadow Bush-cricket": {
+    "scientific_name": "Cantabrian Meadow Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 10
+  },
+  "Adriatic Marmored Bush-cricket": {
+    "scientific_name": "Adriatic Marmored Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 10
+  },
+  "Cretan Long-legged Bush-cricket": {
+    "scientific_name": "Cretan Long-legged Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 10
+  },
+  "Pink Bright Bush-cricket": {
+    "scientific_name": "Pink Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 10
+  },
+  "Fall Field Cricket": {
+    "scientific_name": "Gryllus pennsylvanicus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 10
+  },
+  "Striated Bush-cricket": {
+    "scientific_name": "Striated Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 10
+  },
+  "Apulian Bush-cricket": {
+    "scientific_name": "Apulian Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 10
+  },
+  "Jumping Bush Cricket": {
+    "scientific_name": "UNMAPPED_Jumping Bush Cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 10
+  },
+  "Sardinian Straw Grasshopper": {
+    "scientific_name": "Sardinian Straw grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 10
+  },
+  "Uhagon's Grasshopper": {
+    "scientific_name": "Uhagon's grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 10
+  },
+  "Black-legged Meadow Katydid": {
+    "scientific_name": "UNMAPPED_Black-legged Meadow Katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 10
+  },
+  "Macedonian Steppe Bush-cricket": {
+    "scientific_name": "Macedonian Steppe Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 10
+  },
+  "Werner's Bush-cricket": {
+    "scientific_name": "Werner's Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 9
+  },
+  "Reissinger's Grasshopper": {
+    "scientific_name": "Reissinger's grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 9
+  },
+  "Provence Banded Grasshopper": {
+    "scientific_name": "Provence Banded grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 9
+  },
+  "Bazyluk Plump Bush-cricket": {
+    "scientific_name": "Bazyluk Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 9
+  },
+  "Heroic Bright Bush-cricket": {
+    "scientific_name": "Heroic Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 9
+  },
+  "Gavrogo Bush-cricket": {
+    "scientific_name": "Gavrogo Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 9
+  },
+  "Dalmatian Saddle Bush-cricket": {
+    "scientific_name": "Dalmatian Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 9
+  },
+  "Ebner's Cone-head": {
+    "scientific_name": "UNMAPPED_Ebner's Cone-head",
+    "mapping_type": "unmapped",
+    "recording_count": 8
+  },
+  "Cyclades Marbled Bush-cricket": {
+    "scientific_name": "Cyclades Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 8
+  },
+  "Tyrrhenian Bush-cricket": {
+    "scientific_name": "Tyrrhenian Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 8
+  },
+  "Sicilian Saddle Bush-cricket": {
+    "scientific_name": "Sicilian Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 8
+  },
+  "Speckled Sardinian Bush-cricket": {
+    "scientific_name": "Speckled Sardinian Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 8
+  },
+  "Asturian Saddle Bush-cricket": {
+    "scientific_name": "Asturian Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 8
+  },
+  "Crimean Bright Bush-cricket": {
+    "scientific_name": "Crimean Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 8
+  },
+  "Apulian Stone Grasshopper": {
+    "scientific_name": "Apulian Stone grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 8
+  },
+  "Broad-winged Tree Cricket": {
+    "scientific_name": "Oecanthus pellucens",
+    "mapping_type": "direct_mapping",
+    "recording_count": 8
+  },
+  "Sardinian Grey Bush-cricket": {
+    "scientific_name": "Sardinian Grey Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 8
+  },
+  "Northern natula": {
+    "scientific_name": "Northern natula",
+    "mapping_type": "already_scientific",
+    "recording_count": 8
+  },
+  "Ramme's Predatory Bush-cricket": {
+    "scientific_name": "Ramme's Predatory Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 7
+  },
+  "Aegean Bright Bush-cricket": {
+    "scientific_name": "Aegean Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 7
+  },
+  "Short-winged Meadow Katydid": {
+    "scientific_name": "UNMAPPED_Short-winged Meadow Katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 7
+  },
+  "Madeiran Steppe Bush-cricket": {
+    "scientific_name": "Madeiran Steppe Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 7
+  },
+  "Badajoz Saddle Bush-cricket": {
+    "scientific_name": "Badajoz Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 7
+  },
+  "Spring field cricket": {
+    "scientific_name": "Gryllus species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 7
+  },
+  "Gerona Pygmy Wart-biter": {
+    "scientific_name": "Decticus verrucivorus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 7
+  },
+  "Ikaria Marbled Bush-cricket": {
+    "scientific_name": "Ikaria Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 7
+  },
+  "Spring trig": {
+    "scientific_name": "Spring trig",
+    "mapping_type": "already_scientific",
+    "recording_count": 6
+  },
+  "Cretan Bush-cricket": {
+    "scientific_name": "Cretan Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 6
+  },
+  "Pliginski's Bright Bush-cricket": {
+    "scientific_name": "Pliginski's Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 6
+  },
+  "Gennargentu Platycleis": {
+    "scientific_name": "UNMAPPED_Gennargentu Platycleis",
+    "mapping_type": "unmapped",
+    "recording_count": 6
+  },
+  "Italian Grey Bush-cricket": {
+    "scientific_name": "Italian Grey Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 6
+  },
+  "Corsican Sand Grasshopper": {
+    "scientific_name": "Corsican Sand grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 6
+  },
+  "Epiros Bright Bush-cricket": {
+    "scientific_name": "Epiros Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 6
+  },
+  "Olympus Meadow Bush-cricket": {
+    "scientific_name": "Olympus Meadow Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 6
+  },
+  "Sicilian Match Grasshopper": {
+    "scientific_name": "Chorthippus saulcyi",
+    "mapping_type": "direct_mapping",
+    "recording_count": 6
+  },
+  "Heinrich's Bright Bush-cricket": {
+    "scientific_name": "Heinrich's Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 6
+  },
+  "Lusitanian Pygmy Wart-biter": {
+    "scientific_name": "Decticus verrucivorus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 6
+  },
+  "Silver-Bell Cricket": {
+    "scientific_name": "UNMAPPED_Silver-Bell Cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 6
+  },
+  "Annamaria's Marbled Bush-cricket": {
+    "scientific_name": "Annamaria's Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 6
+  },
+  "Stal's Saddle Bush-cricket": {
+    "scientific_name": "Stal's Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 6
+  },
+  "Miksic's Plump Bush-cricket": {
+    "scientific_name": "Miksic's Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 6
+  },
+  "Gold Bell": {
+    "scientific_name": "UNMAPPED_Gold Bell",
+    "mapping_type": "unmapped",
+    "recording_count": 6
+  },
+  "Epirus Marbled Bush-cricket": {
+    "scientific_name": "Epirus Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 5
+  },
+  "Ferdinand's Bush-cricket": {
+    "scientific_name": "Ferdinand's Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 5
+  },
+  "Ukraine Bright Bush-cricket": {
+    "scientific_name": "Ukraine Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 5
+  },
+  "Nymph-like Grasshopper": {
+    "scientific_name": "Nymph-like grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 5
+  },
+  "Reatine Italian Grasshopper": {
+    "scientific_name": "Reatine Italian grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 5
+  },
+  "Southern Barbed-wire Bush-cricket": {
+    "scientific_name": "Southern Barbed-wire Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 5
+  },
+  "Cottian Toothed Grasshopper": {
+    "scientific_name": "Cottian Toothed grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 5
+  },
+  "Gundlach\u2019s trig": {
+    "scientific_name": "UNMAPPED_Gundlach\u2019s trig",
+    "mapping_type": "unmapped",
+    "recording_count": 5
+  },
+  "Retowski's Tonged Bush-cricket": {
+    "scientific_name": "Retowski's Tonged Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 5
+  },
+  "Oblong-winged Katydid": {
+    "scientific_name": "UNMAPPED_Oblong-winged Katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 4
+  },
+  "Club Toothed Grasshopper": {
+    "scientific_name": "Club Toothed grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Jersey Grasshopper": {
+    "scientific_name": "Jersey grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Norris's starry-eyed Shield-back": {
+    "scientific_name": "UNMAPPED_Norris's starry-eyed Shield-back",
+    "mapping_type": "unmapped",
+    "recording_count": 4
+  },
+  "Southern Oak Bush-cricket": {
+    "scientific_name": "Southern Oak Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Keeled Saddle Bush-cricket": {
+    "scientific_name": "Keeled Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Broad-winged katydid": {
+    "scientific_name": "Microcentrum rhombifolium",
+    "mapping_type": "direct_mapping",
+    "recording_count": 4
+  },
+  "Lefkas Marbled Bush-cricket": {
+    "scientific_name": "Lefkas Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Calabrian Gold Grasshopper": {
+    "scientific_name": "Calabrian Gold grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Keeled Slender Bush-cricket": {
+    "scientific_name": "Keeled Slender Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Lampedusa Grasshopper": {
+    "scientific_name": "Lampedusa grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Cozia Plump Bush-cricket": {
+    "scientific_name": "Cozia Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Sicilian Speckled Bush-cricket": {
+    "scientific_name": "Sicilian Speckled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Narrow-winged tree cricket": {
+    "scientific_name": "Oecanthus species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Soulion Bright Bush-cricket": {
+    "scientific_name": "Soulion Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Two-toothed Bright Bush-cricket": {
+    "scientific_name": "Two-toothed Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Western Marbled Bush-cricket": {
+    "scientific_name": "Western Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Whitish Sand Grasshopper": {
+    "scientific_name": "Whitish Sand grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Kadiytsa Bright Bush-cricket": {
+    "scientific_name": "Kadiytsa Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 4
+  },
+  "Spotted Meadow Katydid": {
+    "scientific_name": "UNMAPPED_Spotted Meadow Katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 4
+  },
+  "Saussure's Saddle Bush-cricket": {
+    "scientific_name": "Saussure's Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 3
+  },
+  "Angular-winged katydid": {
+    "scientific_name": "Microcentrum rhombifolium",
+    "mapping_type": "direct_mapping",
+    "recording_count": 3
+  },
+  "Balkan Meadow Bush-cricket": {
+    "scientific_name": "Balkan Meadow Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 3
+  },
+  "Pyrenean Short-winged Grasshopper": {
+    "scientific_name": "Pyrenean Short-winged grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 3
+  },
+  "Black Field Cricket": {
+    "scientific_name": "Gryllus species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 3
+  },
+  "Pseudolus' Saddle Bush-cricket": {
+    "scientific_name": "Pseudolus' Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 3
+  },
+  "Stripe-legged Grasshopper": {
+    "scientific_name": "Stripe-legged grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 3
+  },
+  "Defaut's Grasshopper": {
+    "scientific_name": "Defaut's grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 3
+  },
+  "Diluted Saddle Bush-cricket": {
+    "scientific_name": "Diluted Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 3
+  },
+  "Pine Tree Cricket": {
+    "scientific_name": "Oecanthus pini",
+    "mapping_type": "direct_mapping",
+    "recording_count": 3
+  },
+  "Straight-keeled Saddle Bush-cricket": {
+    "scientific_name": "Straight-keeled Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 3
+  },
+  "Sardinian Saddle Bush-cricket": {
+    "scientific_name": "Sardinian Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 3
+  },
+  "Mormon Cricket": {
+    "scientific_name": "Anabrus simplex",
+    "mapping_type": "direct_mapping",
+    "recording_count": 3
+  },
+  "Mangrove trig": {
+    "scientific_name": "Mangrove trig",
+    "mapping_type": "already_scientific",
+    "recording_count": 3
+  },
+  "Southern wood cricket": {
+    "scientific_name": "UNMAPPED_Southern wood cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 3
+  },
+  "Bulgarian Plump Bush-cricket": {
+    "scientific_name": "Bulgarian Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 3
+  },
+  "Columbian trig": {
+    "scientific_name": "Columbian trig",
+    "mapping_type": "already_scientific",
+    "recording_count": 3
+  },
+  "Drumming Katydid": {
+    "scientific_name": "UNMAPPED_Drumming Katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 3
+  },
+  "Italian Dune Grasshopper": {
+    "scientific_name": "Italian Dune grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 3
+  },
+  "Valentin's Saddle Bush-cricket": {
+    "scientific_name": "Valentin's Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 3
+  },
+  "Swordbearer": {
+    "scientific_name": "UNMAPPED_Swordbearer",
+    "mapping_type": "unmapped",
+    "recording_count": 2
+  },
+  "Northern mole cricket": {
+    "scientific_name": "Gryllotalpa species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Sicilian Marbled Bush-cricket": {
+    "scientific_name": "Sicilian Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Steppe Bush-cricket": {
+    "scientific_name": "Steppe Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "White-horned Italian Grasshopper": {
+    "scientific_name": "White-horned Italian grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Snowy tree cricket": {
+    "scientific_name": "Oecanthus species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Carpetan Steppe Bush-cricket": {
+    "scientific_name": "Carpetan Steppe Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Southern mole cricket": {
+    "scientific_name": "Gryllotalpa species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Krimbas' Mole-cricket": {
+    "scientific_name": "UNMAPPED_Krimbas' Mole-cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 2
+  },
+  "Sporades Bush-cricket": {
+    "scientific_name": "Sporades Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Sureya's Glandular Bush-Cricket": {
+    "scientific_name": "Sureya's Glandular Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Mountain Katydid": {
+    "scientific_name": "UNMAPPED_Mountain Katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 2
+  },
+  "Chirping mole cricket": {
+    "scientific_name": "Gryllotalpa species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Keist's Plump Grasshopper": {
+    "scientific_name": "Keist's Plump grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Apennine Grasshopper": {
+    "scientific_name": "Apennine grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Slender heath katydid": {
+    "scientific_name": "UNMAPPED_Slender heath katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 2
+  },
+  "Calusa trig": {
+    "scientific_name": "Calusa trig",
+    "mapping_type": "already_scientific",
+    "recording_count": 2
+  },
+  "Zeller's Saddle Bush-cricket": {
+    "scientific_name": "Zeller's Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Aegean Match Grasshopper": {
+    "scientific_name": "Aegean Match grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Tindale's Shield-back": {
+    "scientific_name": "UNMAPPED_Tindale's Shield-back",
+    "mapping_type": "unmapped",
+    "recording_count": 2
+  },
+  "Fulton's trig": {
+    "scientific_name": "UNMAPPED_Fulton's trig",
+    "mapping_type": "unmapped",
+    "recording_count": 2
+  },
+  "Sandow's Sluggish snout -nose": {
+    "scientific_name": "UNMAPPED_Sandow's Sluggish snout -nose",
+    "mapping_type": "unmapped",
+    "recording_count": 2
+  },
+  "Larger Spotted Ground Cricket": {
+    "scientific_name": "UNMAPPED_Larger Spotted Ground Cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 2
+  },
+  "Long-chirp field cricket": {
+    "scientific_name": "Gryllus species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Cuban Ground Cricket": {
+    "scientific_name": "UNMAPPED_Cuban Ground Cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 2
+  },
+  "Straight-lanced Katydid": {
+    "scientific_name": "UNMAPPED_Straight-lanced Katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 2
+  },
+  "Cyprian Stripe-headed Cricket": {
+    "scientific_name": "UNMAPPED_Cyprian Stripe-headed Cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 2
+  },
+  "Common Modest Bush-cricket": {
+    "scientific_name": "Common Modest Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 2
+  },
+  "Chirping trig": {
+    "scientific_name": "Chirping trig",
+    "mapping_type": "already_scientific",
+    "recording_count": 2
+  },
+  "Albanian Saddle Bush-cricket": {
+    "scientific_name": "Ephippiger albanicus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 1
+  },
+  "Two-spotted Tree Cricket": {
+    "scientific_name": "Neoxabea bipunctata",
+    "mapping_type": "direct_mapping",
+    "recording_count": 1
+  },
+  "White-lined Bright Bush-cricket": {
+    "scientific_name": "Poecilimon linearis",
+    "mapping_type": "direct_mapping",
+    "recording_count": 1
+  },
+  "Tawny mole cricket": {
+    "scientific_name": "Gryllotalpa orientalis",
+    "mapping_type": "direct_mapping",
+    "recording_count": 1
+  },
+  "Dark Night Mole Cricket": {
+    "scientific_name": "Gryllotalpa orientalis",
+    "mapping_type": "direct_mapping",
+    "recording_count": 1
+  },
+  "False robust conehead": {
+    "scientific_name": "Ruspolia nitidula",
+    "mapping_type": "direct_mapping",
+    "recording_count": 1
+  },
+  "Oak Bush-cricket": {
+    "scientific_name": "Meconema thalassinum",
+    "mapping_type": "direct_mapping",
+    "recording_count": 1
+  },
+  "Northern Bush-katydid": {
+    "scientific_name": "Scudderia septentrionalis",
+    "mapping_type": "direct_mapping",
+    "recording_count": 1
+  },
+  "Riverine Mountain-cricket": {
+    "scientific_name": "UNMAPPED_Riverine Mountain-cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Betico Bush-cricket": {
+    "scientific_name": "Pseudophyllus neriosus",
+    "mapping_type": "direct_mapping",
+    "recording_count": 1
+  },
+  "Indies short-tailed cricket": {
+    "scientific_name": "UNMAPPED_Indies short-tailed cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Fast-tinkling trig": {
+    "scientific_name": "UNMAPPED_Fast-tinkling trig",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Common Meadow Katydid": {
+    "scientific_name": "UNMAPPED_Common Meadow Katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Round-tipped Conehead": {
+    "scientific_name": "Ruspolia nitidula",
+    "mapping_type": "direct_mapping",
+    "recording_count": 1
+  },
+  "Riley's tree cricket": {
+    "scientific_name": "Oecanthus species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Striped Tree Cricket": {
+    "scientific_name": "Oecanthus nigricornis",
+    "mapping_type": "direct_mapping",
+    "recording_count": 1
+  },
+  "Pink-spotted trig": {
+    "scientific_name": "UNMAPPED_Pink-spotted trig",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Mundurra Balloon-winged Katydid": {
+    "scientific_name": "UNMAPPED_Mundurra Balloon-winged Katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Restless Bush Cricket": {
+    "scientific_name": "UNMAPPED_Restless Bush Cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Walker\u2019s ground cricket": {
+    "scientific_name": "UNMAPPED_Walker\u2019s ground cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Sand field cricket": {
+    "scientific_name": "Gryllus species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Marsh ground cricket": {
+    "scientific_name": "UNMAPPED_Marsh ground cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Forest scaly cricket": {
+    "scientific_name": "UNMAPPED_Forest scaly cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Giona Greek Bush-cricket": {
+    "scientific_name": "Giona Greek Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Madeiran Green Bush-cricket": {
+    "scientific_name": "Madeiran Green Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Steindachner's Shieldback": {
+    "scientific_name": "UNMAPPED_Steindachner's Shieldback",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Beydaglari Bush-cricket": {
+    "scientific_name": "Beydaglari Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Sibylline Alpine Bush-cricket": {
+    "scientific_name": "Sibylline Alpine Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Slow-tinkling trig": {
+    "scientific_name": "UNMAPPED_Slow-tinkling trig",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Tenerife Short-winged Bush-cricket": {
+    "scientific_name": "Tenerife Short-winged Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Southeastern field cricket": {
+    "scientific_name": "Gryllus species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Froggatt's buzzer": {
+    "scientific_name": "UNMAPPED_Froggatt's buzzer",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Algeciras Saddle Bush-cricket": {
+    "scientific_name": "Algeciras Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Egyptian Grasshopper": {
+    "scientific_name": "Egyptian grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Dunsborough Requena": {
+    "scientific_name": "UNMAPPED_Dunsborough Requena",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Southern ground cricket": {
+    "scientific_name": "UNMAPPED_Southern ground cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Sampeyre Grasshopper": {
+    "scientific_name": "Sampeyre grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Handsome Trig": {
+    "scientific_name": "UNMAPPED_Handsome Trig",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Ortega's Saddle Bush-cricket": {
+    "scientific_name": "Ortega's Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Greek Toothed Grasshopper": {
+    "scientific_name": "Greek Toothed grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Davis's Tree Cricket": {
+    "scientific_name": "Oecanthus davisi",
+    "mapping_type": "direct_mapping",
+    "recording_count": 1
+  },
+  "Steppe Plump Bush-cricket": {
+    "scientific_name": "Steppe Plump Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Vocal field cricket": {
+    "scientific_name": "Gryllus species",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Bladder grasshopper": {
+    "scientific_name": "Bladder grasshopper",
+    "mapping_type": "already_scientific",
+    "recording_count": 1
+  },
+  "Ege Bright Bush-cricket": {
+    "scientific_name": "Ege Bright Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Bolivar's Saddle Bush-cricket": {
+    "scientific_name": "Bolivar's Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Calabrian Speckled Bush-cricket": {
+    "scientific_name": "Calabrian Speckled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Grey Bush-Cricket": {
+    "scientific_name": "Grey Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Broad-winged Bush-katydid": {
+    "scientific_name": "Scudderia pistillata",
+    "mapping_type": "direct_mapping",
+    "recording_count": 1
+  },
+  "Banded scaly cricket": {
+    "scientific_name": "UNMAPPED_Banded scaly cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Southern Oak Bush-Cricket": {
+    "scientific_name": "Southern Oak Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Melodious Ground Cricket": {
+    "scientific_name": "UNMAPPED_Melodious Ground Cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "False jumping bush cricket": {
+    "scientific_name": "UNMAPPED_False jumping bush cricket",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Queensland Palm Katydid": {
+    "scientific_name": "UNMAPPED_Queensland Palm Katydid",
+    "mapping_type": "unmapped",
+    "recording_count": 1
+  },
+  "Faber's Bush-cricket": {
+    "scientific_name": "Faber's Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Hooded Saddle Bush-cricket": {
+    "scientific_name": "Hooded Saddle Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Chelmos Greek Bush-cricket": {
+    "scientific_name": "Chelmos Greek Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Parnassos Greek Bush-cricket": {
+    "scientific_name": "Parnassos Greek Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Tortuous Stone Grasshopper": {
+    "scientific_name": "Tortuous Stone grasshopper",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  },
+  "Fer's Marbled Bush-cricket": {
+    "scientific_name": "Fer's Marbled Bush-cricket",
+    "mapping_type": "pattern_mapping",
+    "recording_count": 1
+  }
+}

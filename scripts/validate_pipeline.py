@@ -22,7 +22,13 @@ def validate_model_consistency():
     print("🔄 Testing model consistency...")
     
     # Load model and data
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # Setup device with MPS support
+    if torch.backends.mps.is_available():
+        device = torch.device('mps')
+    elif torch.cuda.is_available():
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
     label_encoder = joblib.load('models/trained/label_encoder.joblib')
     n_classes = len(label_encoder.classes_)
     
@@ -86,7 +92,13 @@ def test_model_robustness():
     """Test model robustness to input variations"""
     print("🛡️ Testing model robustness...")
     
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+    # Setup device with MPS support
+    if torch.backends.mps.is_available():
+        device = torch.device('mps')
+    elif torch.cuda.is_available():
+        device = torch.device('cuda')
+    else:
+        device = torch.device('cpu')
     label_encoder = joblib.load('models/trained/label_encoder.joblib')
     n_classes = len(label_encoder.classes_)
     

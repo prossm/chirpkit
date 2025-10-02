@@ -1,40 +1,45 @@
 # 🦗 ChirpKit: Multi-Species Insect Sound Classifier
 
-A comprehensive Python system for identifying **471 insect species** from audio recordings using deep learning. Features a CNN-LSTM neural network with attention mechanisms, comprehensive training pipeline, and an intuitive web interface for real-time species identification.
+A comprehensive Python system for identifying **483 insect species** from audio recordings using deep learning. Features a CNN-LSTM neural network trained on globally balanced datasets, comprehensive training pipeline, and an intuitive web interface for real-time species identification.
 
 ## ✨ Key Features
 
-- **🎯 471 Species Classification**: Trained on combined datasets totaling 176,532 audio samples
-- **🧠 Advanced CNN-LSTM Architecture**: Hybrid model with multi-head attention for temporal audio analysis  
+- **🎯 483 Species Classification**: Trained on unified global datasets with scientifically standardized names (filtered for quality)
+- **🧠 CNN-LSTM Architecture**: Efficient model optimized for cross-platform compatibility
 - **🎤 Real-time Recording**: Web UI supports both live audio recording and file uploads
 - **📊 Smart Confidence Display**: Context-aware confidence ratings with visual star system
-- **🔍 Species Browser**: Searchable modal with all 471 supported species
+- **🔍 Species Browser**: Searchable modal with all 483 supported species
 - **📖 Wikipedia Integration**: Automatic fetching of species info, images, and descriptions
 - **⚡ Fast Training**: Optimized pipeline with resume capability and adaptive learning rates
 
 ## 📊 Dataset Information
 
-ChirpKit is trained on four globally balanced insect audio datasets:
+ChirpKit combines three insect audio datasets with scientifically standardized species names:
 
-### Datasets Overview
-- **InsectSound1000**: 1,000 samples (subsampled from 165,982) across 12 European species
-- **InsectSet459**: 10,550 samples across 459 diverse global species  
-- **SINA**: 265 samples across ~203 North American species (crickets, katydids)
-- **Xeno-canto**: ~34,700 community recordings of global grasshoppers and crickets
-- **Combined Total**: ~46,515 strategically balanced audio samples for global representation
+### Active Training Dataset (483 Species)
+The current training pipeline uses three globally balanced datasets, filtered to species with ≥10 training samples:
 
-### Geographic Balance Strategy
-- **🇪🇺 Europe**: InsectSound1000 (subsampled to 1k to remove European bias)
-- **🌍 Global**: InsectSet459 (full dataset for species diversity)
-- **🇺🇸 North America**: SINA (full dataset for regional balance)
-- **🌍 Global Community**: Xeno-canto (full dataset for comprehensive coverage)
+- **InsectSet459**: 459 diverse global species (14,826 samples) - 111GB
+- **Xeno-canto**: 365 orthoptera species (11,147 samples, 81 scientific + 284 common names) - 574GB
+- **SINA**: 40 North American cricket/katydid species (70 samples) - 547MB
+- **Combined Total**: 483 species (filtered from 808), 24,222 training samples
+- **Quality filtering**: Species with <10 training samples removed for better model performance
+
+### Optional Dataset
+- **InsectSound1000**: 12 European species (165,982 samples, subsampled to 1,000 for balance) - ~99GB
+  - *Note: Not used in current pre-trained models to avoid European geographical bias*
+  - *Available for custom training if desired regional focus*
+
+### Species Name Standardization
+- **Scientific naming**: All species mapped to standardized scientific names (Genus species format) where possible
+- **Cross-dataset overlap**: 42 species overlap between InsectSet459 and Xeno-canto, 11 between InsectSet459 and SINA
+- **Global coverage**: European, North American, Asian, African, and South American species
+- **Xeno-canto mapping**: 81 species with scientific names, 284 with regional common names
 
 ### Storage Requirements
-- **Total Storage**: ~251GB (downloaded datasets)
-- **InsectSound1000**: 99GB (original), ~600MB (after 1k subsampling)
-- **InsectSet459**: 98GB 
-- **SINA**: 424MB
-- **Xeno-canto**: 54GB (partial download, ~1,829 of 34,703 files)
+- **Active datasets**: ~685GB (InsectSet459 + Xeno-canto + SINA)
+- **With InsectSound1000**: ~784GB (all four datasets)
+- **Processed features**: Additional ~2-5GB depending on datasets used
 
 ## 🚀 Quick Start
 
@@ -88,7 +93,7 @@ python simple_ui.py
 Access the web UI at `http://localhost:7860` to:
 - 🎤 Record insect sounds directly in your browser
 - 📁 Upload audio files (.wav, .mp3, .m4a, .flac)
-- 🔍 Browse all 471 supported species
+- 🔍 Browse all 483 supported species
 - 📖 View species information and Wikipedia photos
 
 ### Option 2: Train Your Own Model
@@ -113,6 +118,15 @@ The Xeno-canto dataset requires a free account and API token:
 2. **Verify Email**: Check your email and verify your account
 3. **Get API Token**: Once verified, you'll receive an API token for downloads
 4. **Update Script**: Add your API token to `scripts/download_xenocanto.py`
+
+Note: Download speeds will be limited based on the Xeno-canto servers, so you should plan for the full dataset to take several days to download. The files are of variable sizes, so some take longer than others. Currently, the code is set up to download only files that include an insect name in the filename (some that are not included have simply an ID with no name, or are generic "soundscapes").
+
+**Species Name Mapping**: After downloading Xeno-canto, run the species mapping script to standardize common names to scientific names:
+```bash
+# Map Xeno-canto common names to scientific names (required for preprocessing)
+python scripts/map_xenocanto_names.py
+```
+This creates `data/xenocanto_species_mapping.json` which enables cross-dataset training with standardized species names.
 
 **Resume Downloads**: If downloads are interrupted, you can resume from where you left off:
 ```bash
@@ -351,11 +365,17 @@ pip install chirpkit[full]
 
 ### Command Line Training
 ```bash
-# Train on combined datasets with custom parameters
-python scripts/train_unified.py --dataset combined --epochs 500 --lr 1e-4
+# Train on combined datasets with optimized parameters (recommended)
+python scripts/train_unified.py --dataset combined --epochs 2000 --patience 50 --lr 3e-4 \
+  --batch-size 16 --gradient-accumulation 4 --diversity-weight 0.02 --label-smoothing 0.1 \
+  --use-cosine-schedule --warmup-epochs 10
 
-# Train with data augmentation
-python scripts/train_unified.py --dataset combined --epochs 300
+# Train with custom parameters
+python scripts/train_unified.py --dataset combined --epochs 500 --lr 3e-4 --batch-size 16 --patience 50
+
+# Train on single dataset
+python scripts/train_unified.py --dataset xenocanto --epochs 1000 --patience 30
+
 ```
 
 ### Python API (Advanced)

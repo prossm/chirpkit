@@ -3,8 +3,16 @@ import numpy as np
 from pathlib import Path
 import json
 from typing import Dict, List, Tuple, Optional
-from ..models.bayesian_cnn_lstm import BayesianInsectClassifier
-from ..visualization.uncertainty_viz import UncertaintyVisualizer
+try:
+    from ..models.bayesian_cnn_lstm import BayesianInsectClassifier
+    from ..visualization.uncertainty_viz import UncertaintyVisualizer
+except ImportError:
+    from models.bayesian_cnn_lstm import BayesianInsectClassifier
+    try:
+        from visualization.uncertainty_viz import UncertaintyVisualizer
+    except ImportError:
+        # Skip visualization if not available
+        UncertaintyVisualizer = None
 
 class BayesianModelManager:
     """Utility class for managing Bayesian insect classifier with uncertainty quantification"""

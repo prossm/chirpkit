@@ -13,7 +13,7 @@ from tqdm import tqdm
 import time
 import urllib.parse
 
-def search_xenocanto_orthoptera(area=None, country=None, quality=None, max_results=None, start_page=1):
+def search_xenocanto_orthoptera(area=None, country=None, quality=None, start_page=1, existing_files=0):
     """Search Xeno-canto for Orthoptera recordings"""
 
     base_url = "https://xeno-canto.org/api/3/recordings"
@@ -69,12 +69,9 @@ def search_xenocanto_orthoptera(area=None, country=None, quality=None, max_resul
                 
             all_recordings.extend(recordings)
             
-            print(f"📄 Page {page}: Found {len(recordings)} recordings (total: {len(all_recordings)})")
+            current_total = existing_files + len(all_recordings)
+            print(f"📄 Page {page}: Found {len(recordings)} recordings (total: {current_total}/{total_recordings})")
             
-            if max_results and len(all_recordings) >= max_results:
-                all_recordings = all_recordings[:max_results]
-                print(f"🛑 Reached max results limit: {max_results}")
-                break
                 
             # Check if more pages available using total pages from API response
             if page >= total_pages:
@@ -90,22 +87,40 @@ def search_xenocanto_orthoptera(area=None, country=None, quality=None, max_resul
             
     return all_recordings
 
-def download_xenocanto_recordings(recordings, download_dir, force_download=False):
+def download_xenocanto_recordings(recordings, download_dir, force_download=False, existing_files=0, total_available=0):
     """Download individual recordings from Xeno-canto"""
-    
+
     download_dir = Path(download_dir)
     download_dir.mkdir(parents=True, exist_ok=True)
-    
+
     print(f"📥 Downloading {len(recordings)} recordings to {download_dir}")
-    
+
     downloaded = 0
     failed = 0
     skipped = 0
-    
-    # Create metadata file
+
+    # Load existing metadata if available
+    metadata_file = download_dir / "xenocanto_metadata.json"
+    existing_metadata = []
+    if metadata_file.exists():
+        try:
+            with open(metadata_file, 'r') as f:
+                existing_metadata = json.load(f)
+            print(f"📋 Loaded {len(existing_metadata)} existing metadata entries")
+        except Exception as e:
+            print(f"⚠️  Could not load existing metadata: {e}")
+
     metadata = []
-    
-    for recording in tqdm(recordings, desc="Downloading"):
+
+    # Create progress bar that starts from existing files count
+    progress_bar = tqdm(
+        recordings,
+        desc="Downloading",
+        initial=existing_files,
+        total=total_available if total_available > 0 else existing_files + len(recordings)
+    )
+
+    for recording in progress_bar:
         try:
             xc_id = recording.get('id', 'unknown')
             species = recording.get('en', 'unknown_species').replace(' ', '_')
@@ -118,10 +133,20 @@ def download_xenocanto_recordings(recordings, download_dir, force_download=False
             # Create filename: XC{id}_{species}_{country}.mp3
             filename = f"XC{xc_id}_{species}_{country}.mp3"
             local_path = download_dir / filename
+
+            # Skip files without proper species names (soundscape, identity unknown, etc.)
+            if (not species or
+                species.lower() in ['soundscape', 'identity unknown', 'unknown_species', ''] or
+                'soundscape' in species.lower() or
+                ('identity' in species.lower() and 'unknown' in species.lower())):
+                print(f"⏭️  Skipping non-species recording: {species}")
+                skipped += 1
+                continue
             
             # Skip if already exists
             if local_path.exists() and not force_download:
                 skipped += 1
+                # Don't update progress bar for skipped files since they're already counted in initial
                 continue
             
             # Get download URL
@@ -136,8 +161,10 @@ def download_xenocanto_recordings(recordings, download_dir, force_download=False
             
             with open(local_path, 'wb') as f:
                 f.write(response.content)
-                
+
             downloaded += 1
+            # Update progress bar for newly downloaded file
+            progress_bar.update(1)
             
             # Add to metadata
             metadata.append({
@@ -165,11 +192,27 @@ def download_xenocanto_recordings(recordings, download_dir, force_download=False
             failed += 1
             if failed <= 5:  # Only show first few errors
                 print(f"❌ Failed to download XC{xc_id}: {e}")
-    
-    # Save metadata
-    metadata_file = download_dir / "xenocanto_metadata.json"
+
+    # Close progress bar
+    progress_bar.close()
+
+    # Combine existing and new metadata
+    all_metadata = existing_metadata + metadata
+
+    # Remove duplicates based on filename
+    seen_filenames = set()
+    unique_metadata = []
+    for item in all_metadata:
+        filename = item.get('filename', '')
+        if filename and filename not in seen_filenames:
+            seen_filenames.add(filename)
+            unique_metadata.append(item)
+
+    # Save combined metadata
     with open(metadata_file, 'w') as f:
-        json.dump(metadata, f, indent=2)
+        json.dump(unique_metadata, f, indent=2)
+
+    print(f"📋 Total metadata entries: {len(unique_metadata)} (was {len(existing_metadata)}, added {len(metadata)})"
     
     print(f"✅ Downloaded: {downloaded} files")
     print(f"⏭️  Skipped (already exist): {skipped} files") 
@@ -179,7 +222,7 @@ def download_xenocanto_recordings(recordings, download_dir, force_download=False
     return downloaded
 
 def download_xenocanto_orthoptera(data_dir="data", area=None, country=None,
-                                quality=None, max_results=10000, force_download=False, start_page=1):
+                                quality=None, force_download=False, start_page=1):
     """Main function to download Xeno-canto Orthoptera dataset"""
 
     # Create directories
@@ -194,21 +237,30 @@ def download_xenocanto_orthoptera(data_dir="data", area=None, country=None,
     print("📊 Quality: High-quality recordings with metadata")
     print("=" * 60)
 
+    # Check existing files to show actual progress
+    download_dir = raw_dir / "audio"
+    download_dir.mkdir(parents=True, exist_ok=True)
+    existing_files = len(list(download_dir.glob("*.mp3")))
+    if existing_files > 0:
+        print(f"📁 Found {existing_files} existing files on disk")
+
     # Search for recordings
     recordings = search_xenocanto_orthoptera(
         area=area,
         country=country,
         quality=quality,
-        max_results=max_results,
-        start_page=start_page
+        start_page=start_page,
+        existing_files=existing_files
     )
     
     if not recordings:
         print("❌ No recordings found matching criteria")
         return False
         
-    print(f"\n📊 Found {len(recordings)} Orthoptera recordings")
-    
+    total_available = existing_files + len(recordings)
+    print(f"\n📊 Found {len(recordings)} new Orthoptera recordings")
+    print(f"📊 Total metadata available: {total_available} recordings")
+
     # Get species statistics
     species_set = set()
     countries_set = set()
@@ -217,13 +269,18 @@ def download_xenocanto_orthoptera(data_dir="data", area=None, country=None,
             species_set.add(r['en'])
         if r.get('cnt'):
             countries_set.add(r['cnt'])
-    
-    print(f"📈 Species diversity: {len(species_set)} unique species")
-    print(f"🌍 Geographic spread: {len(countries_set)} countries")
+
+    print(f"📈 Species diversity: {len(species_set)} unique species (in new batch)")
+    print(f"🌍 Geographic spread: {len(countries_set)} countries (in new batch)")
     
     # Download recordings
-    download_dir = raw_dir / "audio"
-    downloaded = download_xenocanto_recordings(recordings, download_dir, force_download)
+    downloaded = download_xenocanto_recordings(
+        recordings,
+        download_dir,
+        force_download,
+        existing_files=existing_files,
+        total_available=total_available
+    )
     
     if downloaded > 0:
         print(f"\n🎉 Xeno-canto Orthoptera download complete!")
@@ -242,7 +299,6 @@ def main():
     parser.add_argument("--area", help="Continental area (africa,america,asia,australia,europe)")
     parser.add_argument("--country", help="Specific country")
     parser.add_argument("--quality", default=None, help="Quality ratings (A,B,C,D,E or combinations)")
-    parser.add_argument("--max-results", type=int, default=10000, help="Maximum recordings (default: 10000)")
     parser.add_argument("--start-page", type=int, default=1, help="Start from specific page (for resuming downloads)")
     parser.add_argument("--force", action="store_true", help="Force re-download existing files")
 
@@ -257,7 +313,6 @@ def main():
         area=args.area,
         country=args.country,
         quality=args.quality,
-        max_results=args.max_results,
         force_download=args.force,
         start_page=args.start_page
     )
