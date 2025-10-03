@@ -516,7 +516,7 @@ class UnifiedTrainer:
         
         if resume and checkpoint_path.exists():
             print("📂 Found checkpoint, resuming training...")
-            checkpoint = torch.load(checkpoint_path, map_location=self.device)
+            checkpoint = torch.load(checkpoint_path, map_location=self.device, weights_only=False)
             self.model.load_state_dict(checkpoint['model_state_dict'])
             
             # Check if we should reset optimizer/scheduler (for learning rate changes)
