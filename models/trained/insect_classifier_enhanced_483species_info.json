@@ -1,9 +1,9 @@
 {
   "dataset": "combined",
   "model_name": "insect_classifier_enhanced_483species",
-  "last_epoch": 15,
-  "best_val_acc": 0.09623671358804942,
-  "best_epoch": 15,
+  "last_epoch": 76,
+  "best_val_acc": 0.2289571962079862,
+  "best_epoch": 76,
   "n_classes": 483,
   "species_list": [
     "Abruzzo Saddle Bush-cricket",
@@ -490,5 +490,5 @@
     "Zimmer's Bright Bush-cricket",
     "Zwick's Bright Bush-cricket"
   ],
-  "last_updated": "2025-10-02T08:33:01.602326"
+  "last_updated": "2025-10-04T08:25:00.420366"
 }
