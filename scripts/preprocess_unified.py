@@ -250,80 +250,102 @@ class UnifiedDatasetProcessor:
             'dataset_name': dataset_name
         }
     
-    def create_splits(self, features, labels, output_dir, test_size=0.2, val_size=0.1):
-        """Create train/validation/test splits"""
+    def create_splits(self, features, labels, output_dir, val_ratio=0.30, min_samples_per_species=30):
+        """
+        Create train/validation splits with improved filtering
+
+        Args:
+            val_ratio: Validation set ratio (default 0.30 = 30%)
+            min_samples_per_species: Minimum samples required per species (default 30)
+        """
         print(f"🔄 Creating data splits...")
 
-        # Filter out species with only 1 sample (can't be split)
+        # Filter out species with insufficient samples
         import pandas as pd
         from collections import Counter
 
         label_counts = Counter(labels)
-        single_sample_species = [label for label, count in label_counts.items() if count == 1]
 
-        if single_sample_species:
-            print(f"⚠️  Found {len(single_sample_species)} species with only 1 sample")
-            print(f"🗑️  Removing single-sample species for proper train/test splitting")
+        # Find species with too few samples
+        insufficient_species = [label for label, count in label_counts.items() if count < min_samples_per_species]
 
-            # Create mask to filter out single-sample species
-            mask = [label not in single_sample_species for label in labels]
+        if insufficient_species:
+            print(f"⚠️  Found {len(insufficient_species)} species with <{min_samples_per_species} samples")
+            print(f"🗑️  Removing under-represented species for better generalization")
+
+            # Show distribution before filtering
+            removed_samples = sum(label_counts[label] for label in insufficient_species)
+            print(f"   Removing {removed_samples} total samples from {len(insufficient_species)} species")
+
+            # Create mask to filter out insufficient species
+            mask = [label not in insufficient_species for label in labels]
             features = features[mask]
             labels = labels[mask]
 
             print(f"📊 After filtering: {len(features)} samples, {len(set(labels))} species")
 
+            # Show new distribution
+            new_counts = Counter(labels)
+            print(f"📊 New distribution:")
+            print(f"   Min samples/species: {min(new_counts.values())}")
+            print(f"   Max samples/species: {max(new_counts.values())}")
+            print(f"   Mean samples/species: {np.mean(list(new_counts.values())):.1f}")
+            print(f"   Median samples/species: {np.median(list(new_counts.values())):.1f}")
+
         # Create splits directory
         splits_dir = output_dir.parent.parent / 'splits' / output_dir.name
         splits_dir.mkdir(parents=True, exist_ok=True)
 
-        # Check if we have enough samples for stratified splitting
+        # Improved stratified splitting logic (from resplit_combined.py)
         min_class_count = min(Counter(labels).values())
-        test_samples = int(len(features) * test_size)
-        unique_classes = len(set(labels))
 
-        if test_samples < unique_classes or min_class_count < 2:
-            print(f"⚠️  Cannot use stratified splitting:")
-            print(f"   Test samples: {test_samples}, Unique classes: {unique_classes}")
-            print(f"   Min class count: {min_class_count}")
-            print(f"🔄 Using random splitting instead")
-            # Use random split for datasets with insufficient samples per class
-            X_temp, X_test, y_temp, y_test = train_test_split(
-                features, labels, test_size=test_size, random_state=42
+        print(f"\n🔀 Creating train/val split ({int((1-val_ratio)*100)}%/{int(val_ratio*100)}%)...")
+
+        # Use stratified split if all classes have at least 2 samples
+        if min_class_count >= 2:
+            print(f"✅ Using stratified split (all species have ≥2 samples)")
+            X_train, X_val, y_train, y_val = train_test_split(
+                features, labels,
+                test_size=val_ratio,
+                stratify=labels,
+                random_state=42
             )
         else:
-            # First split: train+val vs test
-            X_temp, X_test, y_temp, y_test = train_test_split(
-                features, labels, test_size=test_size, stratify=labels, random_state=42
-            )
-        
-        # Second split: train vs val
-        val_size_adjusted = val_size / (1 - test_size)  # Adjust for the reduced dataset
-        min_class_count_temp = min(Counter(y_temp).values())
-        if len(X_temp) < 30 or min_class_count_temp < 2:
-            print(f"🔄 Using random split for train/val (min class: {min_class_count_temp})")
+            print(f"⚠️  Using random split (some species have only 1 sample)")
             X_train, X_val, y_train, y_val = train_test_split(
-                X_temp, y_temp, test_size=val_size_adjusted, random_state=42
+                features, labels,
+                test_size=val_ratio,
+                random_state=42
             )
-        else:
-            X_train, X_val, y_train, y_val = train_test_split(
-                X_temp, y_temp, test_size=val_size_adjusted, stratify=y_temp, random_state=42
-            )
-        
-        # Save splits
+
+        # Validate validation set distribution
+        val_counts = Counter(y_val)
+        print(f"\n📊 Validation set statistics:")
+        print(f"   Total samples: {len(y_val)}")
+        print(f"   Unique species: {len(val_counts)}")
+        print(f"   Min samples/species: {min(val_counts.values())}")
+        print(f"   Max samples/species: {max(val_counts.values())}")
+        print(f"   Mean samples/species: {np.mean(list(val_counts.values())):.1f}")
+        print(f"   Median samples/species: {np.median(list(val_counts.values())):.1f}")
+
+        species_with_few_val = sum(1 for c in val_counts.values() if c < 5)
+        if species_with_few_val > 0:
+            print(f"   ⚠️  {species_with_few_val} species have <5 validation samples")
+
+        # Save splits (no test set - use all data for train/val)
         np.save(splits_dir / 'X_train.npy', X_train)
         np.save(splits_dir / 'y_train.npy', y_train)
         np.save(splits_dir / 'X_val.npy', X_val)
         np.save(splits_dir / 'y_val.npy', y_val)
-        np.save(splits_dir / 'X_test.npy', X_test)
-        np.save(splits_dir / 'y_test.npy', y_test)
-        
-        print(f"✅ Splits saved to: {splits_dir}")
-        print(f"📊 Train: {len(X_train)}, Val: {len(X_val)}, Test: {len(X_test)}")
-        
+
+        print(f"\n✅ Splits saved to: {splits_dir}")
+        print(f"📊 Train: {len(X_train)} ({len(X_train)/(len(X_train)+len(X_val))*100:.1f}%)")
+        print(f"📊 Val: {len(X_val)} ({len(X_val)/(len(X_train)+len(X_val))*100:.1f}%)")
+
         # Show species distribution
         unique_species = np.unique(labels)
-        print(f"🦗 {len(unique_species)} unique species")
-        
+        print(f"🦗 {len(unique_species)} unique species retained")
+
         return splits_dir
     
     def _process_sina_metadata(self, config):
@@ -429,15 +451,19 @@ class UnifiedDatasetProcessor:
         return pd.DataFrame(processed_data)
 
 def main():
-    parser = argparse.ArgumentParser(description='Preprocess insect audio datasets')
-    parser.add_argument('--dataset', 
-                       choices=['insectsound1000', 'insectset459', 'sina', 'xenocanto', 'all'], 
+    parser = argparse.ArgumentParser(description='Preprocess insect audio datasets with improved filtering')
+    parser.add_argument('--dataset',
+                       choices=['insectsound1000', 'insectset459', 'sina', 'xenocanto', 'all'],
                        default='all',
                        help='Dataset to preprocess')
     parser.add_argument('--limit', type=int, help='Limit number of samples for testing')
-    parser.add_argument('--no-splits', action='store_true', help='Skip creating train/val/test splits')
+    parser.add_argument('--no-splits', action='store_true', help='Skip creating train/val splits')
     parser.add_argument('--output-prefix', default='', help='Prefix for output directory')
-    
+    parser.add_argument('--min-samples', type=int, default=30,
+                       help='Minimum samples per species (default: 30, filters out under-represented species)')
+    parser.add_argument('--val-ratio', type=float, default=0.30,
+                       help='Validation set ratio (default: 0.30 = 30%%)')
+
     args = parser.parse_args()
     
     processor = UnifiedDatasetProcessor()
@@ -463,16 +489,51 @@ def main():
             
             if result and not args.no_splits:
                 processor.create_splits(
-                    result['features'], 
-                    result['labels'], 
-                    result['output_dir']
+                    result['features'],
+                    result['labels'],
+                    result['output_dir'],
+                    val_ratio=args.val_ratio,
+                    min_samples_per_species=args.min_samples
                 )
                 
         except Exception as e:
             print(f"❌ Error processing {dataset_name}: {e}")
             continue
-    
+
     print(f"\n✅ Preprocessing complete!")
+
+    # If processing multiple datasets, combine them into unified dataset
+    if len(datasets) > 1 and not args.no_splits:
+        print(f"\n{'='*60}")
+        print("Creating Combined Dataset")
+        print(f"{'='*60}")
+
+        # Import combine_datasets function
+        from combine_datasets import combine_datasets
+
+        # Get list of successfully processed datasets
+        available_datasets = []
+        for ds in datasets:
+            splits_dir = Path(f'data/splits/{ds}')
+            if splits_dir.exists() and (splits_dir / 'X_train.npy').exists():
+                available_datasets.append(ds)
+
+        if len(available_datasets) > 1:
+            print(f"📦 Combining {len(available_datasets)} datasets: {', '.join(available_datasets)}")
+            try:
+                combine_datasets(
+                    datasets=available_datasets,
+                    min_samples_per_species=args.min_samples,
+                    val_ratio=args.val_ratio,
+                    output_dir='data/splits/combined'
+                )
+            except Exception as e:
+                print(f"❌ Error combining datasets: {e}")
+                print("💡 You can manually combine later using: python scripts/combine_datasets.py")
+        else:
+            print(f"⚠️  Only {len(available_datasets)} dataset available, skipping combine step")
+
+    print(f"\n🎉 All preprocessing complete!")
 
 if __name__ == "__main__":
     main()
