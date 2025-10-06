@@ -176,11 +176,24 @@ class RegularizedEnhancedCNNLSTMClassifier(nn.Module):
             nn.Dropout2d(dropout)  # Dropout after pooling
         )
 
-        # We'll calculate the LSTM input size dynamically
+        # Add adaptive pooling to reduce spatial dimensions (CRITICAL for memory!)
+        self.adaptive_pool = nn.AdaptiveAvgPool2d((4, 4))  # Force to 4×4 spatial size
+
+        # LSTM will process sequence of 16 positions, each with 512 channels
+        self.lstm_input_size = 512  # Each position has 512 features
         self.lstm_hidden = lstm_hidden
         self.lstm_dropout = dropout
-        self.lstm = None
-        self._lstm_initialized = False
+
+        # Initialize LSTM directly with known size
+        self.lstm = nn.LSTM(
+            input_size=self.lstm_input_size,  # 512 features per time step
+            hidden_size=lstm_hidden,
+            num_layers=3,
+            batch_first=True,
+            dropout=dropout,
+            bidirectional=True
+        )
+        self._lstm_initialized = True
 
         lstm_output_dim = lstm_hidden * 2  # Bidirectional
 
@@ -221,25 +234,13 @@ class RegularizedEnhancedCNNLSTMClassifier(nn.Module):
         features = self.feature_extractor(x)  # (batch, 128, H, W)
         features = self.cnn_layers(features)  # (batch, 512, H', W')
 
-        # Get actual dimensions after CNN layers
-        _, channels, height, width = features.shape
-        feature_dim = channels * height * width
+        # Apply adaptive pooling to fixed size (CRITICAL for memory!)
+        features = self.adaptive_pool(features)  # (batch, 512, 4, 4)
 
-        # Initialize LSTM on first forward pass if needed (3 layers to enable dropout!)
-        if not self._lstm_initialized:
-            print(f"🔧 Initializing 3-layer LSTM with input size: {feature_dim}, dropout: {self.lstm_dropout}")
-            self.lstm = nn.LSTM(
-                input_size=feature_dim,
-                hidden_size=self.lstm_hidden,
-                num_layers=3,  # 3 layers to enable LSTM dropout!
-                batch_first=True,
-                dropout=self.lstm_dropout,  # Now this will work!
-                bidirectional=True
-            ).to(features.device)
-            self._lstm_initialized = True
-
-        # Reshape for LSTM: treat spatial dimensions as sequence
-        features = features.view(batch_size, -1, feature_dim)  # (batch, seq_len, feature_dim)
+        # Reshape for LSTM: flatten spatial dimensions to create sequence
+        # (batch, 512, 4, 4) -> (batch, 16, 512) - treat 16 positions as sequence
+        batch_size, channels, h, w = features.shape
+        features = features.view(batch_size, channels, -1).transpose(1, 2)  # (batch, 16, 512)
 
         # LSTM processing (now has internal dropout!)
         lstm_out, _ = self.lstm(features)  # (batch, seq_len, lstm_hidden*2)
