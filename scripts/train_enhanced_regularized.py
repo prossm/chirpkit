@@ -307,6 +307,11 @@ class StronglyRegularizedTrainer:
         patience_counter = 0
         start_epoch = 1
 
+        # Timing tracking
+        import time
+        epoch_times = []
+        training_start_time = time.time()
+
         # Load checkpoint if exists
         checkpoint_path = f"models/checkpoints/regularized_enhanced_latest.pth"
         if os.path.exists(checkpoint_path) and not config.get('new_model', False):
@@ -327,6 +332,8 @@ class StronglyRegularizedTrainer:
         print("=" * 80)
 
         for epoch in range(start_epoch, config['epochs'] + 1):
+            epoch_start_time = time.time()
+
             # Training
             if epoch == start_epoch:
                 print("🏁 Starting first epoch...")
@@ -334,6 +341,11 @@ class StronglyRegularizedTrainer:
 
             # Validation
             val_loss, val_acc, val_preds, val_targets = self.validate()
+
+            # Calculate epoch time
+            epoch_time = time.time() - epoch_start_time
+            epoch_times.append(epoch_time)
+            avg_epoch_time = sum(epoch_times) / len(epoch_times)
 
             # Calculate overfitting gap
             overfitting_gap = train_acc - val_acc
@@ -359,6 +371,7 @@ class StronglyRegularizedTrainer:
             print(f"📊 Val Loss: {val_loss:.4f}, Val Acc: {val_acc:.4f}")
             print(f"⚠️  Overfitting Gap: {overfitting_gap:.4f} ({overfitting_gap*100:.1f}%)")
             print(f"📚 Learning Rate: {current_lr:.2e}")
+            print(f"⏱️  Epoch Time: {epoch_time/60:.1f}m | Avg: {avg_epoch_time/60:.1f}m | Estimated Remaining: {avg_epoch_time * (config['epochs'] - epoch) / 3600:.1f}h")
 
             # Save best model (prioritize validation accuracy, but track overfitting)
             if val_acc > best_acc:
@@ -420,9 +433,16 @@ class StronglyRegularizedTrainer:
                 print(f"⚠️ SWA finalization failed: {e}")
 
         writer.close()
+
+        # Calculate total training time
+        total_training_time = time.time() - training_start_time
+
         print(f"\n🎉 Training complete!")
         print(f"🏆 Best validation accuracy: {best_acc:.4f}")
         print(f"📉 Best overfitting gap: {best_overfitting_gap:.4f} ({best_overfitting_gap*100:.1f}%)")
+        print(f"⏱️  Total Training Time: {total_training_time/3600:.2f}h ({total_training_time/60:.1f}m)")
+        print(f"⏱️  Average Epoch Time: {avg_epoch_time/60:.1f}m")
+        print(f"📊 Total Epochs: {len(epoch_times)}")
         return best_acc
 
 def main():
