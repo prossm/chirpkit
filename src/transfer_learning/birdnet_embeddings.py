@@ -27,46 +27,96 @@ from torch.utils.data import Dataset
 from pathlib import Path
 from tqdm import tqdm
 import joblib
+import librosa
+import tensorflow as tf
 
-# Add BirdNET to path
-BIRDNET_PATH = Path(__file__).parent.parent.parent / "BirdNET-Analyzer"
-sys.path.insert(0, str(BIRDNET_PATH))
+# Try to import from BirdNET-Analyzer if available (for training)
+# Otherwise use standalone TFLite implementation (for inference)
+USING_BIRDNET_ANALYZER = False
+try:
+    BIRDNET_PATH = Path(__file__).parent.parent.parent / "BirdNET-Analyzer"
+    if BIRDNET_PATH.exists():
+        sys.path.insert(0, str(BIRDNET_PATH))
+        import birdnet_analyzer.config as birdnet_cfg
+        from birdnet_analyzer import model as birdnet_model
+        from birdnet_analyzer import audio as birdnet_audio
+        USING_BIRDNET_ANALYZER = True
+        print("✅ Using BirdNET-Analyzer (full features available)")
+except ImportError:
+    pass
 
-import birdnet_analyzer.config as birdnet_cfg
-from birdnet_analyzer import model as birdnet_model
-from birdnet_analyzer import audio as birdnet_audio
+if not USING_BIRDNET_ANALYZER:
+    print("ℹ️  Using standalone TFLite implementation (inference only)")
 
 
 class BirdNETEmbeddingExtractor:
     """Extract 1024-dimensional embeddings from audio using BirdNET"""
 
-    def __init__(self):
+    # BirdNET constants
+    SAMPLE_RATE = 48000  # BirdNET uses 48kHz
+    SIG_LENGTH = 3.0     # 3-second chunks
+    SIG_MINLEN = 1.0     # Minimum 1 second
+    EMBEDDING_DIM = 1024 # Output embedding size
+    BANDPASS_FMIN = 1000   # 1kHz (insect frequencies)
+    BANDPASS_FMAX = 15000  # 15kHz
+
+    def __init__(self, model_path=None):
         """Initialize BirdNET model for embedding extraction"""
         print("🔧 Initializing BirdNET embedding extractor...")
 
-        # Configure BirdNET for embedding extraction
+        self.using_analyzer = USING_BIRDNET_ANALYZER
+
+        if USING_BIRDNET_ANALYZER:
+            # Use full BirdNET-Analyzer (for training)
+            self._init_with_analyzer()
+        else:
+            # Use standalone TFLite (for inference)
+            self._init_standalone(model_path)
+
+        print("✅ BirdNET embedding extractor ready!")
+        print(f"   Sample rate: {self.SAMPLE_RATE}Hz")
+        print(f"   Chunk length: {self.SIG_LENGTH}s")
+        print(f"   Embedding dim: {self.EMBEDDING_DIM}")
+        print(f"   Bandpass filter: {self.BANDPASS_FMIN}-{self.BANDPASS_FMAX}Hz")
+
+    def _init_with_analyzer(self):
+        """Initialize using full BirdNET-Analyzer"""
         birdnet_cfg.MODEL_PATH = birdnet_cfg.BIRDNET_MODEL_PATH
         birdnet_cfg.LABELS_FILE = birdnet_cfg.BIRDNET_LABELS_FILE
-        birdnet_cfg.SAMPLE_RATE = birdnet_cfg.BIRDNET_SAMPLE_RATE  # 48kHz
-        birdnet_cfg.SIG_LENGTH = birdnet_cfg.BIRDNET_SIG_LENGTH    # 3.0 seconds
-        birdnet_cfg.SIG_OVERLAP = 0.0  # No overlap for training data
-        birdnet_cfg.SIG_MINLEN = 1.0   # Minimum 1 second
-        birdnet_cfg.BATCH_SIZE = 32    # Process multiple chunks at once
+        birdnet_cfg.SAMPLE_RATE = self.SAMPLE_RATE
+        birdnet_cfg.SIG_LENGTH = self.SIG_LENGTH
+        birdnet_cfg.SIG_OVERLAP = 0.0
+        birdnet_cfg.SIG_MINLEN = self.SIG_MINLEN
+        birdnet_cfg.BATCH_SIZE = 32
+        birdnet_cfg.BANDPASS_FMIN = self.BANDPASS_FMIN
+        birdnet_cfg.BANDPASS_FMAX = self.BANDPASS_FMAX
 
-        # Set bandpass filter for insect frequencies
-        # Insects typically produce sounds between 1-15kHz
-        birdnet_cfg.BANDPASS_FMIN = 1000  # 1kHz
-        birdnet_cfg.BANDPASS_FMAX = 15000  # 15kHz
-
-        # Load model for embedding extraction (not classification)
         print(f"📦 Loading BirdNET model from: {birdnet_cfg.MODEL_PATH}")
         birdnet_model.load_model(class_output=False)  # False = get embeddings
 
-        print("✅ BirdNET embedding extractor ready!")
-        print(f"   Sample rate: {birdnet_cfg.SAMPLE_RATE}Hz")
-        print(f"   Chunk length: {birdnet_cfg.SIG_LENGTH}s")
-        print(f"   Embedding dim: 1024")
-        print(f"   Bandpass filter: {birdnet_cfg.BANDPASS_FMIN}-{birdnet_cfg.BANDPASS_FMAX}Hz")
+    def _init_standalone(self, model_path=None):
+        """Initialize using standalone TFLite"""
+        if model_path is None:
+            # Default to models/birdnet/ directory
+            model_path = Path(__file__).parent.parent.parent / "models" / "birdnet" / "BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
+
+        self.model_path = Path(model_path)
+
+        if not self.model_path.exists():
+            raise FileNotFoundError(
+                f"BirdNET model not found at {self.model_path}\n"
+                f"Expected location: models/birdnet/BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
+            )
+
+        print(f"📦 Loading TFLite model from: {self.model_path}")
+
+        # Load TFLite model
+        self.interpreter = tf.lite.Interpreter(model_path=str(self.model_path))
+        self.interpreter.allocate_tensors()
+
+        # Get input and output details
+        self.input_details = self.interpreter.get_input_details()
+        self.output_details = self.interpreter.get_output_details()
 
     def extract_embeddings_from_audio(self, audio_path, aggregate='mean'):
         """
@@ -77,58 +127,116 @@ class BirdNETEmbeddingExtractor:
             aggregate: How to combine multiple 3-second chunks
                       'mean' - average all embeddings
                       'max' - max pool across embeddings
-                      'concat' - concatenate first N embeddings
+                      'first' - use only first chunk
                       'all' - return all embeddings (for data augmentation)
 
         Returns:
             embeddings: numpy array of shape (1024,) or (n_chunks, 1024)
         """
         try:
-            # Load audio and resample to 48kHz
-            sig, rate = birdnet_audio.open_audio_file(
-                audio_path,
-                sample_rate=birdnet_cfg.SAMPLE_RATE,
-                fmin=birdnet_cfg.BANDPASS_FMIN,
-                fmax=birdnet_cfg.BANDPASS_FMAX
-            )
-
-            # Split into 3-second chunks
-            chunks = self._split_signal(sig, rate)
-
-            if len(chunks) == 0:
-                # Audio too short, pad to 3 seconds
-                chunks = [self._pad_signal(sig, rate)]
-
-            # Extract embeddings for all chunks
-            embeddings = birdnet_model.embeddings(chunks)  # Shape: (n_chunks, 1024)
-
-            # Aggregate embeddings
-            if aggregate == 'mean':
-                return np.mean(embeddings, axis=0)  # (1024,)
-            elif aggregate == 'max':
-                return np.max(embeddings, axis=0)  # (1024,)
-            elif aggregate == 'first':
-                return embeddings[0]  # (1024,)
-            elif aggregate == 'all':
-                return embeddings  # (n_chunks, 1024)
+            if self.using_analyzer:
+                return self._extract_with_analyzer(audio_path, aggregate)
             else:
-                raise ValueError(f"Unknown aggregation method: {aggregate}")
+                return self._extract_standalone(audio_path, aggregate)
 
         except Exception as e:
             print(f"❌ Error extracting embeddings from {audio_path}: {e}")
             # Return zero embedding on error
-            return np.zeros(1024, dtype=np.float32)
+            return np.zeros(self.EMBEDDING_DIM, dtype=np.float32)
+
+    def _extract_with_analyzer(self, audio_path, aggregate):
+        """Extract embeddings using full BirdNET-Analyzer"""
+        # Load audio and resample to 48kHz
+        sig, rate = birdnet_audio.open_audio_file(
+            audio_path,
+            sample_rate=birdnet_cfg.SAMPLE_RATE,
+            fmin=birdnet_cfg.BANDPASS_FMIN,
+            fmax=birdnet_cfg.BANDPASS_FMAX
+        )
+
+        # Split into 3-second chunks
+        chunks = self._split_signal(sig, rate)
+
+        if len(chunks) == 0:
+            # Audio too short, pad to 3 seconds
+            chunks = [self._pad_signal(sig, rate)]
+
+        # Extract embeddings for all chunks
+        embeddings = birdnet_model.embeddings(chunks)  # Shape: (n_chunks, 1024)
+
+        # Aggregate embeddings
+        return self._aggregate_embeddings(embeddings, aggregate)
+
+    def _extract_standalone(self, audio_path, aggregate):
+        """Extract embeddings using standalone TFLite"""
+        # Load audio with librosa
+        audio_data, sr = librosa.load(
+            audio_path,
+            sr=self.SAMPLE_RATE,
+            mono=True
+        )
+
+        # Split into 3-second chunks
+        chunks = self._split_signal(audio_data, sr)
+
+        if len(chunks) == 0:
+            # Audio too short, pad to 3 seconds
+            chunks = [self._pad_signal(audio_data, sr)]
+
+        # Extract embeddings for all chunks
+        embeddings = []
+        for chunk in chunks:
+            embedding = self._extract_chunk_embedding_tflite(chunk)
+            embeddings.append(embedding)
+
+        embeddings = np.array(embeddings)  # Shape: (n_chunks, 1024)
+
+        # Aggregate embeddings
+        return self._aggregate_embeddings(embeddings, aggregate)
+
+    def _extract_chunk_embedding_tflite(self, audio_chunk):
+        """Extract embedding from a single chunk using TFLite"""
+        # Ensure correct length
+        expected_samples = int(self.SIG_LENGTH * self.SAMPLE_RATE)
+        if len(audio_chunk) != expected_samples:
+            audio_chunk = self._pad_signal(audio_chunk, self.SAMPLE_RATE)
+
+        # Prepare input for TFLite model
+        input_data = audio_chunk.astype(np.float32).reshape(1, -1)
+
+        # Run inference
+        self.interpreter.set_tensor(self.input_details[0]['index'], input_data)
+        self.interpreter.invoke()
+
+        # Get embedding output (first output is embeddings)
+        embedding = self.interpreter.get_tensor(self.output_details[0]['index'])
+
+        return embedding.flatten()
+
+    def _aggregate_embeddings(self, embeddings, aggregate):
+        """Aggregate multiple embeddings into one"""
+        if aggregate == 'mean':
+            return np.mean(embeddings, axis=0)  # (1024,)
+        elif aggregate == 'max':
+            return np.max(embeddings, axis=0)  # (1024,)
+        elif aggregate == 'first':
+            return embeddings[0]  # (1024,)
+        elif aggregate == 'all':
+            return embeddings  # (n_chunks, 1024)
+        else:
+            raise ValueError(f"Unknown aggregation method: {aggregate}")
 
     def _split_signal(self, sig, rate):
         """Split signal into 3-second non-overlapping chunks"""
-        chunk_samples = int(birdnet_cfg.SIG_LENGTH * rate)
+        chunk_samples = int(self.SIG_LENGTH * rate)
+        min_samples = int(self.SIG_MINLEN * rate)
         chunks = []
 
         for i in range(0, len(sig), chunk_samples):
             chunk = sig[i:i + chunk_samples]
 
             # Pad last chunk if too short but >= MIN_LEN
-            if len(chunk) >= int(birdnet_cfg.SIG_MINLEN * rate):
+            if len(chunk) >= min_samples:
                 if len(chunk) < chunk_samples:
                     chunk = self._pad_signal(chunk, rate)
                 chunks.append(chunk)
@@ -137,7 +245,7 @@ class BirdNETEmbeddingExtractor:
 
     def _pad_signal(self, sig, rate):
         """Pad signal to 3 seconds with zeros"""
-        target_samples = int(birdnet_cfg.SIG_LENGTH * rate)
+        target_samples = int(self.SIG_LENGTH * rate)
         if len(sig) < target_samples:
             padding = target_samples - len(sig)
             sig = np.pad(sig, (0, padding), mode='constant')
