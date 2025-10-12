@@ -1,0 +1,13 @@
+# Git LFS configuration for ChirpKit
+
+# BirdNET model files (25MB)
+*.tflite filter=lfs diff=lfs merge=lfs -text
+
+# ChirpKit trained model files (2.7MB each)
+models/trained/**/*.pth filter=lfs diff=lfs merge=lfs -text
+
+# Large numpy arrays (if included)
+*.npy filter=lfs diff=lfs merge=lfs -text
+
+# Joblib files (label encoders, etc.)
+*.joblib filter=lfs diff=lfs merge=lfs -text

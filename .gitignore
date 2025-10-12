@@ -19,8 +19,12 @@ data/raw/
 data/processed/
 data/splits/
 data/features/
+data/embeddings/combined/  # Local embeddings (regeneratable)
 
-# Model artifacts (keep trained models in repo, but ignore checkpoints and temporary files)
+# Kaggle packages (too large, regeneratable)
+data/embeddings_kaggle/*.tar.gz
+
+# Model artifacts (keep production models, ignore temporary files)
 models/checkpoints/
 models/bayesian_checkpoints/
 models/hybrid_stacked/
@@ -32,6 +36,39 @@ runs/
 *.h5
 *.ckpt
 
-# Keep trained models and their metadata for easy deployment
-# models/trained/ - INCLUDED in git
+# Production models - KEEP THESE
+# models/trained/chirpkit-ensemble/ - INCLUDED (v6.0 production)
+# models/trained/archive/ - INCLUDED (model history, documentation only)
+
+# Archive checkpoints - TOO LARGE, exclude them
+models/trained/archive/checkpoints/*.pth
+models/trained/archive/bayesian_checkpoints/*.pth
+models/trained/archive/bayesian_advanced/current_epoch_*.pth
+models/trained/archive/bayesian_advanced/best_bayesian_model.pth
+
+# Cache files (regeneratable)
 species_cache.json
+__pycache__/
+*.pyc
+
+# BirdNET-Analyzer - Include essential files only
+# Core Python modules (small, needed for integration)
+!BirdNET-Analyzer/birdnet_analyzer/__init__.py
+!BirdNET-Analyzer/birdnet_analyzer/config.py
+!BirdNET-Analyzer/birdnet_analyzer/model.py
+!BirdNET-Analyzer/birdnet_analyzer/audio.py
+
+# Model files (handled by git LFS)
+!BirdNET-Analyzer/birdnet_analyzer/checkpoints/V2.4/BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite
+!BirdNET-Analyzer/birdnet_analyzer/checkpoints/V2.4/BirdNET_GLOBAL_6K_V2.4_Labels.txt
+
+# Exclude everything else from BirdNET-Analyzer (docs, tests, other model versions, etc.)
+BirdNET-Analyzer/docs/
+BirdNET-Analyzer/tests/
+BirdNET-Analyzer/.git/
+BirdNET-Analyzer/checkpoints/V2.*/
+BirdNET-Analyzer/birdnet_analyzer/checkpoints/*/BirdNET_GLOBAL_6K_*_Model_FP32.tflite
+BirdNET-Analyzer/birdnet_analyzer/checkpoints/*/BirdNET_GLOBAL_6K_*_Model_INT8.tflite
+BirdNET-Analyzer/birdnet_analyzer/checkpoints/*/BirdNET_GLOBAL_6K_*_MData_*.tflite
+BirdNET-Analyzer/birdnet_analyzer/checkpoints/*/BirdNET_*_Model_TFJS/
+BirdNET-Analyzer/birdnet_analyzer/labels/

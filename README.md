@@ -1,18 +1,47 @@
 # 🦗 ChirpKit: Multi-Species Insect Sound Classifier
 
-A comprehensive Python system for identifying **255 high-quality insect species** from audio recordings using deep learning. Features a CNN-LSTM neural network trained on globally balanced datasets with strong regularization, comprehensive training pipeline, and an intuitive web interface for real-time species identification.
+A comprehensive Python system for identifying **231 insect species** from audio recordings using deep learning. Features a 7-model ensemble trained on BirdNET embeddings, achieving **79.7% accuracy** with Test-Time Augmentation.
 
-**Dataset Quality:** All 255 species have ≥30 training samples, ensuring reliable model performance and avoiding overfitting issues common with rare classes.
+**Current Model:** v6.0 Ensemble (October 2024)
+- **Accuracy:** 79.7% on 231 species (79.6% without TTA)
+- **Architecture:** 7 DeepMLP models trained on BirdNET embeddings
+- **Training:** 7 minutes on Kaggle GPU
+- **Species:** All 231 species have ≥30 samples for reliable training
+
+## 🆕 v6.0 Ensemble: 79.7% Accuracy Achieved! 🎉
+
+ChirpKit v6.0 uses a powerful ensemble approach with BirdNET transfer learning:
+
+```bash
+# Use the pre-trained ensemble (recommended)
+python simple_ui.py
+```
+
+**Performance Journey:**
+- v4.0 CNN-LSTM (255 species): 37% accuracy, 12 hours training
+- v5.0 BirdNET Single (231 species): 77% accuracy, 2 minutes training
+- v5.1 BirdNET 5-Ensemble (231 species): 79.4% accuracy, 5 minutes training
+- **v6.0 BirdNET 7-Ensemble + TTA (231 species): 79.7% accuracy, 7 minutes training** ✅
+
+**Key Features:**
+- ⚡ **Extremely fast training** (7 min vs 12 hours)
+- 📈 **Production-ready accuracy** (79.7%)
+- 🎯 **Robust predictions** (7-model ensemble with TTA)
+- 💾 **Compact models** (19MB total for all 7 models)
+- 🔄 **Flexible deployment** (single model, ensemble, or ensemble+TTA)
+
+See **[KAGGLE_WORKFLOW.md](KAGGLE_WORKFLOW.md)** for training guide and **v6.0 Ensemble** section below for usage.
 
 ## ✨ Key Features
 
-- **🎯 255 High-Quality Species**: Trained on carefully curated datasets with minimum 30 samples per species
-- **🧠 Enhanced CNN-LSTM**: Multi-scale feature extraction with attention mechanisms and aggressive regularization
+- **🎯 231 High-Quality Species**: Trained on carefully curated datasets with minimum 30 samples per species
+- **🧠 v6.0 Ensemble**: 7 DeepMLP models with Test-Time Augmentation for robust predictions
+- **🚀 BirdNET Transfer Learning**: Leverages pre-trained embeddings from millions of animal sounds
 - **🎤 Real-time Recording**: Web UI supports both live audio recording and file uploads
 - **📊 Smart Confidence Display**: Context-aware confidence ratings with visual star system
-- **🔍 Species Browser**: Searchable modal with all 255 supported species
+- **🔍 Species Browser**: Searchable modal with all 231 supported species
 - **📖 Wikipedia Integration**: Automatic fetching of species info, images, and descriptions
-- **⚡ Optimized Training**: Advanced regularization techniques (50% dropout, MixUp, SWA) for better generalization
+- **⚡ Fast Training**: 7 minutes on free Kaggle GPU vs 12 hours for CNN-LSTM from scratch
 
 ## 📊 Dataset Information
 
@@ -59,25 +88,34 @@ The current model uses carefully filtered datasets with minimum 30 samples per s
 
 ### Installation
 
-ChirpKit supports flexible installation with platform-specific optimizations:
+ChirpKit includes all necessary model files via git LFS:
 
 ```bash
-# Clone the repository
+# Clone the repository (includes models via git LFS)
 git clone https://github.com/patrickmetzger/chirpkit.git
 cd chirpkit
 
-# Basic installation (CPU-only, universal)
-pip install .
+# Install dependencies
+pip install -e .
 
-# macOS with Apple Silicon/Intel optimization
-pip install .[full]
+# Platform-specific optimizations:
+# macOS with Apple Silicon/Intel
+pip install -e .[full]
 
 # Linux/Windows with optional GPU support
-pip install .[tensorflow-gpu,torch,viz]
+pip install -e .[tensorflow-gpu,torch,viz]
 
 # Development installation
-pip install .[dev]
+pip install -e .[dev]
 ```
+
+**What's included:**
+- ✅ v6.0 Ensemble models (7 × 2.7MB = 19MB total)
+- ✅ BirdNET embedding extractor (25MB model file)
+- ✅ Label encoder for 231 species
+- ✅ All necessary Python code
+
+**No additional downloads required!** The pre-trained models work out of the box.
 
 **Platform-Specific Recommendations:**
 - **macOS**: `pip install .[full]` (includes tensorflow-macos with Metal GPU support)
@@ -97,31 +135,71 @@ chirpkit install-guide
 chirpkit-fix
 ```
 
-### Option 1: Use Pre-trained Model (Recommended)
+### Option 1: Use v6.0 Ensemble Model (Recommended)
 
 ```bash
-# Launch the web interface
+# Launch the web interface with v6.0 ensemble
 python simple_ui.py
 ```
+
+The UI will automatically load the v6.0 ensemble from `models/trained/chirpkit-ensemble/`.
 
 Access the web UI at `http://localhost:7860` to:
 - 🎤 Record insect sounds directly in your browser
 - 📁 Upload audio files (.wav, .mp3, .m4a, .flac)
-- 🔍 Browse all 255 supported species
+- 🔍 Browse all 231 supported species
 - 📖 View species information and Wikipedia photos
+- 🎯 Get predictions from 7-model ensemble with 79.7% accuracy
 
-### Option 2: Train Your Own Model
+### Option 2: Train v6.0 Ensemble (Fast & Accurate)
+
+Train your own v6.0 ensemble on Kaggle GPU (free):
+
+```bash
+# Step 1: Extract BirdNET embeddings locally (one-time, 2-4 hours)
+python scripts/extract_embeddings_final.py \
+    --insectset459-dir data/raw/insectset459/Train \
+    --xenocanto-dir data/raw/xenocanto/audio \
+    --min-samples 30 \
+    --output data/embeddings/combined
+
+# Step 2: Create Kaggle package
+python -c "from scripts.extract_embeddings_for_kaggle import create_kaggle_package; \
+    create_kaggle_package('data/embeddings/combined', 'data/embeddings_kaggle')"
+
+# Step 3: Upload to Kaggle (via web interface)
+# Go to https://kaggle.com/datasets → New Dataset
+# Upload: data/embeddings_kaggle/chirpkit-birdnet-embeddings.tar.gz
+
+# Step 4: Train on Kaggle GPU (7 minutes, free!)
+# Create new notebook, add your dataset, enable GPU, run:
+# !tar -xzf /kaggle/input/chirpkit-birdnet-embeddings/chirpkit-birdnet-embeddings.tar.gz
+# !python chirpkit-birdnet-embeddings/train_ensemble_on_kaggle.py
+
+# Step 5: Download trained models
+# Download the 7 .pth files to models/trained/chirpkit-ensemble/
+```
+
+**Expected results:**
+- Individual models: 76-77% accuracy
+- Ensemble: 79.6% accuracy
+- Ensemble + TTA: 79.7% accuracy
+
+See [KAGGLE_WORKFLOW.md](KAGGLE_WORKFLOW.md) for detailed step-by-step instructions.
+
+### Option 3: Train CNN-LSTM from Scratch (Legacy)
+
+Train the older CNN-LSTM model (not recommended, much slower):
 
 ```bash
 # Download datasets
 python scripts/download_insectset459.py
 python scripts/download_xenocanto.py    # Requires Xeno-canto account (see below)
-python scripts/download_sina.py         # Optional - will be filtered out (<30 samples/species)
 
-# Preprocess and combine datasets (auto-filters to 255 species with ≥30 samples)
+# Preprocess and combine datasets
 python scripts/preprocess_unified.py --dataset all --min-samples 30 --val-ratio 0.30
 
-# Train with strong regularization (recommended)
+# Train with strong regularization (12+ hours)
 python scripts/train_enhanced_regularized.py --dataset combined --epochs 500
 ```
 
@@ -155,23 +233,39 @@ python scripts/download_xenocanto.py --start-page 68
 
 ## 🎯 Model Performance
 
-### Current Model (255 Species)
-- **Target Validation Accuracy**: 50-60% (vs. 0.39% random baseline = 130-155× improvement)
-- **Architecture**: Enhanced CNN-LSTM with multi-scale features, attention, and species-specific focus
-- **Regularization**: 50% dropout, MixUp augmentation, label smoothing, SWA
-- **Training**: ~300 epochs with early stopping (patience=50)
-- **Overfitting Gap**: Target <15% (train_acc - val_acc)
+### v6.0 Ensemble (231 Species) - **Current Production Model** ✅
+- **Validation Accuracy**: 79.7% with TTA, 79.6% without TTA
+- **Architecture**: 7 DeepMLP models (1024 → 512 → 256 → 128 → 231)
+- **Training**: BirdNET embeddings + ensemble + test-time augmentation
+- **Training Time**: 7 minutes on Kaggle GPU P100 (free!)
+- **Inference Speed**:
+  - Single model: ~10ms (77% accuracy)
+  - 7-model ensemble: ~35ms (79.6% accuracy)
+  - Ensemble + TTA: ~70ms (79.7% accuracy)
+- **Model Size**: 2.7MB per model, 19MB total
+- **Random Baseline**: 0.43% (1/231)
+- **Improvement**: 185× better than random
 
-### Previous Model (471 Species, Lower Quality)
-- **Validation Accuracy**: 71.6% on 471 species
-- **Issues**: Severe overfitting (87% train / 37% val = 50% gap) due to rare classes
-- **Lesson Learned**: More species ≠ better model without sufficient data per species
+### Performance Evolution
+| Version | Species | Accuracy | Training Time | Method |
+|---------|---------|----------|---------------|--------|
+| v4.0 | 255 | 37% | 12 hours | CNN-LSTM from scratch |
+| v5.0 | 231 | 77.0% | 2 minutes | BirdNET single model |
+| v5.1 | 231 | 79.4% | 5 minutes | BirdNET 5-model ensemble |
+| **v6.0** | **231** | **79.7%** | **7 minutes** | **BirdNET 7-model ensemble + TTA** |
 
-### Confidence Interpretation:
-- **⭐⭐⭐ Very High** (>15%): Highly reliable identification
-- **⭐⭐☆ High** (8-15%): Good confidence, likely correct
-- **⭐☆☆ Moderate** (3-8%): Reasonable guess, consider alternatives
-- **☆☆☆ Low** (<3%): Uncertain, verify with expert
+### Deployment Options (v6.0)
+| Mode | Accuracy | Inference Time | Use Case |
+|------|----------|----------------|----------|
+| Single | 77.6% | ~10ms | Real-time mobile apps |
+| Ensemble | 79.6% | ~35ms | Production API |
+| Ensemble + TTA | 79.7% | ~70ms | Maximum accuracy |
+
+### Confidence Interpretation (231 species):
+- **⭐⭐⭐ Very High** (>10%): Highly reliable identification
+- **⭐⭐☆ High** (5-10%): Good confidence, likely correct
+- **⭐☆☆ Moderate** (2-5%): Reasonable guess, consider alternatives
+- **☆☆☆ Low** (<2%): Uncertain, verify with expert
 
 ## 🖥️ Web Interface Features
 
@@ -181,13 +275,14 @@ python scripts/download_xenocanto.py --start-page 68
 - **Recording Tips**: Built-in guidance for optimal audio capture
 
 ### Species Identification
-- **Real-time Processing**: Get results in seconds
-- **Rich Results**: Shows common name, scientific name, and confidence
+- **v6.0 Ensemble**: Uses 7-model ensemble with 79.7% accuracy
+- **Real-time Processing**: Get results in ~1 second
+- **Rich Results**: Shows common name, scientific name, confidence, and model info
 - **Wikipedia Integration**: Automatic species photos and descriptions
-- **Top 5 Predictions**: See alternative identifications
+- **Top 5 Predictions**: See alternative identifications with confidence scores
 
 ### Species Browser
-- **Complete Catalog**: Browse all 255 high-quality species
+- **Complete Catalog**: Browse all 231 high-quality species
 - **Fast Search**: Real-time filtering by scientific name
 - **Mobile Friendly**: Touch-optimized interface
 
@@ -195,39 +290,65 @@ python scripts/download_xenocanto.py --start-page 68
 
 ```
 chirpkit/
-├── simple_ui.py                 # Web interface for species identification
+├── simple_ui.py                       # Web interface (v6.0 ensemble)
 ├── src/
 │   ├── models/
-│   │   └── simple_cnn_lstm.py   # CNN-LSTM model architecture
+│   │   ├── chirpkit_ensemble.py       # v6.0 Ensemble classifier
+│   │   ├── birdnet_classifier.py      # DeepMLP architectures
+│   │   └── simple_cnn_lstm.py         # Legacy CNN-LSTM
+│   ├── transfer_learning/
+│   │   └── birdnet_embeddings.py      # BirdNET embedding extractor
 │   └── data/
-│       ├── preprocessing.py      # Audio preprocessing utilities
-│       └── augmentation.py       # Data augmentation pipeline
+│       ├── preprocessing.py           # Audio preprocessing utilities
+│       └── augmentation.py            # Data augmentation pipeline
 ├── scripts/
-│   ├── train_enhanced_regularized.py  # Recommended: Strong regularization training
-│   ├── train_unified.py               # Alternative: Standard training
-│   ├── preprocess_unified.py          # Data preprocessing (auto-combines datasets)
-│   ├── combine_datasets.py            # Manually combine preprocessed datasets
+│   ├── extract_embeddings_final.py    # Extract BirdNET embeddings
+│   ├── extract_embeddings_for_kaggle.py  # Package for Kaggle upload
 │   └── download_*.py                  # Dataset download scripts
 ├── models/
-│   └── trained/                       # Pre-trained models and metadata
-│       ├── insect_classifier_enhanced_255species.pth
-│       ├── insect_classifier_enhanced_255species_label_encoder.joblib
-│       └── insect_classifier_enhanced_255species_info.json
-└── data/                        # Dataset storage (not included in repo)
-    ├── raw/                     # Original audio files
-    ├── processed/               # Preprocessed features
-    └── splits/                  # Train/validation/test splits
+│   └── trained/
+│       └── chirpkit-ensemble/         # v6.0 Production model (231 species)
+│           ├── ensemble_model_1.pth through ensemble_model_7.pth
+│           └── ensemble_info.json
+├── data/
+│   ├── embeddings_kaggle/            # Kaggle training packages
+│   │   └── chirpkit-birdnet-embeddings/
+│   │       ├── train_ensemble_on_kaggle.py
+│   │       ├── X_train_embeddings.npy
+│   │       └── X_val_embeddings.npy
+│   └── raw/                          # Original audio files
+│       ├── insectset459/
+│       └── xenocanto/
+└── BirdNET-Analyzer/                 # BirdNET submodule (for embeddings)
 ```
 
 ## 🔧 Technical Details
 
-### Model Architecture (Enhanced Regularized)
+### v6.0 Ensemble Architecture (Current)
+- **Base Model**: DeepMLP classifier trained on BirdNET embeddings
+- **Architecture per model**: 1024 (embedding) → 512 → 256 → 128 → 231 (species)
+- **Ensemble size**: 7 models with different random seeds [42, 123, 456, 789, 2024, 3141, 5678]
+- **Dropout**: 0.4 throughout
+- **Test-Time Augmentation**: 10 rounds with 1% Gaussian noise
+- **Features**: BirdNET 1024-dimensional embeddings (pre-trained on millions of bird/animal sounds)
+- **Training**:
+  - Optimizer: AdamW with weight decay 1e-4
+  - Loss: CrossEntropyLoss with label smoothing 0.1
+  - Learning rate: 1e-3 with ReduceLROnPlateau
+  - Early stopping: patience 50, max epochs 300
+- **Inference Modes**:
+  - Single model: Single forward pass (~10ms)
+  - Ensemble: Average 7 model predictions (~35ms)
+  - Ensemble + TTA: Average across 7 models × 10 TTA rounds (~70ms)
+
+### Legacy CNN-LSTM Architecture (v4.0 and earlier)
 - **Multi-Scale CNN**: 3 parallel paths (3×3, 5×5, 7×7 kernels) for different temporal scales
 - **CNN Depth**: 5 convolutional blocks with batch normalization and 50% dropout
 - **LSTM**: 3-layer bidirectional LSTM (256 hidden units per direction, dropout enabled)
 - **Attention**: Multi-head attention (8 heads) + species-specific attention
-- **Classifier**: 3-layer MLP (1024→512→255) with 50% dropout and batch normalization
+- **Classifier**: 3-layer MLP (1024→512→231) with 50% dropout and batch normalization
 - **Features**: High-resolution mel spectrograms (256 mel bins, 2.5-second segments, 22kHz)
+- **Note**: Slower training (12 hours) and lower accuracy (37%) - use v6.0 instead
 
 ### Training Configuration (Enhanced Regularized)
 - **Optimizer**: AdamW with strong weight decay (2e-4) and differential learning rates
@@ -472,11 +593,32 @@ Contributions are welcome! Areas for improvement:
 
 This project is licensed under the MIT License - see the LICENSE file for details.
 
+## 📦 Repository Contents
+
+### Included in Git (via Git LFS)
+- ✅ **Production Models**: `models/trained/chirpkit-ensemble/` (v6.0, 7 models, 19MB total)
+- ✅ **Model Archive**: `models/trained/archive/` (historical models and documentation)
+- ✅ **BirdNET Model**: `BirdNET-Analyzer/.../BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite` (25MB)
+- ✅ **BirdNET Core**: Essential Python modules for embedding extraction
+- ✅ **Label Encoders**: Species mappings for 231 species
+- ✅ **Kaggle Package**: Ready-to-upload training package in `data/embeddings_kaggle/`
+
+### Excluded from Git (Too Large)
+- ❌ **Raw Audio**: `data/raw/` (685GB - download separately if training)
+- ❌ **Embeddings**: `data/embeddings/combined/` (regeneratable from raw audio)
+- ❌ **Preprocessed Data**: `data/processed/` and `data/splits/` (regeneratable)
+- ❌ **Training Checkpoints**: Temporary files from training runs
+
+### Total Repository Size
+- **With LFS**: ~50MB (all models included)
+- **Without LFS pointers**: ~5MB (just code)
+
 ## 📚 Additional Documentation
 
+- **[KAGGLE_WORKFLOW.md](KAGGLE_WORKFLOW.md)**: Complete guide to training v6.0 ensemble
 - **[DATASET_SUMMARY.md](DATASET_SUMMARY.md)**: Complete dataset statistics and quality analysis
-- **[PREPROCESSING_IMPROVEMENTS.md](PREPROCESSING_IMPROVEMENTS.md)**: What changed and why
-- **[SUPPORTING_RESEARCH.md](SUPPORTING_RESEARCH.md)**: Scientific justification for all techniques (57 references)
+- **[MODEL_HISTORY.md](models/trained/archive/MODEL_HISTORY.md)**: Evolution from v1.0 to v6.0
+- **[SUPPORTING_RESEARCH.md](SUPPORTING_RESEARCH.md)**: Scientific justification with 76 references
 
 ## 🙏 Acknowledgments
 

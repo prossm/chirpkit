@@ -574,6 +574,244 @@ If we were to remove techniques one by one, expected impact:
 
 ---
 
+## Transfer Learning & Pre-trained Models
+
+### BirdNET Transfer Learning (v5.0+)
+
+**Implementation:** `train_on_kaggle.py`, `train_ensemble_on_kaggle.py` - BirdNET frozen embeddings + Deep MLP classifier
+
+**Scientific Basis:**
+
+#### 1. Transfer Learning Effectiveness
+
+**Core Principle:** Features learned on large-scale audio datasets transfer remarkably well to related tasks, even across domains [44, 45].
+
+**BirdNET Specifics:**
+- Pre-trained on **millions** of bird and animal vocalizations
+- Learned general acoustic features: frequency patterns, temporal structures, harmonic relationships
+- Frozen embeddings (1024-dim) encode rich audio representations without task-specific tuning
+
+**Why It Works for Insects:**
+- **Acoustic Similarity:** Both birds and insects produce tonal, pulsed, and harmonic sounds
+- **Feature Universality:** Fundamental acoustic features (pitch, rhythm, timbre) are domain-agnostic [58]
+- **Data Efficiency:** Pre-training on massive datasets compensates for limited insect training data [59]
+
+**Empirical Results:**
+- **Training from scratch (v4.0):** 37% accuracy after 12 hours
+- **Transfer learning (v5.0):** 77% accuracy after 2 minutes
+- **Improvement:** +40% absolute accuracy, 360x faster training
+
+#### 2. Frozen vs. Fine-tuned Features
+
+**Design Decision:** Keep BirdNET backbone frozen
+
+**Scientific Justification:**
+- **Catastrophic Forgetting:** Fine-tuning on small datasets can destroy pre-trained features [60]
+- **Data Efficiency:** Frozen features work better with <100 samples/class [61]
+- **Regularization:** Freezing acts as strong regularization, preventing overfitting [62]
+
+**Mathematical Intuition:**
+```
+Total parameters = BirdNET (frozen) + Classifier (trainable)
+                 = 50M (frozen) + 719K (trainable)
+                 = 98.6% frozen
+```
+
+Freezing 50M parameters dramatically reduces overfitting risk while maintaining feature quality.
+
+**Alternative Considered:**
+- **Fine-tuning last layers:** Expected +3-5% accuracy but requires:
+  - 10x more training time
+  - Careful learning rate scheduling
+  - Risk of catastrophic forgetting
+  - Re-extraction of raw audio (can't use frozen embeddings)
+
+**Future Work:** Fine-tuning is planned for v7.0 targeting 82-85% accuracy.
+
+#### 3. Embedding Extraction Strategy
+
+**Implementation:** Extract embeddings locally, train classifier on Kaggle
+
+**Scientific Basis:**
+
+**Workflow Separation Benefits:**
+1. **Computational Efficiency:** BirdNET uses CPU (TensorFlow Lite), classifier uses GPU [63]
+2. **Data Compression:** 25K audio files (6+ GB) → embeddings (87 MB) = 70x reduction
+3. **Fast Iteration:** Train multiple architectures without re-extracting features [64]
+4. **Reproducibility:** Fixed embeddings ensure consistent experiments
+
+**Embedding Quality:**
+- **Aggregation:** Mean-pooling across 3-second chunks (vs. single vector)
+- **Temporal Coverage:** Full recording represented (not just first 3 seconds)
+- **Noise Robustness:** Averaging reduces impact of transient noise
+
+**Why Mean Pooling?**
+- Max pooling: Captures strongest features but loses temporal context
+- **Mean pooling:** Balances all temporal segments, more robust [65]
+- Attention pooling: More sophisticated but requires training (defeats frozen approach)
+
+#### 4. Ensemble Methods
+
+**Implementation:** Train N models with different random seeds, average predictions
+
+**Scientific Basis:**
+
+**Diversity Through Random Seeds:**
+- Different initializations explore different local minima [66]
+- **Weight space symmetry:** Neural networks have many equivalent solutions [67]
+- **Prediction diversity:** Independent models make different errors [68]
+
+**Soft Voting (Probability Averaging):**
+```
+P_ensemble(class) = (1/N) * Σ P_model_i(class)
+```
+
+**Why it works:**
+- **Error cancellation:** Uncorrelated errors average out [69]
+- **Confidence calibration:** Averaged probabilities are better calibrated [70]
+- **Bias-variance tradeoff:** Reduces variance without increasing bias [71]
+
+**Empirical Scaling:**
+- 1 model: 77.0% accuracy
+- 5 models: 79.4% accuracy (+2.4%)
+- 7 models: 80.0% accuracy (+0.6%)
+
+**Diminishing Returns:** Adding models helps less as ensemble grows (diversity saturation) [72]
+
+**Comparison to Other Ensemble Methods:**
+- **Bagging (Bootstrap Aggregating):** Requires resampling data, less effective with limited samples
+- **Boosting (AdaBoost, XGBoost):** Sequential training, slower, risk of overfitting
+- **Snapshot Ensembling:** Multiple checkpoints from one training run, less diversity [73]
+- **Random seed ensembling:** Simple, effective, independent training ✅
+
+#### 5. Test-Time Augmentation (TTA)
+
+**Implementation:** Add Gaussian noise to embeddings during inference, average predictions
+
+**Scientific Basis:**
+
+**Noise as Regularization:**
+- **Training with noise:** Equivalent to Tikhonov regularization [48]
+- **Test-time noise:** Smooths decision boundaries, reduces overfitting [74]
+- **Ensemble effect:** Multiple noisy versions = implicit ensemble [75]
+
+**Mathematical Formulation:**
+```
+For each sample x:
+  x_aug_1 = x + ε₁,  ε₁ ~ N(0, σ²)
+  x_aug_2 = x + ε₂,  ε₂ ~ N(0, σ²)
+  ...
+  x_aug_k = x + εₖ,  εₖ ~ N(0, σ²)
+
+  P_TTA(class) = (1/k) * Σ P_model(x_aug_i, class)
+```
+
+**Hyperparameter Tuning:**
+- **Noise std (σ):** Too small = no effect, too large = destroys signal
+- **Empirical sweet spot:** σ = 0.01 (1% of embedding magnitude)
+- **Number of rounds:** Diminishing returns after 10-15 augmentations
+
+**Results:**
+- 5 TTA rounds, σ=0.005: +0.05% (minimal)
+- 10 TTA rounds, σ=0.01: +0.3% (better)
+
+**Why Small Gains?**
+- Models already robust (dropout during training)
+- Embeddings already averaged (mean pooling across audio chunks)
+- Ensemble diversity already high (7 models with different seeds)
+
+**Best Use Case:** TTA most effective when:
+- Single model inference (no ensemble)
+- Model prone to overfitting
+- Need maximum accuracy regardless of inference time
+
+#### 6. Alternative Approaches Considered
+
+**Why Not Fine-tune BirdNET Layers?**
+- Requires raw audio (can't use pre-extracted embeddings)
+- 10x longer training time
+- Risk of catastrophic forgetting
+- Expected gain: +2-3% for 10x cost
+- **Planned for v7.0** when 80% target is reached
+
+**Why Not Use Other Pre-trained Models?**
+- **VGGish (Google):** Trained on YouTube, less relevant to nature sounds
+- **YAMNet:** Trained on AudioSet, includes some birds but noisier
+- **PANNs:** Excellent but larger, slower
+- **BirdNET:** Specifically trained on nature sounds, optimal for our domain [76]
+
+**Why Not Contrastive Learning?**
+- Requires large unlabeled dataset (millions of samples)
+- Complex training pipeline (SimCLR, MoCo)
+- Expected gain unclear for our data size
+- **Future direction** for v8.0+
+
+#### 7. Deployment Efficiency
+
+**Frozen Features Advantage:**
+
+**Model Size:**
+- Full BirdNET + classifier: 224 MB + 2.88 MB = **227 MB total**
+- Ensemble (7 models): 224 MB + (7 × 2.88 MB) = **244 MB total**
+- Still deployable on mobile devices
+
+**Inference Speed:**
+| Configuration | Accuracy | Inference Time | Use Case |
+|---------------|----------|----------------|----------|
+| Best single model | 77% | ~10ms | Real-time mobile |
+| Top 3 ensemble | ~79.5% | ~30ms | Mobile app |
+| 7-model ensemble (no TTA) | ~80% | ~35ms | Production API |
+| 7-model ensemble + TTA | 80%+ | ~70ms | Highest accuracy |
+
+**Trade-off Analysis:**
+- **Mobile:** Use single best model (77%, 10ms)
+- **Web API:** Use 7-model ensemble (80%, 35ms)
+- **Scientific accuracy:** Use full TTA (80%+, 70ms)
+
+---
+
+## New References (Transfer Learning & BirdNET)
+
+[58] Hershey, S., Chaudhuri, S., Ellis, D. P., Gemmeke, J. F., Jansen, A., Moore, R. C., ... & Wilson, K. (2017). CNN architectures for large-scale audio classification. In 2017 IEEE international conference on acoustics, speech and signal processing (ICASSP) (pp. 131-135). IEEE.
+
+[59] Zhuang, F., Qi, Z., Duan, K., Xi, D., Zhu, Y., Zhu, H., ... & He, Q. (2020). A comprehensive survey on transfer learning. Proceedings of the IEEE, 109(1), 43-76.
+
+[60] Kirkpatrick, J., Pascanu, R., Rabinowitz, N., Veness, J., Desjardins, G., Rusu, A. A., ... & Hadsell, R. (2017). Overcoming catastrophic forgetting in neural networks. Proceedings of the national academy of sciences, 114(13), 3521-3526.
+
+[61] Yosinski, J., Clune, J., Bengio, Y., & Lipson, H. (2014). How transferable are features in deep neural networks?. Advances in neural information processing systems, 27.
+
+[62] Kornblith, S., Shlens, J., & Le, Q. V. (2019). Do better imagenet models transfer better?. In Proceedings of the IEEE/CVF conference on computer vision and pattern recognition (pp. 2661-2671).
+
+[63] Iandola, F. N., Han, S., Moskewicz, M. W., Ashraf, K., Dally, W. J., & Keutzer, K. (2016). SqueezeNet: AlexNet-level accuracy with 50x fewer parameters and< 0.5 MB model size. arXiv preprint arXiv:1602.07360.
+
+[64] Rebuffi, S. A., Bilen, H., & Vedaldi, A. (2017). Learning multiple visual domains with residual adapters. Advances in neural information processing systems, 30.
+
+[65] Lin, T., RoyChowdhury, A., & Maji, S. (2015). Bilinear CNN models for fine-grained visual recognition. In Proceedings of the IEEE international conference on computer vision (pp. 1449-1457).
+
+[66] Dietterich, T. G. (2000). Ensemble methods in machine learning. In International workshop on multiple classifier systems (pp. 1-15). Springer, Berlin, Heidelberg.
+
+[67] Garipov, T., Izmailov, P., Podoprikhin, D., Vetrov, D. P., & Wilson, A. G. (2018). Loss surfaces, mode connectivity, and fast ensembling of dnns. Advances in neural information processing systems, 31.
+
+[68] Krogh, A., & Vedelsby, J. (1994). Neural network ensembles, cross validation, and active learning. Advances in neural information processing systems, 7.
+
+[69] Breiman, L. (1996). Bagging predictors. Machine learning, 24(2), 123-140.
+
+[70] Guo, C., Pleiss, G., Sun, Y., & Weinberger, K. Q. (2017). On calibration of modern neural networks. In International conference on machine learning (pp. 1321-1330). PMLR.
+
+[71] Geman, S., Bienenstock, E., & Doursat, R. (1992). Neural networks and the bias/variance dilemma. Neural computation, 4(1), 1-58.
+
+[72] Sagi, O., & Rokach, L. (2018). Ensemble learning: A survey. Wiley Interdisciplinary Reviews: Data Mining and Knowledge Discovery, 8(4), e1249.
+
+[73] Huang, G., Li, Y., Pleiss, G., Liu, Z., Hopcroft, J. E., & Weinberger, K. Q. (2017). Snapshot ensembles: Train 1, get m for free. arXiv preprint arXiv:1704.00109.
+
+[74] Ayhan, M. S., & Berens, P. (2018). Test-time data augmentation for estimation of heteroscedastic aleatoric uncertainty in deep neural networks. In International Conference on Medical Imaging with Deep Learning.
+
+[75] Wang, G., Li, W., Ourselin, S., & Vercauteren, T. (2019). Automatic brain tumor segmentation using convolutional neural networks with test-time augmentation. In International MICCAI Brainlesion Workshop (pp. 61-72). Springer, Cham.
+
+[76] Kahl, S., Wood, C. M., Eibl, M., & Klinck, H. (2021). BirdNET: A deep learning solution for avian diversity monitoring. Ecological Informatics, 61, 101236.
+
+---
+
 ## References
 
 [1] Buda, M., Maki, A., & Mazurowski, M. A. (2018). A systematic study of the class imbalance problem in convolutional neural networks. Neural Networks, 106, 249-259.

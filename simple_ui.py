@@ -1,25 +1,34 @@
 #!/usr/bin/env python3
 """
 Simplified, robust UI for testing the insect classifier
+Uses BirdNET v6.0 ensemble model (79.73% accuracy)
 """
 import gradio as gr
 import torch
 import numpy as np
 import librosa
 import joblib
-from src.models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
 import os
 import traceback
 import requests
 import json
 from pathlib import Path
 import urllib.parse
+import sys
+
+# Add src to path
+sys.path.insert(0, str(Path(__file__).parent / 'src'))
+
 from src.chirpkit._version import __version__
+from src.models.chirpkit_ensemble import ChirpKitEnsembleClassifier
+from src.transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
 
 # Global variables for model components
-model = None
+ensemble_classifier = None
+birdnet_extractor = None
 label_encoder = None
 device = None
+deployment_mode = "ensemble"  # Options: 'single', 'ensemble', 'ensemble_tta'
 
 # Species info cache
 species_cache_file = Path("species_cache.json")
@@ -104,137 +113,127 @@ def get_species_info(scientific_name):
     return species_info
 
 def load_model():
-    """Load the trained model and preprocessing components"""
-    global model, label_encoder, device
-    
+    """Load the ChirpKit v6.0 ensemble model and preprocessing components"""
+    global ensemble_classifier, birdnet_extractor, label_encoder, device
+
     try:
-        print("Loading model components...")
+        print("=" * 80)
+        print("🚀 Loading ChirpKit v6.0 Ensemble Model")
+        print("=" * 80)
+
         device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        
+
         # Load species cache
         load_species_cache()
-        
-        # Load label encoder - automatically find the latest species count model
-        import glob
-        label_encoder_files = glob.glob('models/trained/*_label_encoder.joblib')
-        if not label_encoder_files:
-            print("No label encoder found")
-            return False
-        
-        # Use the one with most species (highest number)
-        latest_encoder = max(label_encoder_files, key=lambda x: int(x.split('_')[-3].replace('species', '')))
-        print(f"Using label encoder: {latest_encoder}")
-        
-        label_encoder = joblib.load(latest_encoder)
+
+        # Initialize BirdNET embedding extractor
+        print("\n📊 Initializing BirdNET embedding extractor...")
+        birdnet_extractor = BirdNETEmbeddingExtractor()
+        print("   ✓ BirdNET ready")
+
+        # Load ensemble classifier
+        print(f"\n🎯 Loading ChirpKit ensemble ({deployment_mode} mode)...")
+        ensemble_classifier = ChirpKitEnsembleClassifier(
+            model_dir="models/trained/chirpkit-ensemble",
+            mode=deployment_mode,
+            tta_rounds=10,
+            tta_noise_std=0.01,
+            device=device
+        )
+        ensemble_classifier.load_models()
+
+        # Get label encoder from ensemble
+        label_encoder = ensemble_classifier.label_encoder
         n_classes = len(label_encoder.classes_)
-        print(f"Label encoder loaded: {n_classes} classes")
-        
-        # Load model - find corresponding model file
-        model_name = latest_encoder.replace('_label_encoder.joblib', '.pth').split('/')[-1]
-        model_path = f'models/trained/{model_name}'
-        print(f"Looking for model: {model_path}")
-        
-        model = SimpleCNNLSTMInsectClassifier(n_classes=n_classes)
-        
-        if os.path.exists(model_path):
-            model.load_state_dict(torch.load(model_path, map_location=device))
-            model = model.to(device)
-            model.eval()
-            print(f"Model loaded successfully on {device}")
-            return True
-        else:
-            print(f"Model file not found: {model_path}")
-            return False
-            
+
+        print(f"\n" + "=" * 80)
+        print(f"✅ ChirpKit v6.0 Ensemble Loaded Successfully!")
+        print(f"=" * 80)
+        print(f"   Species: {n_classes}")
+        print(f"   Mode: {deployment_mode}")
+        print(f"   Device: {device}")
+        if deployment_mode == 'single':
+            print(f"   Expected accuracy: ~77%")
+        elif deployment_mode == 'ensemble':
+            print(f"   Expected accuracy: ~79.6%")
+        else:  # ensemble_tta
+            print(f"   Expected accuracy: ~79.7%")
+        print("=" * 80 + "\n")
+
+        return True
+
     except Exception as e:
-        print(f"Error loading model: {e}")
+        print(f"❌ Error loading model: {e}")
         traceback.print_exc()
         return False
 
 def predict_species(audio_file):
-    """Predict insect species from audio file"""
-    if model is None or label_encoder is None:
+    """Predict insect species from audio file using ChirpKit v6.0 ensemble"""
+    if ensemble_classifier is None or label_encoder is None:
         return "❌ Model not loaded. Please restart the application."
-    
+
     if audio_file is None:
         return "❌ Please upload an audio file first."
-    
+
     try:
         print(f"Processing audio file: {audio_file}")
-        
-        # Load audio file
-        audio, sr = librosa.load(audio_file, sr=16000)
-        print(f"Audio loaded: shape={audio.shape}, sr={sr}")
-        
-        # Ensure it's the right length (2.5 seconds)
-        target_length = int(16000 * 2.5)
-        if len(audio) > target_length:
-            audio = audio[:target_length]
-        elif len(audio) < target_length:
-            audio = np.pad(audio, (0, target_length - len(audio)))
-        
-        # Extract features (mel spectrogram)
-        mel_spec = librosa.feature.melspectrogram(
-            y=audio, 
-            sr=16000, 
-            n_mels=128, 
-            n_fft=2048, 
-            hop_length=512
+
+        # Extract BirdNET embedding from audio
+        print("Extracting BirdNET embedding...")
+        embedding = birdnet_extractor.extract_embeddings_from_audio(
+            audio_file,
+            aggregate='mean'
         )
-        mel_db = librosa.power_to_db(mel_spec)
-        print(f"Mel spectrogram shape: {mel_db.shape}")
-        
-        # Convert to tensor and add batch dimension
-        input_tensor = torch.tensor(mel_db, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
-        input_tensor = input_tensor.to(device)
-        print(f"Input tensor shape: {input_tensor.shape}")
-        
-        # Make prediction
-        with torch.no_grad():
-            outputs = model(input_tensor)
-            probabilities = torch.softmax(outputs, dim=1)
-            predicted_idx = torch.argmax(outputs, dim=1).item()
-            confidence = probabilities[0][predicted_idx].item()
-        
-        # Get species name and info
-        predicted_species = label_encoder.classes_[predicted_idx]
+        print(f"Embedding shape: {embedding.shape}")
+
+        # Make prediction with ensemble
+        print(f"Running ensemble prediction ({deployment_mode} mode)...")
+        result = ensemble_classifier.predict(embedding, top_k=5)
+
+        top_pred = result['top_prediction']
+        predictions = result['predictions']
+
+        # Get enriched species info
+        predicted_species = top_pred['species']
         species_info = get_species_info(predicted_species)
-        
-        # Create confidence scores for top 5
-        probs = probabilities[0].cpu().numpy()
-        species_probs = [(label_encoder.classes_[i], float(probs[i])) for i in range(len(label_encoder.classes_))]
-        species_probs.sort(key=lambda x: x[1], reverse=True)
-        
+        confidence = top_pred['confidence']
+
         # Format result with enhanced info and context
-        result = f"🦗 **Predicted Species:** {species_info['common_name']}\n"
-        result += f"🔬 **Scientific Name:** {predicted_species.replace('_', ' ')}\n"
-        result += f"🎯 **Confidence:** {confidence:.2%}"
-        
-        # Add context for confidence interpretation
-        if confidence > 0.15:  # 15%
-            result += " (Very High) ⭐⭐⭐\n\n"
-        elif confidence > 0.08:  # 8%
-            result += " (High) ⭐⭐☆\n\n"
-        elif confidence > 0.03:  # 3%
-            result += " (Moderate) ⭐☆☆\n\n"
+        output = f"🦗 **Predicted Species:** {species_info['common_name']}\n"
+        output += f"🔬 **Scientific Name:** {top_pred['scientific_name']}\n"
+        output += f"🎯 **Confidence:** {confidence:.2%}"
+
+        # Add context for confidence interpretation (adjusted for 231 classes)
+        if confidence > 0.10:  # 10%
+            output += " (Very High) ⭐⭐⭐\n\n"
+        elif confidence > 0.05:  # 5%
+            output += " (High) ⭐⭐☆\n\n"
+        elif confidence > 0.02:  # 2%
+            output += " (Moderate) ⭐☆☆\n\n"
         else:
-            result += " (Low - verify with expert) ☆☆☆\n\n"
-        
+            output += " (Low - verify with expert) ☆☆☆\n\n"
+
+        # Add model info
+        output += f"🤖 **Model:** ChirpKit v6.0 ({result['mode']} mode, {result['num_models']} models"
+        if result['tta_rounds'] > 0:
+            output += f", {result['tta_rounds']} TTA rounds"
+        output += ")\n\n"
+
         if species_info['description']:
-            result += f"📖 **Description:** {species_info['description']}\n\n"
-        
+            output += f"📖 **Description:** {species_info['description']}\n\n"
+
         if species_info['wikipedia_url']:
-            result += f"🔗 **More Info:** [Wikipedia]({species_info['wikipedia_url']})\n\n"
-        
-        result += "📊 **Top 5 Predictions:**\n"
-        
-        for i, (species, conf) in enumerate(species_probs[:5]):
-            species_common = get_species_info(species)['common_name']
-            result += f"{i+1}. {species_common} ({species.replace('_', ' ')}): {conf:.2%}\n"
-        
+            output += f"🔗 **More Info:** [Wikipedia]({species_info['wikipedia_url']})\n\n"
+
+        output += "📊 **Top 5 Predictions:**\n"
+
+        for pred in predictions:
+            pred_info = get_species_info(pred['species'])
+            output += f"{pred['rank']}. {pred_info['common_name']} ({pred['scientific_name']}): {pred['confidence']:.2%}\n"
+
         print(f"Prediction completed: {predicted_species} ({confidence:.2%})")
-        return result
-        
+        return output
+
     except Exception as e:
         error_msg = f"❌ Error processing audio: {str(e)}"
         print(error_msg)
@@ -243,45 +242,31 @@ def predict_species(audio_file):
 
 def predict_and_display(audio_file):
     """Predict species and return both text results and image"""
-    if model is None or label_encoder is None:
+    if ensemble_classifier is None or label_encoder is None:
         return "❌ Model not loaded. Please restart the application.", None
-    
+
     if audio_file is None:
         return "❌ Please upload an audio file first.", None
-    
+
     try:
         # Get prediction results
         result_text = predict_species(audio_file)
-        
-        # Get the predicted species for image display
-        # Extract species from the audio prediction process
-        audio, sr = librosa.load(audio_file, sr=16000)
-        target_length = int(16000 * 2.5)
-        if len(audio) > target_length:
-            audio = audio[:target_length]
-        elif len(audio) < target_length:
-            audio = np.pad(audio, (0, target_length - len(audio)))
-        
-        mel_spec = librosa.feature.melspectrogram(
-            y=audio, sr=16000, n_mels=128, n_fft=2048, hop_length=512
+
+        # Extract the predicted species from the result
+        # Re-run prediction to get species info
+        embedding = birdnet_extractor.extract_embeddings_from_audio(
+            audio_file,
+            aggregate='mean'
         )
-        mel_db = librosa.power_to_db(mel_spec)
-        
-        input_tensor = torch.tensor(mel_db, dtype=torch.float32).unsqueeze(0).unsqueeze(0)
-        input_tensor = input_tensor.to(device)
-        
-        with torch.no_grad():
-            outputs = model(input_tensor)
-            predicted_idx = torch.argmax(outputs, dim=1).item()
-        
-        predicted_species = label_encoder.classes_[predicted_idx]
+        result = ensemble_classifier.predict(embedding, top_k=1)
+        predicted_species = result['top_prediction']['species']
         species_info = get_species_info(predicted_species)
-        
+
         # Return image URL for display
         image_url = species_info.get('image_url', '')
-        
+
         return result_text, image_url if image_url else None
-        
+
     except Exception as e:
         error_msg = f"❌ Error processing audio: {str(e)}"
         print(error_msg)
@@ -310,17 +295,23 @@ def search_species(search_term, all_species_info):
 
 def create_interface():
     """Create the Gradio interface"""
-    with gr.Blocks(title="🦗 Insect Sound Classifier") as interface:
-        gr.Markdown("# 🦗 Insect Sound Classifier")
+    with gr.Blocks(title="🦗 ChirpKit - Insect Sound Classifier") as interface:
+        gr.Markdown("# 🦗 ChirpKit Insect Sound Classifier")
+        gr.Markdown("### v6.0 Ensemble Model (79.7% accuracy)")
         gr.Markdown("Record insect sounds live or upload audio files (.wav, .mp3) to identify species!")
-        
+
         # Model status with clickable species count
         if label_encoder:
             with gr.Row():
-                gr.Markdown(f"**Model Status:** ✅ Ready")
+                mode_label = {
+                    'single': 'Single Model (~77%)',
+                    'ensemble': 'Ensemble (~79.6%)',
+                    'ensemble_tta': 'Ensemble + TTA (~79.7%)'
+                }[deployment_mode]
+                gr.Markdown(f"**Model:** ✅ ChirpKit v6.0 - {mode_label}")
                 species_btn = gr.Button(
-                    f"📋 {len(label_encoder.classes_)} species", 
-                    variant="secondary", 
+                    f"📋 {len(label_encoder.classes_)} species",
+                    variant="secondary",
                     size="sm"
                 )
         else:

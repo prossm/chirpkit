@@ -1,0 +1,29 @@
+{
+  "num_models": 7,
+  "individual_accuracies": [
+    77.03526915937417,
+    77.38000530363298,
+    76.99549191195969,
+    76.91593741713073,
+    76.47838769557147,
+    77.61866878811986,
+    77.32696897374701
+  ],
+  "average_individual": 77.107247035648,
+  "ensemble_accuracy_no_tta": 79.6340493237868,
+  "ensemble_accuracy_with_tta": 79.72686290108724,
+  "tta_improvement": 0.09281357730044704,
+  "total_improvement": 2.6196158654392434,
+  "seeds": [
+    42,
+    123,
+    456,
+    789,
+    2024,
+    3141,
+    5678
+  ],
+  "n_classes": 231,
+  "tta_rounds": 10,
+  "tta_noise_std": 0.01
+}
