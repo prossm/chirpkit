@@ -301,17 +301,27 @@ class InsectClassifier:
             True if successful, False otherwise
         """
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If loop is already running, schedule initialization
-                future = asyncio.ensure_future(self.initialize())
+            # Try to get existing loop
+            try:
+                loop = asyncio.get_running_loop()
+                # Loop is running - can't block here
+                logger.warning("Event loop already running - use 'await classifier.initialize()' instead")
+                # Schedule initialization but don't wait
+                asyncio.create_task(self.initialize())
                 return True
-            else:
-                # Run in new event loop
-                loop.run_until_complete(self.initialize())
-                return True
+            except RuntimeError:
+                # No running loop - create new one
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    loop.run_until_complete(self.initialize())
+                    return True
+                finally:
+                    loop.close()
         except Exception as e:
             logger.error(f"Failed to load model: {e}")
+            import traceback
+            traceback.print_exc()
             return False
 
     def predict(self, audio_path: str, top_k: int = 5) -> Dict[str, Any]:
@@ -326,18 +336,25 @@ class InsectClassifier:
             Classification results
         """
         try:
-            loop = asyncio.get_event_loop()
-            if loop.is_running():
-                # If loop is already running, create task
-                future = asyncio.ensure_future(self.classify(audio_path, top_k))
-                # This is tricky - we can't block in an async context
-                # Return a pending result that the caller needs to await
-                raise RuntimeError("Use await classify() in async context")
-            else:
-                # Run in event loop
-                return loop.run_until_complete(self.classify(audio_path, top_k))
+            # Try to get existing loop
+            try:
+                loop = asyncio.get_running_loop()
+                # Loop is running - can't block here
+                raise RuntimeError("Use 'await classifier.classify()' in async context, not 'classifier.predict()'")
+            except RuntimeError as e:
+                if "async context" in str(e):
+                    raise
+                # No running loop - create new one
+                loop = asyncio.new_event_loop()
+                asyncio.set_event_loop(loop)
+                try:
+                    return loop.run_until_complete(self.classify(audio_path, top_k))
+                finally:
+                    loop.close()
         except Exception as e:
             logger.error(f"Prediction failed: {e}")
+            import traceback
+            traceback.print_exc()
             return {
                 'success': False,
                 'error': str(e),
