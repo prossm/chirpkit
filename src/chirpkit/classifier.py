@@ -83,11 +83,18 @@ class InsectClassifier:
     async def _load_ensemble(self):
         """Load v6.0 ensemble classifier and BirdNET extractor"""
         try:
-            # Import from package root (handles both dev and installed package)
+            # Import - these should be installed alongside chirpkit package
             import sys
+            import site
             from pathlib import Path
 
-            # Add src directory to path for development
+            # When pip installs, models and transfer_learning are in site-packages
+            # Find site-packages directory and add to path if needed
+            for site_pkg in site.getsitepackages():
+                if site_pkg not in sys.path:
+                    sys.path.insert(0, site_pkg)
+
+            # Also add parent dir for development mode
             src_dir = Path(__file__).parent.parent
             if str(src_dir) not in sys.path:
                 sys.path.insert(0, str(src_dir))
