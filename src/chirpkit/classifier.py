@@ -83,6 +83,15 @@ class InsectClassifier:
     async def _load_ensemble(self):
         """Load v6.0 ensemble classifier and BirdNET extractor"""
         try:
+            # Import from package root (handles both dev and installed package)
+            import sys
+            from pathlib import Path
+
+            # Add src directory to path for development
+            src_dir = Path(__file__).parent.parent
+            if str(src_dir) not in sys.path:
+                sys.path.insert(0, str(src_dir))
+
             from models.chirpkit_ensemble import ChirpKitEnsembleClassifier
             from transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
 
