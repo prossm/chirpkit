@@ -17,14 +17,8 @@ setup(
     version=get_version(),
     packages=find_packages(where='src'),
     package_dir={'': 'src'},
-    data_files=[
-        ('models/trained', [
-            'models/trained/insect_classifier_471species.pth',
-            'models/trained/insect_classifier_471species_label_encoder.joblib',
-            'models/trained/insect_classifier_471species_info.json'
-        ]),
-    ],
-    include_package_data=True,
+    # Models are downloaded on first use, not included in package
+    include_package_data=False,
     install_requires=[
         # Core dependencies with broader compatibility ranges
         'numpy>=1.21.0,<2.0.0',

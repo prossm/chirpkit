@@ -103,6 +103,21 @@ class ChirpKitEnsembleClassifier:
 
     def load_models(self):
         """Load ensemble models and metadata"""
+        # Auto-download models if not present
+        if not self.model_dir.exists() or not (self.model_dir / "ensemble_info.json").exists():
+            print(f"⚠️  Models not found at {self.model_dir}")
+            print(f"   Attempting auto-download...")
+
+            try:
+                from chirpkit.model_downloader import ModelDownloader
+                self.model_dir = ModelDownloader.download_model('chirpkit-ensemble')
+            except Exception as e:
+                print(f"❌ Auto-download failed: {e}")
+                print(f"\n💡 Please install models manually:")
+                print(f"   git clone https://github.com/prossm/chirpkit.git")
+                print(f"   cd chirpkit && git lfs pull")
+                raise
+
         print(f"📦 Loading ChirpKit Ensemble from {self.model_dir}")
         print(f"   Mode: {self.mode}")
         print(f"   Device: {self.device}")

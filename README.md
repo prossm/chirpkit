@@ -88,39 +88,78 @@ The current model uses carefully filtered datasets with minimum 30 samples per s
 
 ### Installation
 
-ChirpKit includes all necessary model files via git LFS:
+#### Option 1: Install from GitHub (Recommended for Users)
 
 ```bash
-# Clone the repository (includes models via git LFS)
-git clone https://github.com/patrickmetzger/chirpkit.git
-cd chirpkit
+# Install directly from GitHub
+pip install git+https://github.com/prossm/chirpkit.git
 
-# Install dependencies
-pip install -e .
-
-# Platform-specific optimizations:
+# With platform-specific optimizations:
 # macOS with Apple Silicon/Intel
-pip install -e .[full]
+pip install "git+https://github.com/prossm/chirpkit.git#egg=chirpkit[full]"
 
-# Linux/Windows with optional GPU support
-pip install -e .[tensorflow-gpu,torch,viz]
-
-# Development installation
-pip install -e .[dev]
+# Linux/Windows with GPU support
+pip install "git+https://github.com/prossm/chirpkit.git#egg=chirpkit[tensorflow-gpu,torch]"
 ```
 
-**What's included:**
-- ✅ v6.0 Ensemble models (7 × 2.7MB = 19MB total)
-- ✅ BirdNET embedding extractor (25MB model file)
+**Models are downloaded automatically** (~44MB total) on first use to `~/.chirpkit/models/`:
+- ✅ v6.0 Ensemble models (7 × 2.7MB = 19MB)
+- ✅ BirdNET embedding extractor (25MB TFLite model)
 - ✅ Label encoder for 231 species
-- ✅ All necessary Python code
 
-**No additional downloads required!** The pre-trained models work out of the box.
+#### Option 2: Clone Repository (For Development)
+
+```bash
+# Clone with model files via Git LFS
+git clone https://github.com/prossm/chirpkit.git
+cd chirpkit
+
+# Pull model files from Git LFS
+git lfs pull
+
+# Install in development mode
+pip install -e .
+
+# Or with full dependencies:
+pip install -e .[full]
+```
+
+**What's included in the repository:**
+- ✅ All Python source code
+- ✅ Pre-trained models (via Git LFS)
+- ✅ Training scripts and documentation
+- ✅ Example datasets and notebooks
 
 **Platform-Specific Recommendations:**
 - **macOS**: `pip install .[full]` (includes tensorflow-macos with Metal GPU support)
 - **Linux**: `pip install .[tensorflow-gpu,torch]` (with CUDA support)
 - **Windows**: `pip install .[tensorflow,torch]`
+
+### Manual Model Download (If Auto-Download Fails)
+
+If automatic model download fails, you can download manually:
+
+```bash
+# Download from GitHub Releases
+wget https://github.com/prossm/chirpkit/releases/download/v6.0/chirpkit-ensemble.zip
+wget https://github.com/prossm/chirpkit/releases/download/v6.0/birdnet-models.zip
+
+# Extract to ~/.chirpkit/models/
+mkdir -p ~/.chirpkit/models/trained
+mkdir -p ~/.chirpkit/models/birdnet
+unzip chirpkit-ensemble.zip -d ~/.chirpkit/models/trained/
+unzip birdnet-models.zip -d ~/.chirpkit/models/
+
+# Or specify custom path in your code:
+from chirpkit import ChirpKitEnsembleClassifier
+classifier = ChirpKitEnsembleClassifier(model_dir="/path/to/chirpkit-ensemble")
+```
+
+**Note:** If GitHub Releases are not yet published, clone the repository with Git LFS:
+```bash
+git clone https://github.com/prossm/chirpkit.git
+cd chirpkit && git lfs pull
+```
 
 ### Verify Installation
 
@@ -128,11 +167,11 @@ pip install -e .[dev]
 # Check installation health
 chirpkit-doctor
 
-# Get platform-specific installation guide
-chirpkit install-guide
+# List available models and download status
+python -m chirpkit.model_downloader list
 
-# Auto-fix common issues
-chirpkit-fix
+# Manually download all models
+python -m chirpkit.model_downloader download
 ```
 
 ### Option 1: Use v6.0 Ensemble Model (Recommended)

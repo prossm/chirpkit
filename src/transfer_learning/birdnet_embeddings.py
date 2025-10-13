@@ -102,11 +102,27 @@ class BirdNETEmbeddingExtractor:
 
         self.model_path = Path(model_path)
 
+        # Auto-download if not present
         if not self.model_path.exists():
-            raise FileNotFoundError(
-                f"BirdNET model not found at {self.model_path}\n"
-                f"Expected location: models/birdnet/BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
-            )
+            print(f"⚠️  BirdNET model not found at {self.model_path}")
+            print(f"   Attempting auto-download...")
+
+            try:
+                # Import here to avoid circular dependency
+                import sys
+                sys.path.insert(0, str(Path(__file__).parent.parent))
+                from chirpkit.model_downloader import ModelDownloader
+                birdnet_dir = ModelDownloader.download_model('birdnet')
+                self.model_path = birdnet_dir / "BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
+            except Exception as e:
+                print(f"❌ Auto-download failed: {e}")
+                print(f"\n💡 Please install models manually:")
+                print(f"   git clone https://github.com/prossm/chirpkit.git")
+                print(f"   cd chirpkit && git lfs pull")
+                raise FileNotFoundError(
+                    f"BirdNET model not found at {self.model_path}\n"
+                    f"Expected location: models/birdnet/BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
+                )
 
         print(f"📦 Loading TFLite model from: {self.model_path}")
 
