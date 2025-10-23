@@ -19,11 +19,12 @@ class ModelDownloader:
     """Download ChirpKit models on first use"""
 
     # Model download URLs (GitHub Releases)
+    # Note: v6.0 refers to the model version, not the package version
     MODELS = {
         'chirpkit-ensemble': {
             'url': 'https://github.com/prossm/chirpkit/releases/download/v6.0/chirpkit-ensemble.zip',
             'size_mb': 19,
-            'description': 'ChirpKit v6.0 7-model ensemble (79.7% accuracy)',
+            'description': 'ChirpKit ensemble model v6.0 - 7-model ensemble (79.7% accuracy)',
             'files': [
                 'ensemble_model_1.pth',
                 'ensemble_model_2.pth',

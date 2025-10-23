@@ -9,7 +9,9 @@ def get_version():
     with open(version_file, 'r') as f:
         for line in f:
             if line.startswith('__version__'):
-                return line.split('=')[1].strip(' \'"')
+                # Extract version and strip whitespace, quotes, and newlines
+                version = line.split('=')[1].strip()
+                return version.strip('"\'')
     return '0.1.2'  # Fallback
 
 setup(

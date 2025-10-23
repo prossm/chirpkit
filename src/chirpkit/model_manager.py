@@ -1,22 +1,23 @@
 """
-Model management utilities for ChirpKit v6.0
+Model management utilities for ChirpKit
 """
 
 import logging
 from pathlib import Path
 from typing import Optional, Tuple
+from ._version import __version__, __model_version__
 
 logger = logging.getLogger(__name__)
 
 class ModelManager:
-    """Manages ChirpKit v6.0 ensemble model paths"""
+    """Manages ChirpKit ensemble model paths"""
 
     DEFAULT_MODEL_DIR = Path("models/trained/chirpkit-ensemble")
 
     @classmethod
     def get_default_model_path(cls) -> Path:
         """
-        Get path to v6.0 ensemble model directory
+        Get path to ensemble model directory
 
         Returns:
             Path to ensemble model directory
@@ -60,12 +61,12 @@ class ModelManager:
 def find_any_model() -> Optional[Tuple[Path, Path, Path]]:
     """
     Legacy function - returns None as old models are no longer supported
-    Use v6.0 ensemble instead
+    Use ensemble model instead
 
     Returns:
-        None (v6.0 uses ensemble, not single model files)
+        None (ensemble model uses directory structure, not single files)
     """
-    logger.info("ChirpKit v6.0 uses ensemble models")
+    logger.info(f"ChirpKit v{__version__} uses ensemble models (model v{__model_version__})")
     logger.info("Old single-model format no longer supported")
     return None
 
@@ -75,21 +76,23 @@ def list_models() -> list:
     List available models
 
     Returns:
-        List with v6.0 ensemble info
+        List with ensemble model info
     """
     ensemble_dir = ModelManager.get_default_model_path()
 
     models = []
     if ModelManager.verify_ensemble_files(ensemble_dir):
         models.append({
-            'name': 'chirpkit-v6.0-ensemble',
+            'name': f'chirpkit-ensemble-v{__model_version__}',
             'path': str(ensemble_dir),
             'type': 'ensemble',
             'num_models': 7,
             'species': 231,
-            'accuracy': '79.7%'
+            'accuracy': '79.7%',
+            'package_version': __version__,
+            'model_version': __model_version__
         })
     else:
-        logger.info("v6.0 ensemble not found - will auto-download on first use")
+        logger.info(f"Ensemble model v{__model_version__} not found - will auto-download on first use")
 
     return models

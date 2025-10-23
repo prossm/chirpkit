@@ -1,7 +1,7 @@
 """
 ChirpKit Ensemble Classifier with Test-Time Augmentation
 
-This module provides inference for the ChirpKit v6.0 ensemble model.
+This module provides inference for the ChirpKit ensemble model.
 The model uses BirdNET embeddings as features, with a 7-model ensemble trained
 on insect sounds.
 
@@ -24,6 +24,7 @@ from pathlib import Path
 from typing import List, Dict, Any, Optional, Tuple
 import json
 import joblib
+from .._version import __version__, __model_version__
 
 
 class DeepMLPClassifier(nn.Module):
@@ -242,7 +243,8 @@ class ChirpKitEnsembleClassifier:
             'mode': self.mode,
             'num_models': len(self.models),
             'tta_rounds': self.tta_rounds if self.mode == 'ensemble_tta' else 0,
-            'model_version': 'v6.0'
+            'package_version': __version__,
+            'model_version': __model_version__
         }
 
     def _predict_single(self, embedding: torch.Tensor) -> torch.Tensor:
@@ -314,7 +316,8 @@ class ChirpKitEnsembleClassifier:
     def get_model_info(self) -> Dict[str, Any]:
         """Get model information"""
         return {
-            'model_version': 'v6.0',
+            'package_version': __version__,
+            'model_version': __model_version__,
             'model_dir': str(self.model_dir),
             'mode': self.mode,
             'num_models': len(self.models),

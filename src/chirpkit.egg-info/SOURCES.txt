@@ -6,7 +6,7 @@ src/chirpkit/classifier.py
 src/chirpkit/cli.py
 src/chirpkit/dependencies.py
 src/chirpkit/model_downloader.py
-src/chirpkit/models.py
+src/chirpkit/model_manager.py
 src/chirpkit.egg-info/._PKG-INFO
 src/chirpkit.egg-info/._SOURCES.txt
 src/chirpkit.egg-info/._dependency_links.txt

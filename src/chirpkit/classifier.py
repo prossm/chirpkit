@@ -1,8 +1,11 @@
 """
-ChirpKit Insect Classifier - v6.0 Ensemble
+ChirpKit Insect Classifier
 
 Neural network-based insect sound identification using BirdNET embeddings
 and a 7-model ensemble for robust predictions.
+
+Model Version: v6.0 (ensemble architecture)
+Package Version: See __version__ in _version.py
 """
 
 import logging
@@ -16,16 +19,16 @@ from typing import Dict, List, Any, Optional, Tuple
 from concurrent.futures import ThreadPoolExecutor
 
 from .dependencies import DependencyManager, requires_torch
-from ._version import __version__
+from ._version import __version__, __model_version__
 
 logger = logging.getLogger(__name__)
 
 class InsectClassifier:
-    """Neural network-based insect sound classifier using v6.0 ensemble"""
+    """Neural network-based insect sound classifier using ensemble model"""
 
     def __init__(self, model_path: Optional[str] = None, mode: str = "ensemble_tta"):
         """
-        Initialize the InsectClassifier with v6.0 ensemble
+        Initialize the InsectClassifier with ensemble model
 
         Args:
             model_path: Optional path to ensemble model directory.
@@ -42,7 +45,7 @@ class InsectClassifier:
         self.birdnet_extractor = None
         self.species_labels = []
         self.label_encoder = None
-        self.n_classes = 231  # v6.0 ensemble
+        self.n_classes = 231  # Model ensemble classes
         self.torch = None
         self.device = None
 
@@ -53,11 +56,11 @@ class InsectClassifier:
 
     @requires_torch
     async def initialize(self):
-        """Initialize the v6.0 ensemble classifier"""
+        """Initialize the ensemble classifier"""
         if self.is_initialized:
             return
 
-        logger.info("🚀 Initializing ChirpKit v6.0 Ensemble...")
+        logger.info(f"🚀 Initializing ChirpKit v{__version__} (Model v{__model_version__})...")
 
         self.torch = DependencyManager.get_torch()
         if self.torch is None:
@@ -67,21 +70,21 @@ class InsectClassifier:
         self.device = self._get_device(self.torch)
         logger.info(f"🖥️  Using device: {self.device}")
 
-        # Load v6.0 ensemble
+        # Load ensemble model
         model_loaded = await self._load_ensemble()
 
         if not model_loaded:
-            raise RuntimeError("Failed to load ChirpKit v6.0 ensemble")
+            raise RuntimeError(f"Failed to load ChirpKit ensemble model v{__model_version__}")
 
         # Load species cache for Wikipedia data
         await self._load_species_cache()
         logger.info(f"📚 Loaded species cache with {len(self.species_cache)} entries")
 
         self.is_initialized = True
-        logger.info(f"✅ ChirpKit v6.0 initialized ({self.n_classes} species, {self.mode} mode)")
+        logger.info(f"✅ ChirpKit initialized ({self.n_classes} species, {self.mode} mode)")
 
     async def _load_ensemble(self):
-        """Load v6.0 ensemble classifier and BirdNET extractor"""
+        """Load ensemble classifier and BirdNET extractor"""
         try:
             # Import models and transfer_learning from chirpkit package
             from .models.chirpkit_ensemble import ChirpKitEnsembleClassifier
@@ -107,7 +110,7 @@ class InsectClassifier:
             return True
 
         except Exception as e:
-            logger.error(f"❌ Failed to load v6.0 ensemble: {e}")
+            logger.error(f"❌ Failed to load ensemble model v{__model_version__}: {e}")
             import traceback
             traceback.print_exc()
             return False
@@ -171,7 +174,8 @@ class InsectClassifier:
                     for p in result['predictions']
                 ],
                 'model_info': {
-                    'version': '6.0',
+                    'package_version': __version__,
+                    'model_version': __model_version__,
                     'mode': result['mode'],
                     'num_models': result['num_models'],
                     'tta_rounds': result.get('tta_rounds', 0),
