@@ -25,10 +25,12 @@ from .dependencies import (
 
 try:
     from .classifier import InsectClassifier
-    from .models import ModelManager, find_any_model, list_models
+    from .model_manager import ModelManager, find_any_model, list_models
     from .cli import classify_audio_file, get_classifier_instance
 except ImportError as e:
     # Classifier may not be available if ML dependencies are missing
+    import logging
+    logger = logging.getLogger(__name__)
     logger.warning(f"Some ChirpKit modules not available: {e}")
     InsectClassifier = None
     ModelManager = None

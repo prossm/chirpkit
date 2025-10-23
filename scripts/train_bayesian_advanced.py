@@ -15,10 +15,10 @@ from datetime import datetime
 src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
 sys.path.insert(0, src_path)
 
-from models.bayesian_cnn_lstm import BayesianInsectClassifier
-from training.advanced_trainer import AdvancedInsectTrainer
-from utils.bayesian_utils import BayesianModelManager
-from data.augmentation import InsectAudioAugmenter, AugmentedDataset
+from chirpkit.models.bayesian_cnn_lstm import BayesianInsectClassifier
+from chirpkit.training.advanced_trainer import AdvancedInsectTrainer
+from chirpkit.utils.bayesian_utils import BayesianModelManager
+from chirpkit.data.augmentation import InsectAudioAugmenter, AugmentedDataset
 
 # Import existing data loading utilities
 sys.path.append(os.path.join(os.path.dirname(__file__)))

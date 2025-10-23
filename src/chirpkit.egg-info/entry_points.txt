@@ -1,0 +1,4 @@
+[console_scripts]
+chirpkit = chirpkit.cli:main
+chirpkit-doctor = chirpkit.cli:doctor
+chirpkit-fix = chirpkit.cli:fix

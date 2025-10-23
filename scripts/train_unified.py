@@ -20,7 +20,7 @@ import time
 src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
 sys.path.insert(0, src_path)  # Insert at beginning to prioritize local modules
 
-from models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
+from chirpkit.models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
 
 # TensorBoard
 from torch.utils.tensorboard import SummaryWriter
@@ -30,7 +30,7 @@ from sklearn.preprocessing import LabelEncoder
 from sklearn.metrics import f1_score, precision_score, recall_score
 
 # Augmentation - use full path to avoid conflicts
-from data.augmentation import InsectAudioAugmenter, AugmentedDataset
+from chirpkit.data.augmentation import InsectAudioAugmenter, AugmentedDataset
 
 # Custom Dataset for on-the-fly loading
 class NpyDataset(Dataset):

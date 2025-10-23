@@ -300,7 +300,7 @@ class ChirpKitEnsembleClassifier:
             Prediction results
         """
         # Import here to avoid circular dependency
-        from transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
+        from ..transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
 
         if extractor is None:
             extractor = BirdNETEmbeddingExtractor()

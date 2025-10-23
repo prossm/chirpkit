@@ -20,9 +20,9 @@ try:
     from ..utils.bayesian_utils import BayesianModelManager
 except ImportError:
     # Fall back to absolute imports (when used from scripts)
-    from models.bayesian_cnn_lstm import BayesianInsectClassifier
-    from data.augmentation import InsectAudioAugmenter, AugmentedDataset
-    from utils.bayesian_utils import BayesianModelManager
+    from chirpkit.models.bayesian_cnn_lstm import BayesianInsectClassifier
+    from chirpkit.data.augmentation import InsectAudioAugmenter, AugmentedDataset
+    from chirpkit.utils.bayesian_utils import BayesianModelManager
 
 class ExploratoryDataset(Dataset):
     """Dataset that provides diverse, challenging examples for robust learning"""

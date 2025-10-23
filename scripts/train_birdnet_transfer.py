@@ -44,8 +44,8 @@ from torch.utils.data import Dataset, DataLoader
 src_path = Path(__file__).parent.parent / 'src'
 sys.path.insert(0, str(src_path))
 
-from transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
-from models.birdnet_classifier import create_classifier
+from chirpkit.transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
+from chirpkit.models.birdnet_classifier import create_classifier
 
 
 class EmbeddingDataset(Dataset):

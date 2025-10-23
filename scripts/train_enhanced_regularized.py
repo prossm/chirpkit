@@ -21,9 +21,9 @@ from torch.utils.tensorboard import SummaryWriter
 src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
 sys.path.insert(0, src_path)
 
-from models.enhanced_cnn_lstm_regularized import RegularizedEnhancedCNNLSTMClassifier, EnhancedLoss
-from models.ensemble_model import InsectEnsemble, AdaptiveEnsemble
-from data.augmentation import InsectAudioAugmenter, AugmentedDataset
+from chirpkit.models.enhanced_cnn_lstm_regularized import RegularizedEnhancedCNNLSTMClassifier, EnhancedLoss
+from chirpkit.models.ensemble_model import InsectEnsemble, AdaptiveEnsemble
+from chirpkit.data.augmentation import InsectAudioAugmenter, AugmentedDataset
 
 # Import existing utilities
 sys.path.append(os.path.join(os.path.dirname(__file__)))

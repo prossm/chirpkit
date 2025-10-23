@@ -36,7 +36,7 @@ sys.path.insert(0, str(src_path))
 sys.path.insert(0, str(Path(__file__).parent))
 from preprocess_unified import UnifiedDatasetProcessor
 
-from transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
+from chirpkit.transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
 

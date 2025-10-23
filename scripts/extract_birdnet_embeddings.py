@@ -29,7 +29,7 @@ import joblib
 src_path = Path(__file__).parent.parent / 'src'
 sys.path.insert(0, str(src_path))
 
-from transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
+from chirpkit.transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
 
 
 def load_audio_file_list(raw_data_dir, dataset_name):

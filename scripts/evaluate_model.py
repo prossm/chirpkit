@@ -17,7 +17,7 @@ import os
 src_path = os.path.join(os.path.dirname(__file__), '..', 'src')
 sys.path.insert(0, src_path)
 
-from models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
+from chirpkit.models.simple_cnn_lstm import SimpleCNNLSTMInsectClassifier
 from torch.utils.data import DataLoader, Dataset
 
 # Dataset class

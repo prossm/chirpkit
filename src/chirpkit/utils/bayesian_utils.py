@@ -7,9 +7,9 @@ try:
     from ..models.bayesian_cnn_lstm import BayesianInsectClassifier
     from ..visualization.uncertainty_viz import UncertaintyVisualizer
 except ImportError:
-    from models.bayesian_cnn_lstm import BayesianInsectClassifier
+    from chirpkit.models.bayesian_cnn_lstm import BayesianInsectClassifier
     try:
-        from visualization.uncertainty_viz import UncertaintyVisualizer
+        from chirpkit.visualization.uncertainty_viz import UncertaintyVisualizer
     except ImportError:
         # Skip visualization if not available
         UncertaintyVisualizer = None
