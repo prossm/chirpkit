@@ -34,7 +34,8 @@ import tensorflow as tf
 # Otherwise use standalone TFLite implementation (for inference)
 USING_BIRDNET_ANALYZER = False
 try:
-    BIRDNET_PATH = Path(__file__).parent.parent.parent / "BirdNET-Analyzer"
+    # BirdNET-Analyzer is at project root
+    BIRDNET_PATH = Path(__file__).parent.parent.parent.parent / "BirdNET-Analyzer"
     if BIRDNET_PATH.exists():
         sys.path.insert(0, str(BIRDNET_PATH))
         import birdnet_analyzer.config as birdnet_cfg
@@ -97,8 +98,8 @@ class BirdNETEmbeddingExtractor:
     def _init_standalone(self, model_path=None):
         """Initialize using standalone TFLite"""
         if model_path is None:
-            # Default to models/birdnet/ directory
-            model_path = Path(__file__).parent.parent.parent / "models" / "birdnet" / "BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
+            # Default to models/birdnet/ directory (go up to project root)
+            model_path = Path(__file__).parent.parent.parent.parent / "models" / "birdnet" / "BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
 
         self.model_path = Path(model_path)
 
@@ -133,6 +134,22 @@ class BirdNETEmbeddingExtractor:
         # Get input and output details
         self.input_details = self.interpreter.get_input_details()
         self.output_details = self.interpreter.get_output_details()
+
+        # Debug: print output shapes to find embeddings
+        print(f"📊 TFLite model outputs:")
+        for i, output in enumerate(self.output_details):
+            print(f"   Output {i}: shape={output['shape']}, dtype={output['dtype']}")
+
+        # Find embedding output (should be 1024-dim)
+        self.embedding_output_idx = None
+        for i, output in enumerate(self.output_details):
+            if 1024 in output['shape']:
+                self.embedding_output_idx = i
+                print(f"✅ Found embedding output at index {i}")
+                break
+
+        if self.embedding_output_idx is None:
+            print(f"⚠️  Could not find 1024-dim embedding output, using output 0")
 
     def extract_embeddings_from_audio(self, audio_path, aggregate='mean'):
         """
@@ -224,8 +241,9 @@ class BirdNETEmbeddingExtractor:
         self.interpreter.set_tensor(self.input_details[0]['index'], input_data)
         self.interpreter.invoke()
 
-        # Get embedding output (first output is embeddings)
-        embedding = self.interpreter.get_tensor(self.output_details[0]['index'])
+        # Get embedding output (use detected embedding index or fallback to 0)
+        output_idx = self.embedding_output_idx if self.embedding_output_idx is not None else 0
+        embedding = self.interpreter.get_tensor(self.output_details[output_idx]['index'])
 
         return embedding.flatten()
 

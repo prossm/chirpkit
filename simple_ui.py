@@ -20,8 +20,8 @@ import sys
 sys.path.insert(0, str(Path(__file__).parent / 'src'))
 
 from src.chirpkit._version import __version__
-from src.models.chirpkit_ensemble import ChirpKitEnsembleClassifier
-from src.transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
+from src.chirpkit.models.chirpkit_ensemble import ChirpKitEnsembleClassifier
+from src.chirpkit.transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
 
 # Global variables for model components
 ensemble_classifier = None
@@ -252,8 +252,7 @@ def predict_and_display(audio_file):
         # Get prediction results
         result_text = predict_species(audio_file)
 
-        # Extract the predicted species from the result
-        # Re-run prediction to get species info
+        # Extract the predicted species to get image info
         embedding = birdnet_extractor.extract_embeddings_from_audio(
             audio_file,
             aggregate='mean'
@@ -262,14 +261,38 @@ def predict_and_display(audio_file):
         predicted_species = result['top_prediction']['species']
         species_info = get_species_info(predicted_species)
 
-        # Return image URL for display
+        # Download image with proper headers to avoid 403 errors
         image_url = species_info.get('image_url', '')
 
-        return result_text, image_url if image_url else None
+        if image_url:
+            try:
+                # Download image with proper User-Agent header
+                headers = {
+                    'User-Agent': f'ChirpKit/{__version__} (https://github.com/patrickmetzger/chirpkit; contact@chirpkit.ai) Wikipedia Integration'
+                }
+                response = requests.get(image_url, headers=headers, timeout=10, stream=True)
+
+                if response.status_code == 200:
+                    # Save to temporary file
+                    import tempfile
+                    with tempfile.NamedTemporaryFile(delete=False, suffix='.jpg') as tmp_file:
+                        for chunk in response.iter_content(chunk_size=8192):
+                            tmp_file.write(chunk)
+                        temp_image_path = tmp_file.name
+                    return result_text, temp_image_path
+                else:
+                    print(f"⚠️  Failed to download image: HTTP {response.status_code}")
+                    return result_text, None
+            except Exception as img_error:
+                print(f"⚠️  Error downloading image: {img_error}")
+                return result_text, None
+
+        return result_text, None
 
     except Exception as e:
         error_msg = f"❌ Error processing audio: {str(e)}"
         print(error_msg)
+        traceback.print_exc()
         return error_msg, None
 
 def search_species(search_term, all_species_info):
