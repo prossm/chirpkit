@@ -23,10 +23,10 @@ class ModelDownloader:
     """Download ChirpKit models on first use"""
 
     # Model download URLs (GitHub Releases)
-    # Note: v6.0 refers to the model version, not the package version
+    # Note: Release version should match package version (v0.2.0)
     MODELS = {
         'chirpkit-ensemble': {
-            'url': 'https://github.com/prossm/chirpkit/releases/download/v6.0/chirpkit-ensemble.zip',
+            'url': 'https://github.com/prossm/chirpkit/releases/download/v0.2.0/chirpkit-ensemble.zip',
             'size_mb': 19,
             'description': 'ChirpKit ensemble model v6.0 - 7-model ensemble (79.7% accuracy)',
             'files': [
@@ -42,7 +42,7 @@ class ModelDownloader:
             ]
         },
         'birdnet': {
-            'url': 'https://github.com/prossm/chirpkit/releases/download/v6.0/birdnet-models.zip',
+            'url': 'https://github.com/prossm/chirpkit/releases/download/v0.2.0/birdnet-models.zip',
             'size_mb': 25,
             'description': 'BirdNET v2.4 embedding extractor',
             'files': [

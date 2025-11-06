@@ -60,7 +60,7 @@ RUN python -c "from chirpkit.model_downloader import ModelDownloader; \
     ModelDownloader.download_all_models()"
 ```
 
-**Note:** Once GitHub Release v6.0 is created with model files, this will be even faster (no Git LFS needed)
+**✅ READY NOW:** GitHub Release v0.2.0 is live with model files - auto-download will work immediately!
 
 #### Option B: Bundle Models in Image (Most Reliable)
 ```dockerfile
@@ -110,8 +110,8 @@ from .models.chirpkit_ensemble import ChirpKitEnsembleClassifier
 
 ### Improved Model Downloader
 New fallback system tries multiple download methods:
-1. **GitHub Release** (fast) - Will work once v6.0 release is created
-2. **Git LFS Clone** (slower but reliable) - Works now as fallback
+1. **GitHub Release** (fast) - ✅ LIVE at v0.2.0, tested and working
+2. **Git LFS Clone** (slower but reliable) - Automatic fallback if needed
 
 ### Fixed BirdNET Path Resolution
 The BirdNET model path resolution was incorrect for production deployments - now fixed to properly locate models in both development and production environments.
@@ -168,44 +168,112 @@ else:
 
 ---
 
-## Repository Owner Action Items
+## SoundCurious Integration Instructions
 
-To complete the fix and help all users (including SoundCurious):
+### Recommended Implementation (Option A - Auto-Download)
 
-### 1. Create GitHub Release v6.0 (HIGH PRIORITY)
+This is the simplest and most reliable approach now that v0.2.0 is released:
 
-```bash
-# Package is already created
-ls -lh birdnet-models.zip  # Should show ~22MB file
+**Update your Dockerfile:**
 
-# Steps:
-# 1. Go to https://github.com/prossm/chirpkit/releases
-# 2. Click "Create a new release"
-# 3. Tag: v6.0
-# 4. Title: "ChirpKit v6.0 - Ensemble Model Release"
-# 5. Upload: birdnet-models.zip
-# 6. Publish release
+```dockerfile
+FROM python:3.11-slim
+
+# Install system dependencies (needed for Git LFS fallback)
+RUN apt-get update && apt-get install -y git git-lfs && \
+    rm -rf /var/lib/apt/lists/*
+
+# Install latest ChirpKit with all fixes
+RUN pip install --force-reinstall git+https://github.com/prossm/chirpkit.git@main
+
+# Pre-download models during Docker build (fast from GitHub Release)
+RUN python -c "from chirpkit.model_downloader import ModelDownloader; \
+    ModelDownloader.download_all_models()"
+
+# Verify installation
+RUN python -c "from chirpkit import InsectClassifier; print('✅ ChirpKit ready')"
+
+# Your app code
+COPY . /app
+WORKDIR /app
+CMD ["python", "your_app.py"]
 ```
 
-This will make auto-download work instantly for all users!
+**What this does:**
+1. ✅ Installs latest ChirpKit (fixes import errors)
+2. ✅ Downloads models from GitHub Release v0.2.0 (~22MB, fast)
+3. ✅ Falls back to Git LFS if needed (automatic)
+4. ✅ Verifies installation before starting your app
+5. ✅ Models are bundled in Docker image (no runtime downloads needed)
 
-### 2. Update README.md
-
-Add installation instructions from `INSTALLATION.md`
-
-### 3. Test End-to-End
-
+**Build and deploy:**
 ```bash
-# Simulate fresh install
-python -m venv test_env
-source test_env/bin/activate
-pip install git+https://github.com/prossm/chirpkit.git@main
-
-# Test auto-download
-python -c "from chirpkit import InsectClassifier; \
-    c = InsectClassifier(); \
-    c.load_model()"
+docker build -t soundcurious-app .
+docker push soundcurious-app
+# Deploy to your staging/production
 ```
+
+### Verification After Deployment
+
+Add this to your app startup or health check:
+
+```python
+from chirpkit import InsectClassifier
+from chirpkit.model_downloader import ModelDownloader
+import logging
+
+logging.basicConfig(level=logging.INFO)
+
+# Verify models are present
+print("🔍 Checking ChirpKit models...")
+ModelDownloader.list_available_models()
+
+# Initialize classifier
+classifier = InsectClassifier()
+
+# Load models
+if not classifier.load_model():
+    raise RuntimeError("❌ ChirpKit failed to load - check logs above")
+
+print(f"✅ ChirpKit ready: {classifier.n_classes} species, {classifier.mode} mode")
+```
+
+### Expected Output (Success)
+
+```
+🔍 Checking ChirpKit models...
+📋 ChirpKit Models:
+============================================================
+
+chirpkit-ensemble:
+  Description: ChirpKit ensemble model v6.0 - 7-model ensemble (79.7% accuracy)
+  Size: 19MB
+  Status: ✅ Downloaded
+  Path: /root/.chirpkit/models/trained/chirpkit-ensemble
+
+birdnet:
+  Description: BirdNET v2.4 embedding extractor
+  Size: 25MB
+  Status: ✅ Downloaded
+  Path: /root/.chirpkit/models/birdnet
+
+============================================================
+✅ ChirpKit ready: 231 species, ensemble_tta mode
+```
+
+### Troubleshooting
+
+If you see errors:
+
+**"HTTP Error 404"** (shouldn't happen now):
+- Verify: `curl -I https://github.com/prossm/chirpkit/releases/download/v0.2.0/birdnet-models.zip`
+- Should return HTTP 200 or 302
+
+**"No module named 'models.chirpkit_ensemble'"**:
+- Ensure you're using latest main branch: `pip install --force-reinstall git+...@main`
+
+**"Model identifier 'ion '"**:
+- Old corrupted file - fixed by re-download with `ModelDownloader.download_model('birdnet', force=True)`
 
 ---
 

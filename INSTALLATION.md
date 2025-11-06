@@ -84,12 +84,12 @@ ChirpKit requires two model files (~50MB total):
 ### 1. BirdNET Embedding Extractor (~25MB)
 - File: `BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite`
 - Location: `models/birdnet/`
-- Auto-downloads from: GitHub Release v6.0
+- Auto-downloads from: GitHub Release v0.2.0
 
 ### 2. ChirpKit Ensemble (~19MB)
 - Files: 7 ensemble models + metadata
 - Location: `models/trained/chirpkit-ensemble/`
-- Auto-downloads from: GitHub Release v6.0
+- Auto-downloads from: GitHub Release v0.2.0
 
 ---
 
@@ -158,7 +158,7 @@ pip install --upgrade --force-reinstall git+https://github.com/prossm/chirpkit.g
 
 ### Error: "HTTP Error 404: Not Found"
 
-**Cause:** GitHub release v6.0 hasn't been created yet
+**Cause:** GitHub release v0.2.0 hasn't been created yet
 
 **Solution:** Git LFS fallback will automatically activate. Ensure you have `git` and `git-lfs` installed:
 ```bash
@@ -238,7 +238,7 @@ success = classifier.load_model()
 if success:
     print("✅ ChirpKit installed and ready!")
     print(f"   Species: {classifier.n_classes}")
-    print(f"   Model version: v6.0")
+    print(f"   Model version: v0.2.0")
 else:
     print("❌ Model loading failed - check logs above")
 ```
