@@ -13,6 +13,10 @@ import json
 import zipfile
 import tempfile
 import shutil
+import subprocess
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class ModelDownloader:
@@ -91,9 +95,102 @@ class ModelDownloader:
         raise ValueError(f"Unknown model: {model_name}")
 
     @staticmethod
+    def _download_from_github_release(model_name, model_info, model_path):
+        """Download model from GitHub release (primary method)"""
+        print(f"📥 Downloading {model_info['description']}...")
+        print(f"   Size: ~{model_info['size_mb']}MB (one-time download)")
+        print(f"   Source: GitHub Release")
+        print(f"   URL: {model_info['url']}")
+
+        # Create temp file for download
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp:
+            tmp_path = tmp.name
+
+        # Download with progress
+        def show_progress(block_num, block_size, total_size):
+            downloaded = block_num * block_size
+            percent = min(100, downloaded * 100 / total_size) if total_size > 0 else 0
+            print(f"\r   Progress: {percent:.1f}%", end='', flush=True)
+
+        urllib.request.urlretrieve(model_info['url'], tmp_path, show_progress)
+        print()  # New line after progress
+
+        # Extract
+        print(f"📦 Extracting to {model_path}...")
+        model_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with zipfile.ZipFile(tmp_path, 'r') as zip_ref:
+            zip_ref.extractall(model_path.parent)
+
+        # Clean up temp file
+        os.unlink(tmp_path)
+
+        # Verify all expected files are present
+        missing_files = []
+        for file_name in model_info['files']:
+            if not (model_path / file_name).exists():
+                missing_files.append(file_name)
+
+        if missing_files:
+            raise FileNotFoundError(f"Missing files after extraction: {missing_files}")
+
+        print(f"✅ {model_name} downloaded successfully!")
+        return model_path
+
+    @staticmethod
+    def _download_via_git_lfs(model_name, model_path):
+        """Fallback: Clone repository with LFS and copy models"""
+        print(f"📥 Fallback: Cloning ChirpKit repository with Git LFS...")
+        print(f"   This may take a few minutes...")
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            try:
+                # Clone repository
+                print("   Cloning repository...")
+                subprocess.run(
+                    ['git', 'clone', '--depth', '1', 'https://github.com/prossm/chirpkit.git', tmpdir],
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+
+                # Pull LFS files
+                print("   Pulling LFS files...")
+                subprocess.run(
+                    ['git', 'lfs', 'pull'],
+                    cwd=tmpdir,
+                    check=True,
+                    capture_output=True,
+                    text=True
+                )
+
+                # Copy models to cache
+                if model_name == 'birdnet':
+                    src_path = Path(tmpdir) / 'models' / 'birdnet'
+                    dst_path = model_path
+                    dst_path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copytree(src_path, dst_path, dirs_exist_ok=True)
+                elif model_name == 'chirpkit-ensemble':
+                    src_path = Path(tmpdir) / 'models' / 'trained' / 'chirpkit-ensemble'
+                    dst_path = model_path
+                    dst_path.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copytree(src_path, dst_path, dirs_exist_ok=True)
+
+                print(f"✅ {model_name} downloaded via Git LFS!")
+                return model_path
+
+            except subprocess.CalledProcessError as e:
+                raise RuntimeError(f"Git command failed: {e.stderr}")
+            except Exception as e:
+                raise RuntimeError(f"Git LFS download failed: {e}")
+
+    @staticmethod
     def download_model(model_name, force=False):
         """
         Download a specific model if not present.
+        Tries multiple download methods with automatic fallback:
+        1. GitHub Release (fast, recommended)
+        2. Git LFS clone (slower fallback)
 
         Args:
             model_name: Name of model ('chirpkit-ensemble' or 'birdnet')
@@ -101,6 +198,72 @@ class ModelDownloader:
 
         Returns:
             Path to downloaded model directory
+        """
+        if model_name not in ModelDownloader.MODELS:
+            raise ValueError(f"Unknown model: {model_name}. Available: {list(ModelDownloader.MODELS.keys())}")
+
+        model_info = ModelDownloader.MODELS[model_name]
+        model_path = ModelDownloader.get_model_path(model_name)
+
+        # Check if already downloaded
+        if not force and ModelDownloader.check_model_exists(model_name):
+            print(f"✅ {model_name} already downloaded at {model_path}")
+            return model_path
+
+        # Try download methods in order of preference
+        download_methods = [
+            {
+                'name': 'GitHub Release',
+                'func': lambda: ModelDownloader._download_from_github_release(model_name, model_info, model_path)
+            },
+            {
+                'name': 'Git LFS',
+                'func': lambda: ModelDownloader._download_via_git_lfs(model_name, model_path)
+            }
+        ]
+
+        last_error = None
+        for method in download_methods:
+            try:
+                return method['func']()
+            except urllib.error.HTTPError as e:
+                if e.code == 404:
+                    logger.warning(f"{method['name']} failed: Model not found (404)")
+                    print(f"⚠️  {method['name']} failed: Model not found at URL")
+                    last_error = e
+                else:
+                    logger.warning(f"{method['name']} failed: HTTP {e.code}")
+                    print(f"⚠️  {method['name']} failed: HTTP Error {e.code}")
+                    last_error = e
+            except Exception as e:
+                logger.warning(f"{method['name']} failed: {e}")
+                print(f"⚠️  {method['name']} failed: {e}")
+                last_error = e
+
+            # If this wasn't the last method, try next one
+            if method != download_methods[-1]:
+                print(f"   Trying next download method...")
+
+        # All methods failed
+        print(f"\n❌ All download methods failed for {model_name}")
+        print(f"\n💡 Manual installation instructions:")
+        print(f"   1. Install Git LFS: https://git-lfs.github.com/")
+        print(f"   2. Clone repository:")
+        print(f"      git clone https://github.com/prossm/chirpkit.git")
+        print(f"      cd chirpkit && git lfs pull")
+        print(f"   3. Install in development mode:")
+        print(f"      pip install -e .")
+
+        if last_error:
+            raise last_error
+        else:
+            raise RuntimeError(f"Failed to download {model_name}")
+
+    @staticmethod
+    def download_model_legacy(model_name, force=False):
+        """
+        Legacy download method (kept for reference).
+        Use download_model() instead which has automatic fallbacks.
         """
         if model_name not in ModelDownloader.MODELS:
             raise ValueError(f"Unknown model: {model_name}. Available: {list(ModelDownloader.MODELS.keys())}")
