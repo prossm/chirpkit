@@ -1,7 +1,7 @@
-# Core PyTorch ecosystem
-torch>=1.9.0
-torchvision>=0.10.0
-torchaudio>=0.9.0
+# Core PyTorch ecosystem (updated for security)
+torch>=2.6.0
+torchvision>=0.17.0
+torchaudio>=2.0.0
 
 # Machine Learning
 tensorflow>=2.6.0
@@ -17,18 +17,32 @@ numpy>=1.21.0
 matplotlib>=3.3.0
 seaborn>=0.11.0
 
-# Web interface and API
+# Web interface and API (updated for security)
 gradio>=3.0.0
 fastapi>=0.68.0
 uvicorn>=0.15.0
+starlette>=0.49.1
 
-# Utilities
+# Utilities (updated for security)
 joblib>=1.0.0
-requests>=2.25.0
+requests>=2.32.4
+urllib3>=2.2.2
+certifi>=2024.7.4
+cryptography>=43.0.1
+pillow>=10.3.0
+jinja2>=3.1.6
+aiohttp>=3.12.14
+brotli>=1.2.0
+h11>=0.16.0
+idna>=3.7
+markdownify>=0.14.1
 
-# Dataset and experiment tracking
+# Dataset downloads
 kagglehub>=0.1.0
-wandb>=0.12.0
 
-# Development and testing
+# Development and testing (updated for security)
 pytest>=6.2.0
+setuptools>=78.1.1
+
+# Note: wandb (Weights & Biases) is available as an optional dependency
+# Install with: pip install chirpkit[viz] or pip install chirpkit[full]
