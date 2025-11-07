@@ -54,6 +54,15 @@ class InsectClassifier:
         self.cache_file = Path("species_cache.json")
         self.enable_enrichment = True
 
+    def is_available(self) -> bool:
+        """
+        Check if the classifier is available and ready to use.
+
+        Returns:
+            bool: True if classifier is initialized and models are loaded
+        """
+        return self.is_initialized
+
     @requires_torch
     async def initialize(self):
         """Initialize the ensemble classifier"""

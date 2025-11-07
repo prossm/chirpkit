@@ -208,34 +208,40 @@ def optional_import(module_name: str, fallback_message: Optional[str] = None):
 
 def warn_about_missing_gpu():
     """Warn user about missing GPU acceleration."""
+    has_acceleration = False
+
+    # Check PyTorch acceleration (used by ensemble models)
+    torch = DependencyManager.get_torch()
+    if torch is not None:
+        try:
+            if torch.cuda.is_available():
+                logger.info(f"Found CUDA GPU for PyTorch: {torch.cuda.get_device_name(0)}")
+                has_acceleration = True
+            elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
+                logger.info("Found Metal (MPS) GPU for PyTorch on macOS")
+                has_acceleration = True
+        except Exception as e:
+            logger.debug(f"Could not check PyTorch GPU: {e}")
+
+    # Check TensorFlow acceleration (used by BirdNET)
     tf = DependencyManager.get_tensorflow()
     if tf is not None:
         try:
             gpus = tf.config.list_physical_devices('GPU')
-            if not gpus:
-                warnings.warn(
-                    "No GPU devices found. Computations will run on CPU. "
-                    "For better performance, ensure CUDA (Linux/Windows) or "
-                    "Metal (macOS) acceleration is properly configured.",
-                    UserWarning
-                )
-            else:
+            if gpus:
                 logger.info(f"Found {len(gpus)} GPU device(s) for TensorFlow")
+                has_acceleration = True
         except Exception as e:
-            logger.warning(f"Could not check GPU availability: {e}")
-    
-    torch = DependencyManager.get_torch()
-    if torch is not None:
-        if torch.cuda.is_available():
-            logger.info(f"PyTorch CUDA available with {torch.cuda.device_count()} device(s)")
-        elif hasattr(torch.backends, 'mps') and torch.backends.mps.is_available():
-            logger.info("PyTorch MPS (Apple Silicon) backend available")
-        else:
-            warnings.warn(
-                "No GPU acceleration available for PyTorch. "
-                "Computations will run on CPU.",
-                UserWarning
-            )
+            logger.debug(f"Could not check TensorFlow GPU: {e}")
+
+    # Only warn if no acceleration found
+    if not has_acceleration:
+        warnings.warn(
+            "No GPU acceleration detected. Computations will run on CPU. "
+            "For better performance, ensure CUDA (Linux/Windows) or "
+            "Metal (macOS) acceleration is properly configured.",
+            UserWarning
+        )
 
 
 # Convenience functions for common imports
