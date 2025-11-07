@@ -34,18 +34,29 @@ import tensorflow as tf
 # Otherwise use standalone TFLite implementation (for inference)
 USING_BIRDNET_ANALYZER = False
 
-# Try local BirdNET-Analyzer directory first (development/GitHub install)
+# Try importing birdnet-analyzer package directly (works with pip install)
 try:
-    BIRDNET_PATH = Path(__file__).parent.parent.parent.parent / "BirdNET-Analyzer"
-    if BIRDNET_PATH.exists():
-        sys.path.insert(0, str(BIRDNET_PATH))
-        import birdnet_analyzer.config as birdnet_cfg
-        from birdnet_analyzer import model as birdnet_model
-        from birdnet_analyzer import audio as birdnet_audio
-        USING_BIRDNET_ANALYZER = True
-        print("✅ Using BirdNET-Analyzer (GitHub version with model files)")
+    import birdnet_analyzer.config as birdnet_cfg
+    from birdnet_analyzer import model as birdnet_model
+    from birdnet_analyzer import audio as birdnet_audio
+    USING_BIRDNET_ANALYZER = True
+    print("✅ Using BirdNET-Analyzer (installed package)")
 except ImportError:
     pass
+
+# Fallback: Try local BirdNET-Analyzer directory (development)
+if not USING_BIRDNET_ANALYZER:
+    try:
+        BIRDNET_PATH = Path(__file__).parent.parent.parent.parent / "BirdNET-Analyzer"
+        if BIRDNET_PATH.exists():
+            sys.path.insert(0, str(BIRDNET_PATH))
+            import birdnet_analyzer.config as birdnet_cfg
+            from birdnet_analyzer import model as birdnet_model
+            from birdnet_analyzer import audio as birdnet_audio
+            USING_BIRDNET_ANALYZER = True
+            print("✅ Using BirdNET-Analyzer (local directory)")
+    except ImportError:
+        pass
 
 if not USING_BIRDNET_ANALYZER:
     print("ℹ️  Using standalone TFLite implementation (inference only)")
