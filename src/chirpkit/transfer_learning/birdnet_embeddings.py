@@ -33,8 +33,9 @@ import tensorflow as tf
 # Try to import from BirdNET-Analyzer if available (for training)
 # Otherwise use standalone TFLite implementation (for inference)
 USING_BIRDNET_ANALYZER = False
+
+# Try local BirdNET-Analyzer directory first (development/GitHub install)
 try:
-    # BirdNET-Analyzer is at project root
     BIRDNET_PATH = Path(__file__).parent.parent.parent.parent / "BirdNET-Analyzer"
     if BIRDNET_PATH.exists():
         sys.path.insert(0, str(BIRDNET_PATH))
@@ -42,7 +43,7 @@ try:
         from birdnet_analyzer import model as birdnet_model
         from birdnet_analyzer import audio as birdnet_audio
         USING_BIRDNET_ANALYZER = True
-        print("✅ Using BirdNET-Analyzer (full features available)")
+        print("✅ Using BirdNET-Analyzer (GitHub version with model files)")
 except ImportError:
     pass
 
@@ -82,8 +83,13 @@ class BirdNETEmbeddingExtractor:
 
     def _init_with_analyzer(self):
         """Initialize using full BirdNET-Analyzer"""
-        birdnet_cfg.MODEL_PATH = birdnet_cfg.BIRDNET_MODEL_PATH
-        birdnet_cfg.LABELS_FILE = birdnet_cfg.BIRDNET_LABELS_FILE
+        # PyPI package already has MODEL_PATH and LABELS_FILE set to correct defaults
+        # Only override if BIRDNET_MODEL_PATH exists (GitHub version)
+        if hasattr(birdnet_cfg, 'BIRDNET_MODEL_PATH'):
+            birdnet_cfg.MODEL_PATH = birdnet_cfg.BIRDNET_MODEL_PATH
+        if hasattr(birdnet_cfg, 'BIRDNET_LABELS_FILE'):
+            birdnet_cfg.LABELS_FILE = birdnet_cfg.BIRDNET_LABELS_FILE
+
         birdnet_cfg.SAMPLE_RATE = self.SAMPLE_RATE
         birdnet_cfg.SIG_LENGTH = self.SIG_LENGTH
         birdnet_cfg.SIG_OVERLAP = 0.0
