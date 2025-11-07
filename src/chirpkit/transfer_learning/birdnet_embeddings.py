@@ -83,12 +83,25 @@ class BirdNETEmbeddingExtractor:
 
     def _init_with_analyzer(self):
         """Initialize using full BirdNET-Analyzer"""
-        # PyPI package already has MODEL_PATH and LABELS_FILE set to correct defaults
-        # Only override if BIRDNET_MODEL_PATH exists (GitHub version)
-        if hasattr(birdnet_cfg, 'BIRDNET_MODEL_PATH'):
+        # Point to ChirpKit's downloaded models in ~/.chirpkit/models/birdnet/
+        chirpkit_model_dir = Path.home() / '.chirpkit' / 'models' / 'birdnet'
+
+        if chirpkit_model_dir.exists():
+            # Use ChirpKit's downloaded models
+            birdnet_cfg.MODEL_PATH = str(chirpkit_model_dir / 'BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite')
+            birdnet_cfg.LABELS_FILE = str(chirpkit_model_dir / 'BirdNET_GLOBAL_6K_V2.4_Labels.txt')
+            print(f"✅ Using ChirpKit downloaded models from: {chirpkit_model_dir}")
+        elif hasattr(birdnet_cfg, 'BIRDNET_MODEL_PATH'):
+            # Fallback to GitHub version paths
             birdnet_cfg.MODEL_PATH = birdnet_cfg.BIRDNET_MODEL_PATH
-        if hasattr(birdnet_cfg, 'BIRDNET_LABELS_FILE'):
             birdnet_cfg.LABELS_FILE = birdnet_cfg.BIRDNET_LABELS_FILE
+            print("✅ Using BirdNET-Analyzer package models")
+        else:
+            raise RuntimeError(
+                "BirdNET models not found. Please run:\n"
+                "  from chirpkit.model_downloader import ModelDownloader\n"
+                "  ModelDownloader.download_model('birdnet')"
+            )
 
         birdnet_cfg.SAMPLE_RATE = self.SAMPLE_RATE
         birdnet_cfg.SIG_LENGTH = self.SIG_LENGTH
