@@ -2,6 +2,10 @@
 
 ## Updated Dependency Versions (January 2025)
 
+### Security Updates
+- ✅ **requests** upgraded to >=2.32.4 (fixes CVE: GHSA-9wx4-h78v-vm56, GHSA-9hjg-9r4m-mvj7)
+- ✅ All dependencies updated to latest secure versions
+
 ### Key Changes Made
 
 #### 1. TensorFlow Version Constraints

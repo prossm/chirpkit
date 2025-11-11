@@ -29,7 +29,7 @@ setup(
         'librosa>=0.9.0',
         'soundfile>=0.10.0',
         'joblib>=1.0.0',
-        'requests>=2.25.0',
+        'requests>=2.32.4',  # Security: CVE fixes in 2.32.4
         # Web interface (optional by default)
         'fastapi>=0.68.0',
         'uvicorn>=0.15.0',
