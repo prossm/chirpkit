@@ -4,7 +4,10 @@ torchvision>=0.17.0
 torchaudio>=2.0.0
 
 # Machine Learning
-tensorflow>=2.6.0
+# Note: TensorFlow-macos is required for macOS, regular tensorflow for Linux/Windows
+# tensorflow-macos maxes out at 2.16.2, so don't specify versions higher than that
+tensorflow>=2.12.0; sys_platform != "darwin"
+tensorflow-macos>=2.12.0,<=2.16.2; sys_platform == "darwin"
 scikit-learn>=1.0.0
 
 # BirdNET for embedding extraction (critical dependency)
@@ -22,7 +25,8 @@ matplotlib>=3.3.0
 seaborn>=0.11.0
 
 # Web interface and API (updated for security)
-gradio>=3.0.0
+gradio>=5.0.0
+python-multipart>=0.0.20  # Required by gradio for file uploads
 fastapi>=0.68.0
 uvicorn>=0.15.0
 starlette>=0.49.1

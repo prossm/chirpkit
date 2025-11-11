@@ -40,7 +40,9 @@ setup(
             'tensorflow>=2.12.0,<3.0.0',
         ],
         'tensorflow-macos': [
-            'tensorflow-macos>=2.12.0,<3.0.0',
+            # tensorflow-macos maxes out at 2.16.2 as of Jan 2025
+            'tensorflow-macos>=2.12.0,<=2.16.2',
+            'tensorflow-metal>=1.0.0',
         ],
         'tensorflow-gpu': [
             'tensorflow[and-cuda]>=2.12.0,<3.0.0',
@@ -67,7 +69,8 @@ setup(
         
         # UI components
         'ui': [
-            'gradio>=3.0.0',
+            'gradio>=5.0.0',
+            'python-multipart>=0.0.20',  # Required by gradio for file uploads
         ],
         
         # Dataset utilities
@@ -91,14 +94,16 @@ setup(
         
         # Complete installation with recommended backends
         'full': [
-            'tensorflow-macos>=2.12.0,<3.0.0; sys_platform == "darwin"',
+            'tensorflow-macos>=2.12.0,<=2.16.2; sys_platform == "darwin"',
+            'tensorflow-metal>=1.0.0; sys_platform == "darwin"',
             'tensorflow>=2.12.0,<3.0.0; sys_platform != "darwin"',
             'torch>=1.9.0',
             'torchvision>=0.10.0',
             'torchaudio>=0.9.0',
             'matplotlib>=3.3.0',
             'seaborn>=0.11.0',
-            'gradio>=3.0.0',
+            'gradio>=5.0.0',
+            'python-multipart>=0.0.20',
             'wandb>=0.12.0',
             'kagglehub>=0.1.0',
         ],
