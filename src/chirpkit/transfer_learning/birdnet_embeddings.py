@@ -94,8 +94,16 @@ class BirdNETEmbeddingExtractor:
 
     def _init_with_analyzer(self):
         """Initialize using full BirdNET-Analyzer"""
-        # Point to ChirpKit's downloaded models in ~/.chirpkit/models/birdnet/
-        chirpkit_model_dir = Path.home() / '.chirpkit' / 'models' / 'birdnet'
+        # Import get_default_cache_dir to respect environment variables
+        try:
+            from chirpkit.model_downloader import get_default_cache_dir
+            cache_dir = get_default_cache_dir()
+        except ImportError:
+            # Fallback if import fails
+            cache_dir = Path.home() / '.chirpkit' / 'models'
+
+        # Point to ChirpKit's downloaded models
+        chirpkit_model_dir = cache_dir / 'birdnet'
 
         if chirpkit_model_dir.exists():
             # Use ChirpKit's downloaded models
@@ -128,8 +136,20 @@ class BirdNETEmbeddingExtractor:
     def _init_standalone(self, model_path=None):
         """Initialize using standalone TFLite"""
         if model_path is None:
-            # Default to models/birdnet/ directory (go up to project root)
-            model_path = Path(__file__).parent.parent.parent.parent / "models" / "birdnet" / "BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
+            # Try development mode first (models in project directory)
+            dev_model_path = Path(__file__).parent.parent.parent.parent / "models" / "birdnet" / "BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
+
+            if dev_model_path.exists():
+                model_path = dev_model_path
+            else:
+                # Use environment-aware cache directory
+                try:
+                    from chirpkit.model_downloader import get_default_cache_dir
+                    cache_dir = get_default_cache_dir()
+                except ImportError:
+                    cache_dir = Path.home() / '.chirpkit' / 'models'
+
+                model_path = cache_dir / "birdnet" / "BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
 
         self.model_path = Path(model_path)
 

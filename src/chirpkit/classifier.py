@@ -20,6 +20,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from .dependencies import DependencyManager, requires_torch
 from ._version import __version__, __model_version__
+from .model_downloader import get_default_cache_dir
 
 logger = logging.getLogger(__name__)
 
@@ -32,10 +33,25 @@ class InsectClassifier:
 
         Args:
             model_path: Optional path to ensemble model directory.
-                       Defaults to "models/trained/chirpkit-ensemble"
+                       If not provided, uses environment-aware cache directory.
             mode: Deployment mode - 'single', 'ensemble', or 'ensemble_tta' (default)
+
+        Environment Variables:
+            CHIRPKIT_MODEL_DIR: Override model storage location
+            CHIRPKIT_HOME: Alternative override ({CHIRPKIT_HOME}/models)
         """
-        self.model_path = model_path or "models/trained/chirpkit-ensemble"
+        if model_path is None:
+            # Try development mode first
+            dev_model_path = Path("models/trained/chirpkit-ensemble")
+            if dev_model_path.exists():
+                self.model_path = str(dev_model_path)
+            else:
+                # Use environment-aware cache directory
+                cache_dir = get_default_cache_dir()
+                self.model_path = str(cache_dir / "trained" / "chirpkit-ensemble")
+        else:
+            self.model_path = model_path
+
         self.mode = mode
         self.is_initialized = False
         self.executor = ThreadPoolExecutor(max_workers=2)

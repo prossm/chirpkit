@@ -102,10 +102,12 @@ pip install "git+https://github.com/prossm/chirpkit.git#egg=chirpkit[full]"
 pip install "git+https://github.com/prossm/chirpkit.git#egg=chirpkit[tensorflow-gpu,torch]"
 ```
 
-**Models are downloaded automatically** (~44MB total) on first use to `~/.chirpkit/models/`:
+**Models are downloaded automatically** (~44MB total) on first use:
 - ✅ v6.0 Ensemble models (7 × 2.7MB = 19MB)
 - ✅ BirdNET embedding extractor (25MB TFLite model)
 - ✅ Label encoder for 231 species
+- 📂 **Default location:** `~/.chirpkit/models/`
+- 🐳 **Custom location:** Set `CHIRPKIT_MODEL_DIR` environment variable (see "Custom Model Storage" below)
 
 #### Option 2: Clone Repository (For Development)
 
@@ -160,6 +162,67 @@ classifier = ChirpKitEnsembleClassifier(model_dir="/path/to/chirpkit-ensemble")
 git clone https://github.com/prossm/chirpkit.git
 cd chirpkit && git lfs pull
 ```
+
+### Custom Model Storage (Docker/Container Deployments)
+
+ChirpKit supports custom model storage locations via environment variables, making it easy to deploy in containers or custom environments:
+
+**Environment Variables:**
+- `CHIRPKIT_MODEL_DIR`: Primary override for model storage location
+- `CHIRPKIT_HOME`: Alternative override (models stored in `{CHIRPKIT_HOME}/models`)
+
+**Docker Example:**
+```dockerfile
+FROM python:3.11-slim
+
+# Set custom model directory
+ENV CHIRPKIT_MODEL_DIR=/models/chirpkit
+
+# Create volume for persistent model storage
+VOLUME /models/chirpkit
+
+# Install ChirpKit
+RUN pip install git+https://github.com/prossm/chirpkit.git
+
+# Models will automatically be downloaded to /models/chirpkit on first use
+CMD ["python", "-m", "chirpkit.model_downloader", "download"]
+```
+
+**Docker Compose Example:**
+```yaml
+services:
+  chirpkit:
+    image: chirpkit:latest
+    environment:
+      - CHIRPKIT_MODEL_DIR=/models/chirpkit
+    volumes:
+      - chirpkit-models:/models/chirpkit
+
+volumes:
+  chirpkit-models:
+```
+
+**Programmatic Configuration:**
+```python
+# Option 1: Set environment variable before import
+import os
+os.environ['CHIRPKIT_MODEL_DIR'] = '/custom/path'
+from chirpkit import InsectClassifier
+
+# Option 2: Use cache_dir parameter
+from chirpkit import ModelDownloader
+ModelDownloader.download_all_models(cache_dir='/custom/path')
+
+# Option 3: Check current cache directory
+from chirpkit import get_default_cache_dir
+print(get_default_cache_dir())  # Shows where models will be stored
+```
+
+**Benefits:**
+- No symlinks needed for container deployments
+- Works with persistent volumes and network storage
+- Follows standard practice (like `HF_HOME`, `TORCH_HOME`, etc.)
+- Fully backward compatible with existing installations
 
 ### Verify Installation
 

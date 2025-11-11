@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).parent / 'src'))
 from src.chirpkit._version import __version__
 from src.chirpkit.models.chirpkit_ensemble import ChirpKitEnsembleClassifier
 from src.chirpkit.transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
+from src.chirpkit.model_downloader import get_default_cache_dir
 
 # Global variables for model components
 ensemble_classifier = None
@@ -131,10 +132,23 @@ def load_model():
         birdnet_extractor = BirdNETEmbeddingExtractor()
         print("   ✓ BirdNET ready")
 
+        # Determine model directory (development mode first, then environment-aware)
+        dev_model_path = Path("models/trained/chirpkit-ensemble")
+        if dev_model_path.exists():
+            model_dir = str(dev_model_path)
+            print(f"📂 Using development model directory: {model_dir}")
+        else:
+            # Use environment-aware cache directory
+            cache_dir = get_default_cache_dir()
+            model_dir = str(cache_dir / "trained" / "chirpkit-ensemble")
+            print(f"📂 Using production model directory: {model_dir}")
+            if 'CHIRPKIT_MODEL_DIR' in os.environ:
+                print(f"   (from CHIRPKIT_MODEL_DIR environment variable)")
+
         # Load ensemble classifier
         print(f"\n🎯 Loading ChirpKit ensemble ({deployment_mode} mode)...")
         ensemble_classifier = ChirpKitEnsembleClassifier(
-            model_dir="models/trained/chirpkit-ensemble",
+            model_dir=model_dir,
             mode=deployment_mode,
             tta_rounds=10,
             tta_noise_std=0.01,

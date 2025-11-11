@@ -19,6 +19,41 @@ import logging
 logger = logging.getLogger(__name__)
 
 
+def get_default_cache_dir():
+    """
+    Get the default cache directory for ChirpKit models.
+
+    Respects environment variables for custom cache locations:
+    - CHIRPKIT_MODEL_DIR: Primary override for model storage location
+    - CHIRPKIT_HOME: Secondary override (models stored in {CHIRPKIT_HOME}/models)
+
+    If no environment variables are set, defaults to ~/.chirpkit/models
+
+    Returns:
+        Path: Directory where models should be stored
+
+    Examples:
+        # Use default location
+        >>> get_default_cache_dir()
+        PosixPath('/Users/username/.chirpkit/models')
+
+        # With environment variable
+        >>> os.environ['CHIRPKIT_MODEL_DIR'] = '/models/chirpkit'
+        >>> get_default_cache_dir()
+        PosixPath('/models/chirpkit')
+    """
+    # Environment variable takes precedence
+    if env_dir := os.environ.get('CHIRPKIT_MODEL_DIR'):
+        return Path(env_dir)
+
+    # Secondary: CHIRPKIT_HOME/models
+    if chirpkit_home := os.environ.get('CHIRPKIT_HOME'):
+        return Path(chirpkit_home) / 'models'
+
+    # Fallback to home directory
+    return Path.home() / '.chirpkit' / 'models'
+
+
 class ModelDownloader:
     """Download ChirpKit models on first use"""
 
@@ -53,23 +88,47 @@ class ModelDownloader:
     }
 
     @staticmethod
-    def get_models_dir():
-        """Get the directory where models should be stored"""
+    def get_models_dir(cache_dir=None):
+        """
+        Get the directory where models should be stored.
+
+        Args:
+            cache_dir: Optional custom cache directory path. If not provided,
+                      uses get_default_cache_dir() which respects environment variables.
+
+        Returns:
+            Path: Directory where models are stored
+        """
+        # Use explicit cache_dir if provided
+        if cache_dir is not None:
+            cache_path = Path(cache_dir)
+            cache_path.mkdir(parents=True, exist_ok=True)
+            return cache_path
+
         # Try to use package directory first (for development)
         package_dir = Path(__file__).parent.parent.parent.parent / "models"
         if package_dir.exists() and (package_dir / "trained").exists():
             # Development mode - models are in repo
             return package_dir
 
-        # Production mode - use user's home directory
-        home_dir = Path.home() / ".chirpkit" / "models"
+        # Production mode - use environment-aware cache directory
+        home_dir = get_default_cache_dir()
         home_dir.mkdir(parents=True, exist_ok=True)
         return home_dir
 
     @staticmethod
-    def check_model_exists(model_name):
-        """Check if a model is already downloaded"""
-        model_dir = ModelDownloader.get_models_dir()
+    def check_model_exists(model_name, cache_dir=None):
+        """
+        Check if a model is already downloaded.
+
+        Args:
+            model_name: Name of the model to check
+            cache_dir: Optional custom cache directory
+
+        Returns:
+            bool: True if model exists, False otherwise
+        """
+        model_dir = ModelDownloader.get_models_dir(cache_dir)
 
         if model_name == 'chirpkit-ensemble':
             ensemble_dir = model_dir / "trained" / "chirpkit-ensemble"
@@ -83,9 +142,21 @@ class ModelDownloader:
         return False
 
     @staticmethod
-    def get_model_path(model_name):
-        """Get the path to a model directory"""
-        model_dir = ModelDownloader.get_models_dir()
+    def get_model_path(model_name, cache_dir=None):
+        """
+        Get the path to a model directory.
+
+        Args:
+            model_name: Name of the model
+            cache_dir: Optional custom cache directory
+
+        Returns:
+            Path: Path to the model directory
+
+        Raises:
+            ValueError: If model name is unknown
+        """
+        model_dir = ModelDownloader.get_models_dir(cache_dir)
 
         if model_name == 'chirpkit-ensemble':
             return model_dir / "trained" / "chirpkit-ensemble"
@@ -185,7 +256,7 @@ class ModelDownloader:
                 raise RuntimeError(f"Git LFS download failed: {e}")
 
     @staticmethod
-    def download_model(model_name, force=False):
+    def download_model(model_name, force=False, cache_dir=None):
         """
         Download a specific model if not present.
         Tries multiple download methods with automatic fallback:
@@ -195,18 +266,24 @@ class ModelDownloader:
         Args:
             model_name: Name of model ('chirpkit-ensemble' or 'birdnet')
             force: Force re-download even if model exists
+            cache_dir: Optional custom directory for model storage.
+                      If not provided, uses environment variables or default location.
 
         Returns:
             Path to downloaded model directory
+
+        Environment Variables:
+            CHIRPKIT_MODEL_DIR: Override model storage location
+            CHIRPKIT_HOME: Alternative override ({CHIRPKIT_HOME}/models)
         """
         if model_name not in ModelDownloader.MODELS:
             raise ValueError(f"Unknown model: {model_name}. Available: {list(ModelDownloader.MODELS.keys())}")
 
         model_info = ModelDownloader.MODELS[model_name]
-        model_path = ModelDownloader.get_model_path(model_name)
+        model_path = ModelDownloader.get_model_path(model_name, cache_dir)
 
         # Check if already downloaded
-        if not force and ModelDownloader.check_model_exists(model_name):
+        if not force and ModelDownloader.check_model_exists(model_name, cache_dir):
             print(f"✅ {model_name} already downloaded at {model_path}")
             return model_path
 
@@ -337,11 +414,35 @@ class ModelDownloader:
             raise
 
     @staticmethod
-    def download_all_models(force=False):
-        """Download all required models"""
+    def download_all_models(force=False, cache_dir=None):
+        """
+        Download all required models.
+
+        Args:
+            force: Re-download even if models exist
+            cache_dir: Custom directory for model storage (default: uses environment variables or ~/.chirpkit/models)
+
+        Returns:
+            bool: True if all models downloaded successfully, False otherwise
+
+        Environment Variables:
+            CHIRPKIT_MODEL_DIR: Override model storage location
+            CHIRPKIT_HOME: Alternative override ({CHIRPKIT_HOME}/models)
+
+        Examples:
+            # Download to default location
+            ModelDownloader.download_all_models()
+
+            # Download to custom location
+            ModelDownloader.download_all_models(cache_dir='/models/chirpkit')
+
+            # Use environment variable
+            os.environ['CHIRPKIT_MODEL_DIR'] = '/models/chirpkit'
+            ModelDownloader.download_all_models()
+        """
         for model_name in ModelDownloader.MODELS:
             try:
-                ModelDownloader.download_model(model_name, force=force)
+                ModelDownloader.download_model(model_name, force=force, cache_dir=cache_dir)
             except Exception as e:
                 print(f"Failed to download {model_name}: {e}")
                 return False

@@ -27,6 +27,7 @@ try:
     from .classifier import InsectClassifier
     from .model_manager import ModelManager, find_any_model, list_models
     from .cli import classify_audio_file, get_classifier_instance
+    from .model_downloader import get_default_cache_dir, ModelDownloader
 except ImportError as e:
     # Classifier may not be available if ML dependencies are missing
     import logging
@@ -38,6 +39,8 @@ except ImportError as e:
     list_models = None
     classify_audio_file = None
     get_classifier_instance = None
+    get_default_cache_dir = None
+    ModelDownloader = None
 
 from ._version import __version__
 __author__ = "Patrick Metzger"
@@ -73,7 +76,7 @@ except Exception:
 __all__ = [
     'get_tensorflow',
     'get_torch',
-    'get_gradio', 
+    'get_gradio',
     'get_wandb',
     'DependencyManager',
     'requires_tensorflow',
@@ -82,8 +85,10 @@ __all__ = [
     'warn_about_missing_gpu',
     'InsectClassifier',
     'ModelManager',
+    'ModelDownloader',
     'find_any_model',
     'list_models',
     'classify_audio_file',
-    'get_classifier_instance'
+    'get_classifier_instance',
+    'get_default_cache_dir'
 ]
