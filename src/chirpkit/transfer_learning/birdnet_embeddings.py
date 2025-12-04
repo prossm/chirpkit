@@ -73,11 +73,12 @@ class BirdNETEmbeddingExtractor:
     BANDPASS_FMIN = 1000   # 1kHz (insect frequencies)
     BANDPASS_FMAX = 15000  # 15kHz
 
-    def __init__(self, model_path=None):
+    def __init__(self, model_path=None, auto_download=False):
         """Initialize BirdNET model for embedding extraction"""
         print("🔧 Initializing BirdNET embedding extractor...")
 
         self.using_analyzer = USING_BIRDNET_ANALYZER
+        self.auto_download = auto_download
 
         if USING_BIRDNET_ANALYZER:
             # Use full BirdNET-Analyzer (for training)
@@ -153,25 +154,32 @@ class BirdNETEmbeddingExtractor:
 
         self.model_path = Path(model_path)
 
-        # Auto-download if not present
+        # Handle missing models based on auto_download setting
         if not self.model_path.exists():
             print(f"⚠️  BirdNET model not found at {self.model_path}")
-            print(f"   Attempting auto-download...")
-
-            try:
-                # Import here to avoid circular dependency
-                import sys
-                sys.path.insert(0, str(Path(__file__).parent.parent))
-                from chirpkit.model_downloader import ModelDownloader
-                birdnet_dir = ModelDownloader.download_model('birdnet')
-                self.model_path = birdnet_dir / "BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
-            except Exception as e:
-                print(f"❌ Auto-download failed: {e}")
-                print(f"\n💡 Please install models manually:")
-                print(f"   git clone https://github.com/prossm/chirpkit.git")
-                print(f"   cd chirpkit && git lfs pull")
+            
+            if self.auto_download:
+                print(f"   Auto-download enabled - downloading BirdNET model...")
+                try:
+                    # Import here to avoid circular dependency
+                    import sys
+                    sys.path.insert(0, str(Path(__file__).parent.parent))
+                    from chirpkit.model_downloader import ModelDownloader
+                    birdnet_dir = ModelDownloader.download_model('birdnet')
+                    self.model_path = birdnet_dir / "BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
+                except Exception as e:
+                    print(f"❌ Auto-download failed: {e}")
+                    print(f"\n💡 Please install models manually:")
+                    print(f"   python -m chirpkit.model_downloader download birdnet")
+                    print(f"   # Or: git clone https://github.com/prossm/chirpkit.git && cd chirpkit && git lfs pull")
+                    raise
+            else:
+                print(f"   Auto-download disabled. Please either:")
+                print(f"   1. Download models: python -m chirpkit.model_downloader download birdnet")
+                print(f"   2. Enable auto-download: InsectClassifier(auto_download=True)")
+                print(f"   3. Specify existing model path: InsectClassifier(birdnet_model_path='/path/to/model.tflite')")
                 raise FileNotFoundError(
-                    f"BirdNET model not found at {self.model_path}\n"
+                    f"BirdNET model not found at {self.model_path} and auto_download=False\n"
                     f"Expected location: models/birdnet/BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
                 )
 

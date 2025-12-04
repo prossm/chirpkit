@@ -70,7 +70,8 @@ class ChirpKitEnsembleClassifier:
         mode: str = "ensemble",
         tta_rounds: int = 10,
         tta_noise_std: float = 0.01,
-        device: Optional[torch.device] = None
+        device: Optional[torch.device] = None,
+        auto_download: bool = False
     ):
         """
         Initialize ensemble classifier
@@ -81,12 +82,14 @@ class ChirpKitEnsembleClassifier:
             tta_rounds: Number of TTA rounds (only for ensemble_tta mode)
             tta_noise_std: Standard deviation for TTA Gaussian noise
             device: torch device (auto-detected if None)
+            auto_download: Whether to auto-download missing models (default: False)
         """
         self.model_dir = Path(model_dir)
         self.mode = mode
         self.tta_rounds = tta_rounds
         self.tta_noise_std = tta_noise_std
         self.device = device or self._get_device()
+        self.auto_download = auto_download
 
         self.models = []
         self.label_encoder = None
@@ -104,20 +107,27 @@ class ChirpKitEnsembleClassifier:
 
     def load_models(self):
         """Load ensemble models and metadata"""
-        # Auto-download models if not present
+        # Check if models exist
         if not self.model_dir.exists() or not (self.model_dir / "ensemble_info.json").exists():
             print(f"⚠️  Models not found at {self.model_dir}")
-            print(f"   Attempting auto-download...")
-
-            try:
-                from chirpkit.model_downloader import ModelDownloader
-                self.model_dir = ModelDownloader.download_model('chirpkit-ensemble')
-            except Exception as e:
-                print(f"❌ Auto-download failed: {e}")
-                print(f"\n💡 Please install models manually:")
-                print(f"   git clone https://github.com/prossm/chirpkit.git")
-                print(f"   cd chirpkit && git lfs pull")
-                raise
+            
+            if self.auto_download:
+                print(f"   Auto-download enabled - downloading models...")
+                try:
+                    from chirpkit.model_downloader import ModelDownloader
+                    self.model_dir = ModelDownloader.download_model('chirpkit-ensemble')
+                except Exception as e:
+                    print(f"❌ Auto-download failed: {e}")
+                    print(f"\n💡 Please install models manually:")
+                    print(f"   python -m chirpkit.model_downloader download chirpkit-ensemble")
+                    print(f"   # Or: git clone https://github.com/prossm/chirpkit.git && cd chirpkit && git lfs pull")
+                    raise
+            else:
+                print(f"   Auto-download disabled. Please either:")
+                print(f"   1. Download models: python -m chirpkit.model_downloader download chirpkit-ensemble")
+                print(f"   2. Enable auto-download: InsectClassifier(auto_download=True)")
+                print(f"   3. Specify existing model path: InsectClassifier(ensemble_path='/path/to/models')")
+                raise FileNotFoundError(f"Ensemble models not found at {self.model_dir} and auto_download=False")
 
         print(f"📦 Loading ChirpKit Ensemble from {self.model_dir}")
         print(f"   Mode: {self.mode}")

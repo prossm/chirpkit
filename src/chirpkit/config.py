@@ -48,7 +48,7 @@ class ModelConfiguration:
     
     # Deployment settings
     mode: str = "ensemble_tta"  # single, ensemble, ensemble_tta
-    auto_download: bool = True
+    auto_download: bool = False  # Changed to False - don't download by default
     validate_compatibility: bool = True
     fallback_to_default: bool = True
     
@@ -135,7 +135,7 @@ class ConfigurationManager:
         """Load default configuration"""
         return {
             'mode': 'ensemble_tta',
-            'auto_download': True,
+            'auto_download': False,  # Don't auto-download by default
             'validate_compatibility': True,
             'fallback_to_default': True,
             'tta_rounds': 10,
@@ -490,7 +490,7 @@ def create_example_config_file(config_path: str = "~/.chirpkit/config.yaml") -> 
                 'mode': "ensemble_tta"
             },
             'download': {
-                'auto_download': False,
+                'auto_download': True,  # Enable for first-time users
                 'fallback_to_default': True
             },
             'validate_compatibility': True

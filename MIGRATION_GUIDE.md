@@ -50,7 +50,7 @@ classifier = InsectClassifier()
 # Option 1: Use existing downloaded models
 classifier = InsectClassifier(
     model_root="/models/chirpkit",
-    auto_download=False,
+    auto_download=False,  # Don't download if models exist
     validate_compatibility=True
 )
 

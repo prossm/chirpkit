@@ -33,7 +33,7 @@ class InsectClassifier:
         birdnet_model_path: Optional[str] = None,
         ensemble_path: Optional[str] = None,
         mode: str = "ensemble_tta",
-        auto_download: bool = True,
+        auto_download: bool = False,
         validate_compatibility: bool = True,
         device: Optional[str] = None,
         **kwargs
@@ -46,7 +46,7 @@ class InsectClassifier:
             birdnet_model_path: Explicit path to BirdNET model file
             ensemble_path: Explicit path to ensemble model directory
             mode: Deployment mode - 'single', 'ensemble', or 'ensemble_tta' (default)
-            auto_download: Whether to auto-download missing models (default: True)
+            auto_download: Whether to auto-download missing models (default: False)
             validate_compatibility: Whether to validate model compatibility (default: True)
             device: Device to use ('cpu', 'cuda', 'mps', or None for auto-detection)
             **kwargs: Additional configuration options
@@ -226,13 +226,17 @@ class InsectClassifier:
             logger.info("📦 Loading BirdNET embedding extractor...")
             # Pass resolved BirdNET path if available
             birdnet_path = self.birdnet_path if hasattr(self, 'birdnet_path') else None
-            self.birdnet_extractor = BirdNETEmbeddingExtractor(model_path=birdnet_path)
+            self.birdnet_extractor = BirdNETEmbeddingExtractor(
+                model_path=birdnet_path,
+                auto_download=self.config.auto_download
+            )
 
             logger.info(f"📦 Loading ChirpKit ensemble ({self.mode} mode)...")
             self.ensemble_classifier = ChirpKitEnsembleClassifier(
                 model_dir=self.model_path,
                 mode=self.mode,
-                device=self.device
+                device=self.device,
+                auto_download=self.config.auto_download
             )
             self.ensemble_classifier.load_models()
 

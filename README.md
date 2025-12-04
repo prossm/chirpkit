@@ -102,12 +102,13 @@ pip install "git+https://github.com/prossm/chirpkit.git#egg=chirpkit[full]"
 pip install "git+https://github.com/prossm/chirpkit.git#egg=chirpkit[tensorflow-gpu,torch]"
 ```
 
-**Models are downloaded automatically** (~44MB total) on first use:
+**Models are downloaded on-demand** (~44MB total):
 - ✅ v6.0 Ensemble models (7 × 2.7MB = 19MB)
 - ✅ BirdNET embedding extractor (25MB TFLite model)
 - ✅ Label encoder for 231 species
 - 📂 **Default location:** `~/.chirpkit/models/`
-- 🐳 **Custom location:** Set `CHIRPKIT_MODEL_DIR` environment variable (see "Custom Model Storage" below)
+- 🐳 **Custom location:** Use `model_root` parameter or `CHIRPKIT_ROOT_DIR` environment variable
+- 🔧 **Auto-download:** Disabled by default - enable with `auto_download=True` or use existing models
 
 #### Option 2: Clone Repository (For Development)
 
@@ -163,20 +164,57 @@ git clone https://github.com/prossm/chirpkit.git
 cd chirpkit && git lfs pull
 ```
 
-### Custom Model Storage (Docker/Container Deployments)
+### Flexible Model Configuration
 
-ChirpKit supports custom model storage locations via environment variables, making it easy to deploy in containers or custom environments:
+ChirpKit now supports comprehensive model configuration for maximum deployment flexibility:
+
+**Constructor Options:**
+```python
+from chirpkit import InsectClassifier
+
+# Use existing models without auto-downloading
+classifier = InsectClassifier(
+    model_root="/models/chirpkit",           # Root directory for all models
+    auto_download=False,                     # Don't download if models exist
+    validate_compatibility=True              # Check model compatibility
+)
+
+# Explicit paths for full control
+classifier = InsectClassifier(
+    birdnet_model_path="/path/to/birdnet.tflite",
+    ensemble_path="/path/to/ensemble/",
+    auto_download=False
+)
+```
 
 **Environment Variables:**
-- `CHIRPKIT_MODEL_DIR`: Primary override for model storage location
-- `CHIRPKIT_HOME`: Alternative override (models stored in `{CHIRPKIT_HOME}/models`)
+- `CHIRPKIT_ROOT_DIR`: Root directory for all models
+- `CHIRPKIT_BIRDNET_MODEL`: Explicit BirdNET model path
+- `CHIRPKIT_ENSEMBLE_DIR`: Explicit ensemble directory path
+- `CHIRPKIT_AUTO_DOWNLOAD`: Enable/disable automatic model downloads
+- `CHIRPKIT_MODEL_DIR`: Legacy override for model storage location
+- `CHIRPKIT_HOME`: Legacy alternative override
+
+**Configuration File Support:**
+```yaml
+# ~/.chirpkit/config.yaml
+models:
+  root_directory: "/models/chirpkit"
+  birdnet:
+    model_path: "birdnet/BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
+  ensemble:
+    path: "trained/chirpkit-ensemble"
+  download:
+    auto_download: false  # Don't auto-download in production
+```
 
 **Docker Example:**
 ```dockerfile
 FROM python:3.11-slim
 
-# Set custom model directory
-ENV CHIRPKIT_MODEL_DIR=/models/chirpkit
+# Set model configuration - no auto-download for containers
+ENV CHIRPKIT_ROOT_DIR=/models/chirpkit
+ENV CHIRPKIT_AUTO_DOWNLOAD=false
 
 # Create volume for persistent model storage
 VOLUME /models/chirpkit
@@ -184,8 +222,8 @@ VOLUME /models/chirpkit
 # Install ChirpKit
 RUN pip install git+https://github.com/prossm/chirpkit.git
 
-# Models will automatically be downloaded to /models/chirpkit on first use
-CMD ["python", "-m", "chirpkit.model_downloader", "download"]
+# Pre-download models (optional, can also mount existing models)
+# CMD ["python", "-m", "chirpkit.model_downloader", "download"]
 ```
 
 **Docker Compose Example:**
@@ -194,7 +232,8 @@ services:
   chirpkit:
     image: chirpkit:latest
     environment:
-      - CHIRPKIT_MODEL_DIR=/models/chirpkit
+      - CHIRPKIT_ROOT_DIR=/models/chirpkit
+      - CHIRPKIT_AUTO_DOWNLOAD=false
     volumes:
       - chirpkit-models:/models/chirpkit
 
@@ -202,27 +241,37 @@ volumes:
   chirpkit-models:
 ```
 
-**Programmatic Configuration:**
+**Key Benefits:**
+- ✅ **No unexpected downloads** - Models don't auto-download by default
+- ✅ **Use existing models** - Point to pre-downloaded model locations  
+- ✅ **Container-friendly** - Perfect for Docker deployments
+- ✅ **Server-optimized** - Ideal for production environments with pre-installed models
+- ✅ **Backwards compatible** - All existing code continues to work
+
+**Perfect for SoundCurious and similar projects:**
 ```python
-# Option 1: Set environment variable before import
-import os
-os.environ['CHIRPKIT_MODEL_DIR'] = '/custom/path'
-from chirpkit import InsectClassifier
-
-# Option 2: Use cache_dir parameter
-from chirpkit import ModelDownloader
-ModelDownloader.download_all_models(cache_dir='/custom/path')
-
-# Option 3: Check current cache directory
-from chirpkit import get_default_cache_dir
-print(get_default_cache_dir())  # Shows where models will be stored
+# Use your existing models without re-downloading
+classifier = InsectClassifier(
+    model_root="/your/existing/models/chirpkit",
+    auto_download=False
+)
 ```
 
-**Benefits:**
-- No symlinks needed for container deployments
-- Works with persistent volumes and network storage
-- Follows standard practice (like `HF_HOME`, `TORCH_HOME`, etc.)
-- Fully backward compatible with existing installations
+**Model Management Commands:**
+```bash
+# List available models and their status
+python -m chirpkit.model_downloader list
+
+# Download specific model
+python -m chirpkit.model_downloader download chirpkit-ensemble
+python -m chirpkit.model_downloader download birdnet
+
+# Download all models to custom location
+python -m chirpkit.model_downloader download --cache-dir /models/chirpkit
+
+# Check installation health
+chirpkit-doctor
+```
 
 ### Verify Installation
 
