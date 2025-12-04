@@ -28,6 +28,14 @@ try:
     from .model_manager import ModelManager, find_any_model, list_models
     from .cli import classify_audio_file, get_classifier_instance
     from .model_downloader import get_default_cache_dir, ModelDownloader
+    from .config import (
+        ModelConfiguration, 
+        ConfigurationManager, 
+        ModelDiscovery, 
+        ModelValidator,
+        ModelCompatibilityError,
+        create_example_config_file
+    )
 except ImportError as e:
     # Classifier may not be available if ML dependencies are missing
     import logging
@@ -41,6 +49,12 @@ except ImportError as e:
     get_classifier_instance = None
     get_default_cache_dir = None
     ModelDownloader = None
+    ModelConfiguration = None
+    ConfigurationManager = None
+    ModelDiscovery = None
+    ModelValidator = None
+    ModelCompatibilityError = None
+    create_example_config_file = None
 
 from ._version import __version__
 __author__ = "Patrick Metzger"
@@ -90,5 +104,11 @@ __all__ = [
     'list_models',
     'classify_audio_file',
     'get_classifier_instance',
-    'get_default_cache_dir'
+    'get_default_cache_dir',
+    'ModelConfiguration',
+    'ConfigurationManager',
+    'ModelDiscovery',
+    'ModelValidator',
+    'ModelCompatibilityError',
+    'create_example_config_file'
 ]

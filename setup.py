@@ -30,6 +30,7 @@ setup(
         'soundfile>=0.10.0',
         'joblib>=1.0.0',
         'requests>=2.32.4',  # Security: CVE fixes in 2.32.4
+        'PyYAML>=5.4.0',  # Configuration file support
         # Web interface (optional by default)
         'fastapi>=0.68.0',
         'uvicorn>=0.15.0',

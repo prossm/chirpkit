@@ -27,32 +27,67 @@ logger = logging.getLogger(__name__)
 class InsectClassifier:
     """Neural network-based insect sound classifier using ensemble model"""
 
-    def __init__(self, model_path: Optional[str] = None, mode: str = "ensemble_tta"):
+    def __init__(
+        self,
+        model_root: Optional[str] = None,
+        birdnet_model_path: Optional[str] = None,
+        ensemble_path: Optional[str] = None,
+        mode: str = "ensemble_tta",
+        auto_download: bool = True,
+        validate_compatibility: bool = True,
+        device: Optional[str] = None,
+        **kwargs
+    ):
         """
-        Initialize the InsectClassifier with ensemble model
+        Initialize the InsectClassifier with flexible model configuration
 
         Args:
-            model_path: Optional path to ensemble model directory.
-                       If not provided, uses environment-aware cache directory.
+            model_root: Root directory for all models (if not using specific paths)
+            birdnet_model_path: Explicit path to BirdNET model file
+            ensemble_path: Explicit path to ensemble model directory
             mode: Deployment mode - 'single', 'ensemble', or 'ensemble_tta' (default)
+            auto_download: Whether to auto-download missing models (default: True)
+            validate_compatibility: Whether to validate model compatibility (default: True)
+            device: Device to use ('cpu', 'cuda', 'mps', or None for auto-detection)
+            **kwargs: Additional configuration options
 
         Environment Variables:
-            CHIRPKIT_MODEL_DIR: Override model storage location
-            CHIRPKIT_HOME: Alternative override ({CHIRPKIT_HOME}/models)
-        """
-        if model_path is None:
-            # Try development mode first
-            dev_model_path = Path("models/trained/chirpkit-ensemble")
-            if dev_model_path.exists():
-                self.model_path = str(dev_model_path)
-            else:
-                # Use environment-aware cache directory
-                cache_dir = get_default_cache_dir()
-                self.model_path = str(cache_dir / "trained" / "chirpkit-ensemble")
-        else:
-            self.model_path = model_path
+            CHIRPKIT_ROOT_DIR: Root directory for all models
+            CHIRPKIT_BIRDNET_MODEL: Path to BirdNET model
+            CHIRPKIT_ENSEMBLE_DIR: Path to ensemble directory
+            CHIRPKIT_MODEL_DIR: Legacy - model root directory
+            CHIRPKIT_HOME: Legacy - ChirpKit home directory
 
-        self.mode = mode
+        Configuration File Support:
+            ~/.chirpkit/config.yaml or ~/.chirpkit/config.json
+            ./chirpkit.config.yaml or ./chirpkit.config.json
+        """
+        # Import configuration system
+        from .config import ConfigurationManager, ModelDiscovery, ModelValidator
+
+        # Combine all user-provided configuration
+        user_config = {
+            'root_directory': model_root,
+            'birdnet_model_path': birdnet_model_path,
+            'ensemble_path': ensemble_path,
+            'mode': mode,
+            'auto_download': auto_download,
+            'validate_compatibility': validate_compatibility,
+            'device': device,
+            **kwargs
+        }
+        
+        # Remove None values to allow lower-priority sources to provide values
+        user_config = {k: v for k, v in user_config.items() if v is not None}
+
+        # Resolve final configuration
+        config_manager = ConfigurationManager(user_config)
+        self.config = config_manager.resolve_configuration()
+
+        # Resolve model paths from configuration
+        self.model_path, self.birdnet_path = self._resolve_model_paths()
+
+        self.mode = self.config.mode
         self.is_initialized = False
         self.executor = ThreadPoolExecutor(max_workers=2)
 
@@ -69,6 +104,79 @@ class InsectClassifier:
         self.species_cache = {}
         self.cache_file = Path("species_cache.json")
         self.enable_enrichment = True
+        
+    def _resolve_model_paths(self) -> Tuple[str, Optional[str]]:
+        """
+        Resolve model paths from configuration
+        
+        Returns:
+            Tuple of (ensemble_path, birdnet_path)
+        """
+        from .config import ModelDiscovery, ModelValidator
+        from .model_downloader import get_default_cache_dir
+        
+        ensemble_path = self.config.ensemble_path
+        birdnet_path = self.config.birdnet_model_path
+        
+        # If explicit paths are provided, use them
+        if ensemble_path and birdnet_path:
+            logger.info(f"Using explicit model paths:")
+            logger.info(f"  Ensemble: {ensemble_path}")
+            logger.info(f"  BirdNET: {birdnet_path}")
+            
+            if self.config.validate_compatibility:
+                ModelValidator.validate_model_compatibility(birdnet_path, ensemble_path)
+            
+            return ensemble_path, birdnet_path
+        
+        # If root directory is provided, discover models
+        if self.config.root_directory:
+            root_path = Path(self.config.root_directory)
+            logger.info(f"Discovering models in root directory: {root_path}")
+            
+            discovered = ModelDiscovery.find_models(root_path)
+            selection = ModelDiscovery.select_best_models(discovered)
+            
+            # Use discovered paths, falling back to explicit paths if provided
+            final_ensemble_path = ensemble_path or selection.get('ensemble_path')
+            final_birdnet_path = birdnet_path or selection.get('birdnet_model_path')
+            
+            if final_ensemble_path and final_birdnet_path:
+                logger.info(f"Discovered model paths:")
+                logger.info(f"  Ensemble: {final_ensemble_path}")
+                logger.info(f"  BirdNET: {final_birdnet_path}")
+                
+                if self.config.validate_compatibility:
+                    ModelValidator.validate_model_compatibility(final_birdnet_path, final_ensemble_path)
+                
+                return final_ensemble_path, final_birdnet_path
+        
+        # Fallback to legacy behavior
+        if self.config.fallback_to_default:
+            logger.info("Falling back to default model paths")
+            
+            # Try development mode first
+            dev_model_path = Path("models/trained/chirpkit-ensemble")
+            if dev_model_path.exists():
+                default_ensemble_path = str(dev_model_path)
+                default_birdnet_path = None  # Let BirdNET extractor handle this
+            else:
+                # Use environment-aware cache directory
+                cache_dir = get_default_cache_dir()
+                default_ensemble_path = str(cache_dir / "trained" / "chirpkit-ensemble")
+                default_birdnet_path = None
+            
+            logger.info(f"Default ensemble path: {default_ensemble_path}")
+            return default_ensemble_path, default_birdnet_path
+        
+        # No models found and fallback disabled
+        raise RuntimeError(
+            "No model paths could be resolved. Please either:\n"
+            "1. Specify explicit paths (birdnet_model_path, ensemble_path)\n"
+            "2. Set a root directory (model_root) containing models\n"
+            "3. Enable auto_download=True to download models automatically\n"
+            "4. Set fallback_to_default=True to use default locations"
+        )
 
     def is_available(self) -> bool:
         """
@@ -116,7 +224,9 @@ class InsectClassifier:
             from .transfer_learning.birdnet_embeddings import BirdNETEmbeddingExtractor
 
             logger.info("📦 Loading BirdNET embedding extractor...")
-            self.birdnet_extractor = BirdNETEmbeddingExtractor()
+            # Pass resolved BirdNET path if available
+            birdnet_path = self.birdnet_path if hasattr(self, 'birdnet_path') else None
+            self.birdnet_extractor = BirdNETEmbeddingExtractor(model_path=birdnet_path)
 
             logger.info(f"📦 Loading ChirpKit ensemble ({self.mode} mode)...")
             self.ensemble_classifier = ChirpKitEnsembleClassifier(

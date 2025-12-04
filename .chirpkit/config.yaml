@@ -1,0 +1,38 @@
+# ChirpKit Configuration Example
+# This file demonstrates the flexible model configuration options
+
+models:
+  # Root directory containing all models (alternative to individual paths)
+  root_directory: "/models/chirpkit"
+  
+  # BirdNET model configuration
+  birdnet:
+    # Path relative to root_directory or absolute path
+    model_path: "birdnet/BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite"
+    labels_path: "birdnet/BirdNET_GLOBAL_6K_V2.4_Labels.txt"
+  
+  # Ensemble model configuration  
+  ensemble:
+    # Path relative to root_directory or absolute path
+    path: "trained/chirpkit-ensemble"
+    # Deployment mode: single, ensemble, or ensemble_tta
+    mode: "ensemble_tta"
+  
+  # Download settings
+  download:
+    # Whether to automatically download missing models
+    auto_download: false
+    # Whether to fallback to default locations if models not found
+    fallback_to_default: true
+  
+  # Validate that BirdNET and ensemble models are compatible
+  validate_compatibility: true
+
+# Advanced settings (optional)
+advanced:
+  # Test-Time Augmentation settings (for ensemble_tta mode)
+  tta_rounds: 10
+  tta_noise_std: 0.01
+  
+  # Device selection (auto, cpu, cuda, mps)
+  device: "auto"
