@@ -55,6 +55,6 @@ __pycache__/
 ._*
 .DS_Store
 
-# BirdNET-Analyzer - Not needed, using standalone wrapper
-# Model files are stored in models/birdnet/ instead
+# BirdNET-Analyzer submodule (1.8GB) - use pip-installed package instead
+# Install with: pip install 'birdnet-analyzer @ git+https://github.com/kahst/BirdNET-Analyzer.git'
 BirdNET-Analyzer/

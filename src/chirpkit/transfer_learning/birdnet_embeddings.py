@@ -44,22 +44,12 @@ try:
 except ImportError:
     pass
 
-# Fallback: Try local BirdNET-Analyzer directory (development)
-if not USING_BIRDNET_ANALYZER:
-    try:
-        BIRDNET_PATH = Path(__file__).parent.parent.parent.parent / "BirdNET-Analyzer"
-        if BIRDNET_PATH.exists():
-            sys.path.insert(0, str(BIRDNET_PATH))
-            import birdnet_analyzer.config as birdnet_cfg
-            from birdnet_analyzer import model as birdnet_model
-            from birdnet_analyzer import audio as birdnet_audio
-            USING_BIRDNET_ANALYZER = True
-            print("✅ Using BirdNET-Analyzer (local directory)")
-    except ImportError:
-        pass
+# Note: Local BirdNET-Analyzer directory fallback removed
+# Now using pip-installed birdnet-analyzer package only
 
 if not USING_BIRDNET_ANALYZER:
-    print("ℹ️  Using standalone TFLite implementation (inference only)")
+    print("ℹ️  BirdNET-Analyzer not available - using standalone TFLite implementation")
+    print("💡 Install with: pip install 'birdnet-analyzer @ git+https://github.com/kahst/BirdNET-Analyzer.git'")
 
 
 class BirdNETEmbeddingExtractor:

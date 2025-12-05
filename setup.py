@@ -22,8 +22,8 @@ setup(
     # Models are downloaded on first use, not included in package
     include_package_data=False,
     install_requires=[
-        # Core dependencies with broader compatibility ranges
-        'numpy>=1.21.0,<2.0.0',
+        # Core dependencies - compatible with modern ecosystem
+        'numpy>=1.21.0',  # Remove upper bound for compatibility with modern projects
         'scikit-learn>=1.0.0',
         'pandas>=1.3.0',
         'librosa>=0.9.0',
@@ -31,6 +31,8 @@ setup(
         'joblib>=1.0.0',
         'requests>=2.32.4',  # Security: CVE fixes in 2.32.4
         'PyYAML>=5.4.0',  # Configuration file support
+        # BirdNET dependency - use pip package instead of submodule
+        'birdnet-analyzer @ git+https://github.com/kahst/BirdNET-Analyzer.git',
         # Web interface (optional by default)
         'fastapi>=0.68.0',
         'uvicorn>=0.15.0',
@@ -49,16 +51,16 @@ setup(
             'tensorflow[and-cuda]>=2.12.0,<3.0.0',
         ],
         
-        # PyTorch variants
+        # PyTorch variants - modern versions compatible with ecosystem
         'torch': [
-            'torch>=1.9.0',
-            'torchvision>=0.10.0',
-            'torchaudio>=0.9.0',
+            'torch>=2.0.0',  # Modern PyTorch for compatibility
+            'torchvision>=0.15.0',
+            'torchaudio>=2.0.0',
         ],
         'torch-cpu': [
-            'torch>=1.9.0',
-            'torchvision>=0.10.0',
-            'torchaudio>=0.9.0',
+            'torch>=2.0.0',
+            'torchvision>=0.15.0',
+            'torchaudio>=2.0.0',
         ],
         
         # Visualization and experiment tracking
@@ -85,6 +87,11 @@ setup(
             'resampy>=0.4.0',
         ],
         
+        # Inference-only (minimal production deployment)
+        'inference': [
+            'torch>=2.0.0',  # Core ML backend
+        ],
+        
         # Development dependencies
         'dev': [
             'pytest>=6.2.0',
@@ -98,9 +105,9 @@ setup(
             'tensorflow-macos>=2.12.0,<=2.16.2; sys_platform == "darwin"',
             'tensorflow-metal>=1.0.0; sys_platform == "darwin"',
             'tensorflow>=2.12.0,<3.0.0; sys_platform != "darwin"',
-            'torch>=1.9.0',
-            'torchvision>=0.10.0',
-            'torchaudio>=0.9.0',
+            'torch>=2.0.0',  # Modern PyTorch
+            'torchvision>=0.15.0',
+            'torchaudio>=2.0.0',
             'matplotlib>=3.3.0',
             'seaborn>=0.11.0',
             'gradio>=5.0.0',

@@ -1,0 +1,83 @@
+# ChirpKit Inference-Only .gitignore
+# Excludes heavy research data for production deployments
+
+# Large training datasets (693GB+)
+data/raw/
+data/processed/
+data/splits/
+data/embeddings/
+
+# Model archive (1.1GB)
+models/trained/archive/
+
+# Research notebooks and experiments
+notebooks/
+runs/
+experiments/
+
+# BirdNET documentation and examples (85MB)
+BirdNET-Analyzer/docs/
+BirdNET-Analyzer/example/
+BirdNET-Analyzer/birdnet_analyzer/example/
+
+# Test audio files (except minimal examples)
+test_audio/
+# Keep: test_audio/README.md for reference
+
+# Training scripts (keep minimal extraction)
+scripts/train_*.py
+scripts/preprocess_*.py
+scripts/download_*.py
+# Keep: scripts/extract_embeddings_final.py
+
+# Cache and temporary files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyTorch
+*.pth
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Environment
+.env
+.venv/
+venv/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Model downloads (will be downloaded on demand)
+# models/birdnet/
+# models/trained/chirpkit-ensemble/

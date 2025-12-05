@@ -90,15 +90,23 @@ The current model uses carefully filtered datasets with minimum 30 samples per s
 
 #### Option 1: Install from GitHub (Recommended for Users)
 
+**For Modern Python Projects (NumPy 1.26+, PyTorch 2.0+):**
+
 ```bash
 # Install directly from GitHub
 pip install git+https://github.com/prossm/chirpkit.git
 
-# With platform-specific optimizations:
+# Minimal production install (recommended for containers/servers)
+pip install "git+https://github.com/prossm/chirpkit.git#egg=chirpkit[inference]"
+
+# Full installation with all features
+pip install "git+https://github.com/prossm/chirpkit.git#egg=chirpkit[full]"
+
+# Platform-specific optimizations:
 # macOS with Apple Silicon/Intel
 pip install "git+https://github.com/prossm/chirpkit.git#egg=chirpkit[full]"
 
-# Linux/Windows with GPU support
+# Linux/Windows with GPU support  
 pip install "git+https://github.com/prossm/chirpkit.git#egg=chirpkit[tensorflow-gpu,torch]"
 ```
 
@@ -133,10 +141,12 @@ pip install -e .[full]
 - ✅ Training scripts and documentation
 - ✅ Example datasets and notebooks
 
-**Platform-Specific Recommendations:**
-- **macOS**: `pip install .[full]` (includes tensorflow-macos with Metal GPU support)
-- **Linux**: `pip install .[tensorflow-gpu,torch]` (with CUDA support)
-- **Windows**: `pip install .[tensorflow,torch]`
+**Installation Recommendations:**
+- **Production/Containers**: `pip install chirpkit[inference]` (minimal dependencies)
+- **Development/Research**: `pip install chirpkit[full]` (all features)
+- **macOS**: Includes tensorflow-macos with Metal GPU support
+- **Linux**: Use `[tensorflow-gpu,torch]` for CUDA support  
+- **Windows**: Use `[tensorflow,torch]` for standard setup
 
 ### Manual Model Download (If Auto-Download Fails)
 

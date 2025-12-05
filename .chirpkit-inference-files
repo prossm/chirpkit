@@ -1,0 +1,40 @@
+# Essential files for ChirpKit inference-only installation
+# Use this list to create minimal packages
+
+# Core source code
+src/
+setup.py
+pyproject.toml
+README.md
+LICENSE
+MIGRATION_GUIDE.md
+IMPLEMENTATION_SUMMARY.md
+
+# Essential models only (production)
+models/trained/chirpkit-ensemble/
+models/birdnet/BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite
+models/birdnet/BirdNET_GLOBAL_6K_V2.4_Labels.txt
+
+# Configuration examples
+.chirpkit/
+examples/model_configuration_examples.py
+
+# Essential scripts
+scripts/extract_embeddings_final.py
+
+# BirdNET core (minimal)
+BirdNET-Analyzer/birdnet_analyzer/__init__.py
+BirdNET-Analyzer/birdnet_analyzer/analyze/
+BirdNET-Analyzer/birdnet_analyzer/embeddings/
+BirdNET-Analyzer/birdnet_analyzer/config.py
+BirdNET-Analyzer/birdnet_analyzer/audio.py
+BirdNET-Analyzer/birdnet_analyzer/checkpoints/V2.4/BirdNET_GLOBAL_6K_V2.4_Model_FP16.tflite
+BirdNET-Analyzer/birdnet_analyzer/checkpoints/V2.4/BirdNET_GLOBAL_6K_V2.4_Labels.txt
+
+# Exclude (these contain the bulk of the size):
+# data/raw/ (693GB)
+# models/trained/archive/ (1.1GB) 
+# BirdNET-Analyzer/docs/ (85MB)
+# notebooks/
+# test_audio/ (except minimal examples)
+# runs/
