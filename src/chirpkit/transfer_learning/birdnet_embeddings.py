@@ -298,11 +298,12 @@ class BirdNETEmbeddingExtractor:
         self.interpreter.set_tensor(self.input_details[0]['index'], input_data)
         self.interpreter.invoke()
 
-        # Get embedding output (use detected embedding index or fallback to 0)
+        # Get embedding output
         output_idx = self.embedding_output_idx if self.embedding_output_idx is not None else 0
         embedding = self.interpreter.get_tensor(self.output_details[output_idx]['index'])
 
-        return embedding.flatten()
+        # .copy() moves data to Python memory, releasing the TFLite lock
+        return embedding.flatten().copy()
 
     def _aggregate_embeddings(self, embeddings, aggregate):
         """Aggregate multiple embeddings into one"""
