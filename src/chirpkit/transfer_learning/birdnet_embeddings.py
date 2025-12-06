@@ -30,6 +30,15 @@ import joblib
 import librosa
 import tensorflow as tf
 
+# Import logger early for use in module-level code
+try:
+    from ..utils import get_chirpkit_logger
+    logger = get_chirpkit_logger(__name__)
+except ImportError:
+    # Fallback for when utils isn't available
+    import logging
+    logger = logging.getLogger(__name__)
+
 # Try to import from BirdNET-Analyzer if available (for training)
 # Otherwise use standalone TFLite implementation (for inference)
 USING_BIRDNET_ANALYZER = False
@@ -40,7 +49,7 @@ try:
     from birdnet_analyzer import model as birdnet_model
     from birdnet_analyzer import audio as birdnet_audio
     USING_BIRDNET_ANALYZER = True
-    print("✅ Using BirdNET-Analyzer (installed package)")
+    logger.info("✅ Using BirdNET-Analyzer (installed package)")
 except ImportError:
     pass
 
@@ -48,8 +57,8 @@ except ImportError:
 # Now using pip-installed birdnet-analyzer package only
 
 if not USING_BIRDNET_ANALYZER:
-    print("ℹ️  BirdNET-Analyzer not available - using standalone TFLite implementation")
-    print("💡 Install with: pip install 'birdnet-analyzer @ git+https://github.com/kahst/BirdNET-Analyzer.git'")
+    logger.info("ℹ️  BirdNET-Analyzer not available - using standalone TFLite implementation")
+    logger.info("💡 Install with: pip install 'birdnet-analyzer @ git+https://github.com/kahst/BirdNET-Analyzer.git'")
 
 
 class BirdNETEmbeddingExtractor:

@@ -16,9 +16,10 @@ import glob
 from pathlib import Path
 from typing import Dict, Optional, Any, Union, List
 from dataclasses import dataclass, asdict
-import logging
 
-logger = logging.getLogger(__name__)
+from .utils import get_chirpkit_logger
+
+logger = get_chirpkit_logger(__name__)
 
 
 class ModelCompatibilityError(Exception):

@@ -7,8 +7,8 @@ import sys
 import platform
 import subprocess
 import importlib
-import logging
 from ._version import __version__
+from .utils import get_chirpkit_logger
 from typing import List, Dict, Optional, Tuple
 import argparse
 
@@ -18,7 +18,7 @@ class InstallationDiagnostics:
     
     def __init__(self):
         self.issues: List[Dict] = []
-        self.logger = logging.getLogger(__name__)
+        self.logger = get_chirpkit_logger(__name__)
     
     def validate_installation(self) -> List[Dict]:
         """Validate core dependencies and provide recovery suggestions."""
@@ -421,8 +421,7 @@ def classify_audio_file(audio_path: str, detailed: bool = True) -> Dict:
         return result
         
     except Exception as e:
-        import logging
-        logger = logging.getLogger(__name__)
+        logger = get_chirpkit_logger(__name__)
         logger.error(f"Audio classification failed: {e}")
         return {
             'model': 'ChirpKit-Error',

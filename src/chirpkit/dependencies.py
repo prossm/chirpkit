@@ -3,13 +3,14 @@ Dependency management utilities for graceful handling of optional imports.
 Provides fallback mechanisms and helpful error messages for missing dependencies.
 """
 
-import logging
 import importlib
 import functools
 from typing import Optional, Any, Callable, Dict
 import warnings
 
-logger = logging.getLogger(__name__)
+from .utils import get_chirpkit_logger
+
+logger = get_chirpkit_logger(__name__)
 
 
 class DependencyManager:

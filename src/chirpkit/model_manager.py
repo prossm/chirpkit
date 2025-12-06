@@ -2,12 +2,12 @@
 Model management utilities for ChirpKit
 """
 
-import logging
 from pathlib import Path
 from typing import Optional, Tuple
 from ._version import __version__, __model_version__
+from .utils import get_chirpkit_logger
 
-logger = logging.getLogger(__name__)
+logger = get_chirpkit_logger(__name__)
 
 class ModelManager:
     """Manages ChirpKit ensemble model paths"""

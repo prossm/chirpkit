@@ -11,6 +11,10 @@ The package is designed to work across different ML backends (TensorFlow, PyTorc
 with graceful fallback handling for missing dependencies.
 """
 
+# Initialize ChirpKit logging early
+from .utils import setup_chirpkit_logging, get_chirpkit_logger
+setup_chirpkit_logging()
+
 from .dependencies import (
     get_tensorflow,
     get_torch, 
@@ -38,8 +42,7 @@ try:
     )
 except ImportError as e:
     # Classifier may not be available if ML dependencies are missing
-    import logging
-    logger = logging.getLogger(__name__)
+    logger = get_chirpkit_logger(__name__)
     logger.warning(f"Some ChirpKit modules not available: {e}")
     InsectClassifier = None
     ModelManager = None
@@ -60,8 +63,7 @@ from ._version import __version__
 __author__ = "Patrick Metzger"
 
 # Check core dependencies on import
-import logging
-logger = logging.getLogger(__name__)
+logger = get_chirpkit_logger(__name__)
 
 # Perform basic dependency validation
 _missing_deps = []

@@ -8,7 +8,6 @@ Model Version: v6.0 (ensemble architecture)
 Package Version: See __version__ in _version.py
 """
 
-import logging
 import numpy as np
 import json
 import asyncio
@@ -21,8 +20,9 @@ from concurrent.futures import ThreadPoolExecutor
 from .dependencies import DependencyManager, requires_torch
 from ._version import __version__, __model_version__
 from .model_downloader import get_default_cache_dir
+from .utils import get_chirpkit_logger
 
-logger = logging.getLogger(__name__)
+logger = get_chirpkit_logger(__name__)
 
 class InsectClassifier:
     """Neural network-based insect sound classifier using ensemble model"""

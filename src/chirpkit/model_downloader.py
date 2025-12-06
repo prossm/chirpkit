@@ -14,9 +14,10 @@ import zipfile
 import tempfile
 import shutil
 import subprocess
-import logging
 
-logger = logging.getLogger(__name__)
+from .utils import get_chirpkit_logger
+
+logger = get_chirpkit_logger(__name__)
 
 
 def get_default_cache_dir():
@@ -168,10 +169,10 @@ class ModelDownloader:
     @staticmethod
     def _download_from_github_release(model_name, model_info, model_path):
         """Download model from GitHub release (primary method)"""
-        print(f"📥 Downloading {model_info['description']}...")
-        print(f"   Size: ~{model_info['size_mb']}MB (one-time download)")
-        print(f"   Source: GitHub Release")
-        print(f"   URL: {model_info['url']}")
+        logger.info(f"📥 Downloading {model_info['description']}...")
+        logger.info(f"   Size: ~{model_info['size_mb']}MB (one-time download)")
+        logger.info(f"   Source: GitHub Release")
+        logger.info(f"   URL: {model_info['url']}")
 
         # Create temp file for download
         with tempfile.NamedTemporaryFile(delete=False, suffix='.zip') as tmp:
