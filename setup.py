@@ -31,8 +31,12 @@ setup(
         'joblib>=1.0.0',
         'requests>=2.32.4',  # Security: CVE fixes in 2.32.4
         'PyYAML>=5.4.0',  # Configuration file support
-        # BirdNET dependency - use pip package instead of submodule
-        'birdnet-analyzer @ git+https://github.com/kahst/BirdNET-Analyzer.git',
+        # BirdNET dependency — pin to v2.4.0, the latest release that still exposes
+        # the embedding API this package calls: birdnet_analyzer.model.load_model(
+        # class_output=False) and .embeddings(). The default branch (and the PyPI
+        # build) removed/renamed these, so an unpinned install breaks embedding
+        # extraction (1024-dim) at inference time.
+        'birdnet-analyzer @ git+https://github.com/birdnet-team/BirdNET-Analyzer.git@v2.4.0',
         # Web interface (optional by default)
         'fastapi>=0.68.0',
         'uvicorn>=0.15.0',
