@@ -337,24 +337,25 @@ class InsectClassifier:
         """Enrich predictions with Wikipedia data"""
         for pred in predictions:
             species_name = pred['species']
-            if species_name in self.species_cache:
-                info = self.species_cache[species_name]
-                pred['common_name'] = info.get('common_name', pred['scientific_name'])
-                pred['description'] = info.get('description', '')
-                pred['image_url'] = info.get('image_url', '')
-                pred['wikipedia_url'] = info.get('wikipedia_url', '')
-            else:
-                # Fetch from Wikipedia
-                info = await self._fetch_species_info(species_name)
-                pred['common_name'] = info.get('common_name', pred['scientific_name'])
-                pred['description'] = info.get('description', '')
-                pred['image_url'] = info.get('image_url', '')
-                pred['wikipedia_url'] = info.get('wikipedia_url', '')
+            # Always delegate to _fetch_species_info so the cache/schema/re-fetch
+            # logic lives in one place (stale entries missing an image get repaired).
+            info = await self._fetch_species_info(species_name)
+            pred['common_name'] = info.get('common_name', pred['scientific_name'])
+            pred['description'] = info.get('description', '')
+            pred['image_url'] = info.get('image_url', '')
+            pred['wikipedia_url'] = info.get('wikipedia_url', '')
 
     async def _fetch_species_info(self, scientific_name: str) -> Dict[str, str]:
         """Fetch species info from Wikipedia"""
         if scientific_name in self.species_cache:
-            return self.species_cache[scientific_name]
+            cached = self.species_cache[scientific_name]
+            # Entries written by older code (no "schema") may be missing an image
+            # even though the page has one. Re-fetch those exactly once; entries
+            # already at the current schema are trusted as-is (an empty image_url
+            # then means the page genuinely has no thumbnail).
+            if cached.get("schema", 0) >= 2:
+                return cached
+            # else: fall through, re-fetch, and overwrite + save with schema=2
 
         search_name = scientific_name.replace('_', ' ')
 
@@ -404,7 +405,8 @@ class InsectClassifier:
                     'common_name': common_name,
                     'description': description[:200] + '...' if len(description) > 200 else description,
                     'image_url': image_url,
-                    'wikipedia_url': f"https://en.wikipedia.org/wiki/{urllib.parse.quote(search_name)}"
+                    'wikipedia_url': f"https://en.wikipedia.org/wiki/{urllib.parse.quote(search_name)}",
+                    'schema': 2
                 }
 
         except Exception as e:
@@ -414,7 +416,8 @@ class InsectClassifier:
             'common_name': search_name,
             'description': '',
             'image_url': '',
-            'wikipedia_url': ''
+            'wikipedia_url': '',
+            'schema': 2
         }
 
     async def _load_species_cache(self):
