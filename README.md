@@ -1,5 +1,7 @@
 # 🦗 ChirpKit: Multi-Species Insect Sound Classifier
 
+The open-source machine learning engine that powers [SoundCurious](https://soundcurious.com).
+
 A comprehensive Python system for identifying **231 insect species** from audio recordings using deep learning. Features a 7-model ensemble trained on BirdNET embeddings, achieving **79.7% accuracy** with Test-Time Augmentation.
 
 **Current Model:** v6.0 Ensemble (October 2024)
